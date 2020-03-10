@@ -41,7 +41,7 @@ const MET = 'e' // using e because 'm' is already use for 'MA'
 const RUA = 'r'
 const KHUN = 'k'
 
-const DEFAULT_POSITION = 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 0 1'
+const DEFAULT_STATE_STRING = 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 0 1'
 
 const BIA_MOVE_OFFSETS = {
     [WHITE]: [16],
@@ -83,3 +83,38 @@ const SQUARES = {
     a2:    16, b2:    17, c2:    18, d2:    19, e2:    20, f2:    21, g2:    22, h2:    23,
     a1:     0, b1:     1, c1:     2, d1:     3, e1:     4, f1:     5, g1:     6, h1:     7
 }
+
+function getInfoFromStateString(stateString) {
+    const result = stateString.match(/^(?<boardStateString>\S+)\s+(?<activeColor>[wb])\s+(?<halfMove>[01])\s+(?<fullMove>\d+)$/)
+    return result && result.groups
+}
+
+function getStateFromStateString(stateString) {
+    const { boardStateString } = getInfoFromStateString(stateString)
+
+    const boardState = Array(128)
+    let i = 0
+    for (const symbol of boardStateString) {
+        if (/[bfmterk]/.test(symbol)) {
+            boardState[i] = {
+                piece: symbol,
+                color: BLACK
+            }
+            i++
+        } else if (/[BFMTERK]/.test(symbol)) {
+            boardState[i] = {
+                piece: symbol,
+                color: WHITE
+            }
+            i++
+        } else if (/\d/.test(symbol)) {
+            i += parseInt(symbol, 10)
+        } else if (symbol === '/') {
+            i += 8
+        }
+    }
+
+    return boardState
+}
+
+console.log(getStateFromStateString(DEFAULT_STATE_STRING))
