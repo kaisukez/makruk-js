@@ -23,8 +23,8 @@
  * 
  * -------------------------------------------------------------------------------
  * 
- * This file is trying to clone this project https://github.com/jhlywa/chess.js
- * but modify it to be compatible with thai chess rule
+ * This file is trying to copy this project's (https://github.com/jhlywa/chess.js)
+ * algorithm but modify it to be compatible with thai chess rule
  * before starting to optimize it (or even rewrite using bitboard instead).
  * 
  * ------------------------------------------------------------------------------- */
