@@ -28,6 +28,7 @@
  * before starting to optimize it (or even rewrite using bitboard instead).
  * 
  * ------------------------------------------------------------------------------- */
+const R = require('ramda')
 
 const WHITE = 'w'
 const BLACK = 'b'
@@ -84,37 +85,43 @@ const SQUARES = {
     a1:     0, b1:     1, c1:     2, d1:     3, e1:     4, f1:     5, g1:     6, h1:     7
 }
 
-function getInfoFromStateString(stateString) {
-    const result = stateString.match(/^(?<boardStateString>\S+)\s+(?<activeColor>[wb])\s+(?<halfMove>[01])\s+(?<fullMove>\d+)$/)
-    return result && result.groups
-}
 
-function getStateFromStateString(stateString) {
-    const { boardStateString } = getInfoFromStateString(stateString)
+const getInfoFromStateString = R.pipe(
+    R.match(/^(?<boardString>\S+)\s+(?<activeColor>[wb])\s+(?<halfMove>[01])\s+(?<fullMove>\d+)$/),
+    R.prop('groups')
+)
 
-    const boardState = Array(128)
-    let i = 0
-    for (const symbol of boardStateString) {
-        if (/[bfmterk]/.test(symbol)) {
-            boardState[i] = {
-                piece: symbol,
-                color: BLACK
-            }
-            i++
-        } else if (/[BFMTERK]/.test(symbol)) {
-            boardState[i] = {
-                piece: symbol,
-                color: WHITE
-            }
-            i++
-        } else if (/\d/.test(symbol)) {
-            i += parseInt(symbol, 10)
-        } else if (symbol === '/') {
-            i += 8
-        }
-    }
+// https://stackoverflow.com/a/60673103/10154216
+const getBoardStateFromBoardString = R.pipe(
+    R.split(''),
+    R.chain(
+        R.cond([
+            [
+                R.test(/[bfmterk]/),
+                R.applySpec({
+                    piece: R.identity,
+                    color: R.always(BLACK)
+                })
+            ],
+            [
+                R.test(/[BFMTERK]/),
+                R.applySpec({
+                    piece: R.identity,
+                    color: R.always(WHITE)
+                })
+            ],
+            [
+                R.test(/\d/),
+                R.repeat(null)
+            ],
+            [
+                R.equals('/'),
+                R.always(R.repeat(null, 8))
+            ]
+        ])
+    ),
+)
 
-    return boardState
-}
-
-console.log(getStateFromStateString(DEFAULT_STATE_STRING))
+// const info = getInfoFromStateString(DEFAULT_STATE_STRING)
+// const boardState = getBoardStateFromBoardString(info.boardString)
+// console.log(boardState)
