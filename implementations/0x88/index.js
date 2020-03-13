@@ -123,6 +123,25 @@ const getBoardStateFromBoardString = R.pipe(
     R.concat(R.repeat(null, 8))
 )
 
-const info = getInfoFromStateString(DEFAULT_STATE_STRING)
-const boardState = getBoardStateFromBoardString(info.boardString)
-console.log(boardState)
+const getStateFromStateString = R.pipe(
+    getInfoFromStateString,
+    R.converge(
+        R.merge,
+        [
+            R.identity,
+            R.pipe(
+                R.prop('boardString'),
+                R.applySpec({
+                    boardState: getBoardStateFromBoardString
+                })
+            )
+        ]
+    )
+)
+
+// const info = getInfoFromStateString(DEFAULT_STATE_STRING)
+// const boardState = getBoardStateFromBoardString(info.boardString)
+// console.log(boardState)
+
+const state = getStateFromStateString(DEFAULT_STATE_STRING)
+console.log(state)
