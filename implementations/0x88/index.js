@@ -120,8 +120,9 @@ const getBoardStateFromBoardString = R.pipe(
             ]
         ])
     ),
+    R.concat(R.repeat(null, 8))
 )
 
-// const info = getInfoFromStateString(DEFAULT_STATE_STRING)
-// const boardState = getBoardStateFromBoardString(info.boardString)
-// console.log(boardState)
+const info = getInfoFromStateString(DEFAULT_STATE_STRING)
+const boardState = getBoardStateFromBoardString(info.boardString)
+console.log(boardState)
