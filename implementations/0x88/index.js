@@ -190,7 +190,7 @@ const getStateFromStateString = R.pipe(
     )
 )
 
-const generateAllMovesForOneSquare = (boardState, square) => {
+const generateMovesForOneSquare = (boardState, square) => {
     const { piece, color } = boardState[square]
     
     const moves = []
@@ -266,4 +266,4 @@ const state = getStateFromStateString(DEFAULT_STATE_STRING)
 // const allMoves = generateAllMoves(state)
 // console.log(allMoves)
 
-console.log(generateAllMovesForOneSquare(state.boardState, SQUARES.e3))
+console.log(generateMovesForOneSquare(state.boardState, SQUARES.e3))
