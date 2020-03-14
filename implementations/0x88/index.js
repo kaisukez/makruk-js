@@ -32,7 +32,7 @@ const R = require('ramda')
 
 const WHITE = 'w'
 const BLACK = 'b'
-const getOppositeColor = R.ifElse(
+const swapColor = R.ifElse(
     R.equals(WHITE),
     R.always(BLACK),
     R.always(WHITE)
@@ -132,9 +132,24 @@ const SQUARES = {
     a2:    16, b2:    17, c2:    18, d2:    19, e2:    20, f2:    21, g2:    22, h2:    23,
     a1:     0, b1:     1, c1:     2, d1:     3, e1:     4, f1:     5, g1:     6, h1:     7
 }
-
 const FIRST_SQUARE = SQUARES.a1
 const LAST_SQUARE = SQUARES.h8
+
+const rank = index => index >> 4
+const file = index => index & 7
+const algebraic = R.converge(
+    R.concat,
+    [
+        R.pipe(
+            file,
+            R.flip(R.prop)('abcdefgh')
+        ),
+        R.pipe(
+            rank,
+            R.flip(R.prop)('12345678')
+        ),
+    ]
+)
 
 const getInfoFromStateString = R.pipe(
     R.match(/^(?<boardString>\S+)\s+(?<activeColor>[wb])\s+(?<halfMove>[01])\s+(?<fullMove>\d+)$/),
