@@ -150,6 +150,34 @@ const algebraic = R.converge(
         ),
     ]
 )
+const ascii = boardState => {
+    var s = '     +------------------------+\n'
+    for (var i = SQUARES.a1; i <= SQUARES.h8; i++) {
+        /* display the rank */
+        if (file(i) === 0) {
+            s += ' ' + '87654321'[rank(i)] + ' |'
+        }
+
+        /* empty piece */
+        if (boardState[i] == null) {
+            s += ' . '
+        } else {
+            var piece = boardState[i].piece
+            var color = boardState[i].color
+            var symbol = color === WHITE ? piece.toUpperCase() : piece.toLowerCase()
+            s += ' ' + symbol + ' '
+        }
+
+        if ((i + 1) & 0x88) {
+            s += '|\n'
+            i += 8
+        }
+    }
+    s += '     +------------------------+\n'
+    s += '     a  b  c  d  e  f  g  h\n'
+
+    return s
+}
 
 const getInfoFromStateString = R.pipe(
     R.match(/^(?<boardString>\S+)\s+(?<activeColor>[wb])\s+(?<halfMove>[01])\s+(?<fullMove>\d+)$/),
@@ -299,4 +327,6 @@ const state = getStateFromStateString(DEFAULT_STATE_STRING)
 // console.log(allMoves)
 
 // console.log(generateMovesForOneSquare(state.boardState, SQUARES.e3))
-console.log(generateMoves(state.boardState))
+// console.log(generateMoves(state.boardState))
+
+console.log(ascii(state.boardState))
