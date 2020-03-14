@@ -86,7 +86,7 @@ const getAttackOffsets = R.useWith(
         ],
         [
             R.T,
-            R.always(PIECE_ATTACK_OFFSETS[piece, color])
+            R.always(PIECE_ATTACK_OFFSETS[piece])
         ]
     ])(piece),
     [
@@ -107,7 +107,7 @@ const getMoveOffsets = R.useWith(
         ],
         [
             R.T,
-            R.always(PIECE_MOVE_OFFSETS[piece, color])
+            R.always(PIECE_MOVE_OFFSETS[piece])
         ]
     ])(piece),
     [
@@ -191,9 +191,19 @@ const getStateFromStateString = R.pipe(
 )
 
 const generateMovesForOneSquare = (boardState, square) => {
-    const { piece, color } = boardState[square]
-    
     const moves = []
+
+    // if the square is off the board
+    if ((square & 0x88)) {
+        return moves
+    }
+
+    // if the square is empty
+    if (!boardState[square]) {
+        return moves
+    }
+
+    const { piece, color } = boardState[square]
     let squarePointer = square
 
     const attackOffsets = getAttackOffsets(piece, color)
@@ -214,7 +224,7 @@ const generateMovesForOneSquare = (boardState, square) => {
                     piece,
                     color,
                     from: square,
-                    to: targetSquare,
+                    to: squarePointer,
                     type: 'capture'
                 })
             }
@@ -253,7 +263,14 @@ const generateMovesForOneSquare = (boardState, square) => {
             }
         }
     }
+    return moves
+}
 
+const generateMoves = boardState => {
+    const moves = []
+    boardState.forEach((_, index) => {
+        moves.push(...generateMovesForOneSquare(boardState, index))
+    })
     return moves
 }
 
@@ -266,4 +283,5 @@ const state = getStateFromStateString(DEFAULT_STATE_STRING)
 // const allMoves = generateAllMoves(state)
 // console.log(allMoves)
 
-console.log(generateMovesForOneSquare(state.boardState, SQUARES.e3))
+// console.log(generateMovesForOneSquare(state.boardState, SQUARES.e3))
+console.log(generateMoves(state.boardState))
