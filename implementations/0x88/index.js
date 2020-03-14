@@ -32,6 +32,11 @@ const R = require('ramda')
 
 const WHITE = 'w'
 const BLACK = 'b'
+const getOppositeColor = R.ifElse(
+    R.equals(WHITE),
+    R.always(BLACK),
+    R.always(WHITE)
+)
 
 // https://www.chessvariants.com/oriental.dir/thai.html
 const BIA = 'b'
@@ -68,6 +73,49 @@ const PIECE_ATTACK_OFFSETS = {
 }
 const PIECE_MOVE_OFFSETS = PIECE_ATTACK_OFFSETS
 
+
+const getAttackOffsets = R.useWith(
+    (piece, color) => R.cond([
+        [
+            R.equals(BIA),
+            R.always(BIA_ATTACK_OFFSETS[color])
+        ],
+        [
+            R.equals(THON),
+            R.always(THON_ATTACK_OFFSETS[color])
+        ],
+        [
+            R.T,
+            R.always(PIECE_ATTACK_OFFSETS[piece, color])
+        ]
+    ])(piece),
+    [
+        R.toLower,
+        R.identity
+    ]
+)
+
+const getMoveOffsets = R.useWith(
+    (piece, color) => R.cond([
+        [
+            R.equals(BIA),
+            R.always(BIA_MOVE_OFFSETS[color])
+        ],
+        [
+            R.equals(THON),
+            R.always(THON_MOVE_OFFSETS[color])
+        ],
+        [
+            R.T,
+            R.always(PIECE_MOVE_OFFSETS[piece, color])
+        ]
+    ])(piece),
+    [
+        R.toLower,
+        R.identity
+    ]
+)
+
 // use for offset sliding when generating moves
 const IS_SLIDING_PIECE = {
     [RUA]: true
@@ -85,6 +133,8 @@ const SQUARES = {
     a1:     0, b1:     1, c1:     2, d1:     3, e1:     4, f1:     5, g1:     6, h1:     7
 }
 
+const FIRST_SQUARE = SQUARES.a1
+const LAST_SQUARE = SQUARES.h8
 
 const getInfoFromStateString = R.pipe(
     R.match(/^(?<boardString>\S+)\s+(?<activeColor>[wb])\s+(?<halfMove>[01])\s+(?<fullMove>\d+)$/),
@@ -94,6 +144,7 @@ const getInfoFromStateString = R.pipe(
 // https://stackoverflow.com/a/60673103/10154216
 const getBoardStateFromBoardString = R.pipe(
     R.split(''),
+    R.reverse,
     R.chain(
         R.cond([
             [
@@ -120,7 +171,7 @@ const getBoardStateFromBoardString = R.pipe(
             ]
         ])
     ),
-    R.concat(R.repeat(null, 8))
+    R.concat(R.__, R.repeat(null, 8))
 )
 
 const getStateFromStateString = R.pipe(
@@ -139,9 +190,80 @@ const getStateFromStateString = R.pipe(
     )
 )
 
+const generateAllMovesForOneSquare = (boardState, square) => {
+    const { piece, color } = boardState[square]
+    
+    const moves = []
+    let squarePointer = square
+
+    const attackOffsets = getAttackOffsets(piece, color)
+    for (const offset of attackOffsets) {
+        squarePointer = square
+        while (true) {
+            squarePointer += offset
+            targetSquare = boardState[squarePointer]
+
+            // if the square is off the board
+            if (squarePointer & 0x88) {
+                break
+            }
+
+            // if it's a opponent piece
+            if (targetSquare && targetSquare.color !== color) {
+                moves.push({
+                    piece,
+                    color,
+                    from: square,
+                    to: targetSquare,
+                    type: 'capture'
+                })
+            }
+
+            if (!IS_SLIDING_PIECE[piece]) {
+                break
+            }
+        }
+    }
+
+    const moveOffsets = getMoveOffsets(piece, color)
+    for (const offset of moveOffsets) {
+        squarePointer = square
+        while (true) {
+            squarePointer += offset
+            targetSquare = boardState[squarePointer]
+
+            // if the square is off the board
+            if (squarePointer & 0x88) {
+                break
+            }
+
+            // if it's a empty square
+            if (!targetSquare) {
+                moves.push({
+                    piece,
+                    color,
+                    from: square,
+                    to: squarePointer,
+                    type: 'normal'
+                })
+            }
+
+            if (!IS_SLIDING_PIECE[piece]) {
+                break
+            }
+        }
+    }
+
+    return moves
+}
+
 // const info = getInfoFromStateString(DEFAULT_STATE_STRING)
 // const boardState = getBoardStateFromBoardString(info.boardString)
 // console.log(boardState)
 
 const state = getStateFromStateString(DEFAULT_STATE_STRING)
-console.log(state)
+// console.log(state)
+// const allMoves = generateAllMoves(state)
+// console.log(allMoves)
+
+console.log(generateAllMovesForOneSquare(state.boardState, SQUARES.e3))
