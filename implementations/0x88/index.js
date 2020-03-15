@@ -42,7 +42,11 @@ const {
 
 const getInfoFromStateString = R.pipe(
     R.match(/^(?<boardString>\S+)\s+(?<activeColor>[wb])\s+(?<halfMove>[01])\s+(?<fullMove>\d+)$/),
-    R.prop('groups')
+    R.prop('groups'),
+    R.evolve({
+        halfMove: R.curry(parseInt)(R.__, 10),
+        fullMove: R.curry(parseInt)(R.__, 10)
+    })
 )
 
 // https://stackoverflow.com/a/60673103/10154216
@@ -178,12 +182,16 @@ const generateMoves = boardState => {
     return moves
 }
 
+const move = boardState => {
+
+}
+
 // const info = getInfoFromStateString(DEFAULT_STATE_STRING)
 // const boardState = getBoardStateFromBoardString(info.boardString)
 // console.log(boardState)
 
 const state = getStateFromStateString(DEFAULT_STATE_STRING)
-// console.log(state)
+console.log(state)
 // const allMoves = generateAllMoves(state)
 // console.log(allMoves)
 
