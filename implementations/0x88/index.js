@@ -85,9 +85,9 @@ const getBoardStateFromBoardString = R.pipe(
 const getStateFromStateString = R.pipe(
     getInfoFromStateString,
     R.converge(
-        R.merge,
+        R.mergeRight,
         [
-            R.identity,
+            R.omit(['boardString']),
             R.pipe(
                 R.prop('boardString'),
                 R.applySpec({
@@ -182,8 +182,23 @@ const generateMoves = boardState => {
     return moves
 }
 
-const move = boardState => {
+const move = (state, from, to) => {
+    const { boardState, halfMove, activeColor } = state
 
+    const newState = R.clone(state)
+    newState.boardState[to] = boardState[from]
+    newState.boardState[from] = null
+
+    if (halfMove === 0) {
+        newState.halfMove++
+    } else {
+        newState.halfMove = 0
+        newState.fullMove++
+    }
+
+    newState.activeColor = swapColor(activeColor)
+
+    return newState
 }
 
 // const info = getInfoFromStateString(DEFAULT_STATE_STRING)
@@ -191,7 +206,7 @@ const move = boardState => {
 // console.log(boardState)
 
 const state = getStateFromStateString(DEFAULT_STATE_STRING)
-console.log(state)
+// console.log(state)
 // const allMoves = generateAllMoves(state)
 // console.log(allMoves)
 
@@ -199,3 +214,7 @@ console.log(state)
 // console.log(generateMoves(state.boardState))
 
 console.log(ascii(state.boardState))
+
+const newState = move(state, SQUARES.e3, SQUARES.e4)
+console.log(newState)
+console.log(ascii(newState.boardState))

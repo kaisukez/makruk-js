@@ -95,11 +95,21 @@ const algebraic = R.converge(
     ]
 )
 const ascii = boardState => {
+    const increase = i => {
+        if ((i + 1) & 0x88) {
+            return i - (SQUARES.h8 - SQUARES.a7)
+        }
+        return i + 1
+    }
+
+    const end = iterator => iterator === SQUARES.h1
+
     var s = '     +------------------------+\n'
-    for (var i = SQUARES.a1; i <= SQUARES.h8; i++) {
+    var i = SQUARES.a8
+    while(true) {
         /* display the rank */
         if (file(i) === 0) {
-            s += ' ' + '87654321'[rank(i)] + ' |'
+            s += ' ' + (parseInt(rank(i), 10) + 1) + ' |'
         }
 
         /* empty piece */
@@ -114,7 +124,12 @@ const ascii = boardState => {
 
         if ((i + 1) & 0x88) {
             s += '|\n'
-            i += 8
+            if (end(i)) {
+                break
+            }
+            i -= (SQUARES.h8 - SQUARES.a7)
+        } else {
+            i++
         }
     }
     s += '     +------------------------+\n'
