@@ -182,8 +182,16 @@ const generateMoves = boardState => {
     return moves
 }
 
-const move = (state, from, to) => {
+/**
+ * 
+ * @param {Object} lowLevelMoveObject 
+ * @param {Number} lowLevelMoveObject.from 0x88 square
+ * @param {Number} lowLevelMoveObject.to 0x88 square
+ * 
+ */
+const lowLevelMove = (state, lowLevelMoveObject) => {
     const { boardState, halfMove, activeColor } = state
+    const { from, to } = lowLevelMoveObject
 
     const newState = R.clone(state)
     newState.boardState[to] = boardState[from]
@@ -215,6 +223,6 @@ const state = getStateFromStateString(DEFAULT_STATE_STRING)
 
 console.log(ascii(state.boardState))
 
-const newState = move(state, SQUARES.e3, SQUARES.e4)
+const newState = lowLevelMove(state, { from: SQUARES.e3, to: SQUARES.e4 })
 console.log(newState)
 console.log(ascii(newState.boardState))
