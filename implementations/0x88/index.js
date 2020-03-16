@@ -209,6 +209,37 @@ const lowLevelMove = (state, lowLevelMoveObject) => {
     return newState
 }
 
+/**
+ * If there's moveObject.notation then use it, if not then use moveObject.from and moveObject.to.
+ * 
+ * @param {Object} moveObject 
+ * @param {String} moveObject.notation algebraic notation like ne2 (knight move) or c5 (bia move)
+ * @param {String} moveObject.from algebraic square like d3 or f7
+ * @param {String} moveObject.to algebraic square like d3 or f7
+ * 
+ */
+const makeMoveObjectLowLevel = moveObject => {
+    if (moveObject.notation) {
+        // todo
+        return moveObject
+    } else if (
+        typeof(moveObject.from) === 'string' &&
+        typeof(moveObject.to) === 'string'
+    ) {
+        return {
+            from: SQUARES[moveObject.from],
+            to: SQUARES[moveObject.to]
+        }
+    }
+
+    return moveObject
+}
+
+const move = (state, moveObject) => {
+    const lowLevelMoveObject = makeMoveObjectLowLevel(moveObject)
+    return lowLevelMove(state, lowLevelMoveObject)
+}
+
 // const info = getInfoFromStateString(DEFAULT_STATE_STRING)
 // const boardState = getBoardStateFromBoardString(info.boardString)
 // console.log(boardState)
