@@ -41,10 +41,9 @@ const {
 
 
 const getInfoFromStateString = R.pipe(
-    R.match(/^(?<boardString>\S+)\s+(?<activeColor>[wb])\s+(?<halfMove>[01])\s+(?<fullMove>\d+)$/),
+    R.match(/^(?<boardString>\S+)\s+(?<activeColor>[wb])\s+(?<fullMove>\d+)$/),
     R.prop('groups'),
     R.evolve({
-        halfMove: R.curry(parseInt)(R.__, 10),
         fullMove: R.curry(parseInt)(R.__, 10)
     })
 )
@@ -184,30 +183,54 @@ const generateMoves = boardState => {
 
 /**
  * 
- * @param {Object} lowLevelMoveObject 
- * @param {Number} lowLevelMoveObject.from 0x88 square
- * @param {Number} lowLevelMoveObject.to 0x88 square
+ * @param {Object} boardState
+ * @param {Number} from 0x88 square
+ * @param {Number} to 0x88 square
  * 
  */
-const lowLevelMove = (state, lowLevelMoveObject) => {
-    const { boardState, halfMove, activeColor } = state
-    const { from, to } = lowLevelMoveObject
+const changePiecePosition = R.cond([
+    // if "from" or "to" are null then return the same boardState
+    [
+        R.pipe(
+            R.converge(
+                R.or,
+                [
+                    R.nthArg(1), // from
+                    R.nthArg(2) // to
+                ]
+            ),
+            R.isNil
+        ),
+        R.identity
+    ],
 
-    const newState = R.clone(state)
-    newState.boardState[to] = boardState[from]
-    newState.boardState[from] = null
+    // return new boardState
+    [
+        R.T,
+        (boardState, from, to) => R.pipe(
+            R.update(to, boardState[from]),
+            R.update(from, null)
+        )(boardState)
+    ]
+])
 
-    if (halfMove === 0) {
-        newState.halfMove++
-    } else {
-        newState.halfMove = 0
-        newState.fullMove++
-    }
-
-    newState.activeColor = swapColor(activeColor)
-
-    return newState
-}
+/**
+ * Increase move counter (if black have made a move) and swap color
+ * 
+ * @param {Object} state 
+ * 
+ */
+const step = R.pipe(
+    R.when(
+        R.pipe(R.prop('activeColor'), R.equals(BLACK)),
+        R.evolve({
+            fullMove: R.inc
+        })
+    ),
+    R.evolve({
+        activeColor: swapColor
+    })
+)
 
 /**
  * If there's moveObject.notation then use it, if not then use moveObject.from and moveObject.to.
@@ -252,8 +275,10 @@ const state = getStateFromStateString(DEFAULT_STATE_STRING)
 // console.log(generateMovesForOneSquare(state.boardState, SQUARES.e3))
 // console.log(generateMoves(state.boardState))
 
-console.log(ascii(state.boardState))
+// console.log(ascii(state.boardState))
 
-const newState = lowLevelMove(state, { from: SQUARES.e3, to: SQUARES.e4 })
-console.log(newState)
-console.log(ascii(newState.boardState))
+const newBoardState = changePiecePosition(state.boardState, SQUARES.e3, SQUARES.e4)
+// console.log(newBoardState)
+console.log(ascii(newBoardState))
+
+console.log('step', R.omit(['boardState'])(step(state)))
