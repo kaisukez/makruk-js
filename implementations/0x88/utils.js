@@ -111,9 +111,10 @@ const ascii = boardState => {
         if (file(i) === 0) {
             s += ' ' + (parseInt(rank(i), 10) + 1) + ' |'
         }
-
+        
         /* empty piece */
-        if (boardState[i] == null) {
+        // if (boardState[i] == null) {
+        if (boardState[i] == null || R.not(R.both(R.has('piece'), R.has('color'))(boardState[i]))) {
             s += ' . '
         } else {
             var piece = boardState[i].piece

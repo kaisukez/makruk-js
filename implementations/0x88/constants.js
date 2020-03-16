@@ -10,7 +10,7 @@ const MET = 'e' // using e because 'm' is already use for 'MA'
 const RUA = 'r'
 const KHUN = 'k'
 
-const DEFAULT_STATE_STRING = 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 0 1'
+const DEFAULT_STATE_STRING = 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1'
 
 const BIA_MOVE_OFFSETS = {
     [WHITE]: [16],
