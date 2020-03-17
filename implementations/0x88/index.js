@@ -232,6 +232,52 @@ const step = R.pipe(
     })
 )
 
+// https://stackoverflow.com/questions/40007937/regex-help-for-chess-moves-san
+// https://stackoverflow.com/questions/12317049/how-to-split-a-long-regular-expression-into-multiple-lines-in-javascript
+const notationRegex = [
+    /(?<piece>[brqnkBRQNK])(?<to>[a-h][1-8])|/,
+    /(?<piece>[brqnkBRQNK])(?<fromFile>[a-h])x(?<to>[a-h][1-8]|)/,
+    /(?<piece>[brqnkBRQNK])(?<from>[a-h][1-8])x(?<to>[a-h][1-8])/,
+    /(?<piece>[brqnkBRQNK])(?<from>[a-h][1-8])(?<to>[a-h][1-8])/,
+    /(?<piece>[brqnkBRQNK])(?<fromFile>[a-h])(?<to>[a-h][1-8])/,
+    /(?<piece>[brqnkBRQNK])x(?<to>[a-h][1-8])/,
+    /(?<fromFile>[a-h])x(?<to>[a-h][1-8])=(?<promotion>(b+r+q+n+B+R+Q+N))/,
+    /(?<fromFile>[a-h])x(?<to>[a-h][1-8])/,
+    /(?<from>[a-h][1-8])x(?<to>[a-h][1-8])=(?<promotion>(b+r+q+n+B+R+Q+N))/,
+    /(?<from>[a-h][1-8])x(?<to>[a-h][1-8])/,
+    /(?<from>[a-h][1-8])(?<to>[a-h][1-8])=(?<promotion>(b+r+q+n+B+R+Q+N))/,
+    /(?<from>[a-h][1-8])(?<to>[a-h][1-8])/,
+    /(?<from>[a-h][1-8])=(?<promotion>(b+r+q+n+B+R+Q+N))/,
+    /(?<to>[a-h][1-8])/,
+    /(?<piece>[brqnkBRQNK])(?<fromRank>[1-8])x(?<to>[a-h][1-8])/,
+    /(?<piece>[brqnkBRQNK])(?<fromRank>[1-8])(?<to>[a-h][1-8])/,
+]
+
+/**
+ * If there's moveObject.notation then use it, if not then use moveObject.from and moveObject.to.
+ * 
+ * @param {Object} moveObject 
+ * @param {String} moveObject.notation algebraic notation like ne2 (knight move) or c5 (bia move)
+ * @param {String} moveObject.from algebraic square like d3 or f7
+ * @param {String} moveObject.to algebraic square like d3 or f7
+ * 
+ */
+const extract0x88Move = R.cond([
+    [
+        R.both(R.has('notation'), R.T),
+        R.pipe(
+            R.prop('notation'),
+            R.match(notationRegex),
+            R.tap(console.log),
+            R.applySpec({
+                piece: R.prop(1),
+                from: R.prop(2),
+                to: R.prop(3)
+            })
+        )
+    ]
+])
+
 /**
  * If there's moveObject.notation then use it, if not then use moveObject.from and moveObject.to.
  * 
@@ -282,3 +328,6 @@ const newBoardState = changePiecePosition(state.boardState, SQUARES.e3, SQUARES.
 console.log(ascii(newBoardState))
 
 console.log('step', R.omit(['boardState'])(step(state)))
+
+// console.log(extract0x88Move({ notation: 're2' }))
+console.log(notationRegex.map(regex => 'naf3'.match(regex)))
