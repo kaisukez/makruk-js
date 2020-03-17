@@ -75,6 +75,24 @@ const BITS = {
     QSIDE_CASTLE: 64
 }
 
+const RANK_1 = 0
+const RANK_2 = 1
+const RANK_3 = 2
+const RANK_4 = 3
+const RANK_5 = 4
+const RANK_6 = 5
+const RANK_7 = 6
+const RANK_8 = 7
+
+const FILE_A = 0
+const FILE_B = 1
+const FILE_C = 2
+const FILE_D = 3
+const FILE_E = 4
+const FILE_F = 5
+const FILE_G = 6
+const FILE_H = 7
+
 module.exports = {
     WHITE,
     BLACK,
@@ -104,4 +122,22 @@ module.exports = {
 
     FLAGS,
     BITS,
+
+    RANK_1,
+    RANK_2,
+    RANK_3,
+    RANK_4,
+    RANK_5,
+    RANK_6,
+    RANK_7,
+    RANK_8,
+    
+    FILE_A,
+    FILE_B,
+    FILE_C,
+    FILE_D,
+    FILE_E,
+    FILE_F,
+    FILE_G,
+    FILE_H,
 }
