@@ -26,6 +26,9 @@ const {
     SQUARES,
     FIRST_SQUARE,
     LAST_SQUARE,
+
+    FLAGS,
+    BITS,
 } = require('./constants')
 
 
@@ -110,7 +113,8 @@ const generateMovesForOneSquare = (boardState, square) => {
         return moves
     }
 
-    const { piece, color } = boardState[square]
+    let { piece, color } = boardState[square]
+    piece = piece.toLowerCase()
     let squarePointer = square
 
     const attackOffsets = getAttackOffsets(piece, color)
@@ -126,14 +130,17 @@ const generateMovesForOneSquare = (boardState, square) => {
             }
 
             // if it's a opponent piece
-            if (targetSquare && targetSquare.color !== color) {
-                moves.push({
-                    piece,
-                    color,
-                    from: square,
-                    to: squarePointer,
-                    type: 'capture'
-                })
+            if (targetSquare) {
+                if (targetSquare.color !== color) {
+                    moves.push({
+                        piece,
+                        color,
+                        from: square,
+                        to: squarePointer,
+                        type: 'capture'
+                    })
+                }
+                break
             }
 
             if (!IS_SLIDING_PIECE[piece]) {
@@ -163,6 +170,8 @@ const generateMovesForOneSquare = (boardState, square) => {
                     to: squarePointer,
                     type: 'normal'
                 })
+            } else {
+                break
             }
 
             if (!IS_SLIDING_PIECE[piece]) {
@@ -278,6 +287,173 @@ const extract0x88Move = R.cond([
     ]
 ])
 
+// parses all of the decorators out of a SAN string
+const stripped_san = move => {
+    return move.replace(/=/, '').replace(/[+#]?[?!]*$/, '')
+}
+
+/* this function is used to uniquely identify ambiguous moves */
+const get_disambiguator = (boardState, move, sloppy) => {
+    var moves = generateMoves(boardState, { legal: !sloppy })
+
+    var from = move.from
+    var to = move.to
+    var piece = move.piece
+
+    var ambiguities = 0
+    var same_rank = 0
+    var same_file = 0
+
+    for (var i = 0, len = moves.length; i < len; i++) {
+        var ambig_from = moves[i].from
+        var ambig_to = moves[i].to
+        var ambig_piece = moves[i].piece
+
+        /* if a move of the same piece type ends on the same to square, we'll
+            * need to add a disambiguator to the algebraic notation
+            */
+        if (piece === ambig_piece && from !== ambig_from && to === ambig_to) {
+            ambiguities++
+
+            if (rank(from) === rank(ambig_from)) {
+                same_rank++
+            }
+
+            if (file(from) === file(ambig_from)) {
+                same_file++
+            }
+        }
+    }
+
+    if (ambiguities > 0) {
+        /* if there exists a similar moving piece on the same rank and file as
+            * the move in question, use the square as the disambiguator
+            */
+        if (same_rank > 0 && same_file > 0) {
+            return algebraic(from)
+        } else if (same_file > 0) {
+            /* if the moving piece rests on the same file, use the rank symbol as the
+                * disambiguator
+                */
+            return algebraic(from).charAt(1)
+        } else {
+            /* else use the file symbol */
+            return algebraic(from).charAt(0)
+        }
+    }
+
+
+    return ''
+}
+
+/* convert a move from 0x88 coordinates to Standard Algebraic Notation
+* (SAN)
+*
+* @param {boolean} sloppy Use the sloppy SAN generator to work around over
+* disambiguation bugs in Fritz and Chessbase.    See below:
+*
+* r1bqkbnr/ppp2ppp/2n5/1B1pP3/4P3/8/PPPP2PP/RNBQK1NR b KQkq - 2 4
+* 4. ... Nge7 is overly disambiguated because the knight on c6 is pinned
+* 4. ... Ne7 is technically the valid SAN
+*/
+const move_to_san = (boardState, move, sloppy) => {
+    // console.log('move-to-san', move)
+    var output = ''
+
+    if (move.flags & BITS.KSIDE_CASTLE) {
+        output = 'O-O'
+    } else if (move.flags & BITS.QSIDE_CASTLE) {
+        output = 'O-O-O'
+    } else {
+        var disambiguator = get_disambiguator(boardState, move, sloppy)
+
+        if (move.piece !== BIA) {
+            output += move.piece.toUpperCase() + disambiguator
+        }
+
+        if (move.flags & (BITS.CAPTURE | BITS.EP_CAPTURE)) {
+            if (move.piece === BIA) {
+                output += algebraic(move.from)[0]
+            }
+            output += 'x'
+        }
+
+        output += algebraic(move.to)
+
+        if (move.flags & BITS.PROMOTION) {
+            output += '=' + move.promotion.toUpperCase()
+        }
+    }
+
+    // make_move(move)
+    // if (in_check()) {
+    //     if (in_checkmate()) {
+    //         output += '#'
+    //     } else {
+    //         output += '+'
+    //     }
+    // }
+    // undo_move()
+
+    return output
+}
+
+// convert a move from Standard Algebraic Notation (SAN) to 0x88 coordinates
+const move_from_san = (boardState, move, sloppy) => {
+    // strip off any move decorations: e.g Nf3+?!
+    var clean_move = stripped_san(move)
+    // console.log('clean_move', clean_move)
+
+    // if we're using the sloppy parser run a regex to grab piece, to, and from
+    // this should parse invalid SAN like: Pe2-e4, Rc1c4, Qf3xf7
+    if (sloppy) {
+        var matches = clean_move.match(
+            // /([pnbrqkPNBRQK])?([a-h][1-8])x?-?([a-h][1-8])([qrbnQRBN])?/
+            /([bfmterkBFMTERK])?([a-h][1-8])x?-?([a-h][1-8])?/
+        )
+        if (matches) {
+            var piece = matches[1]
+            var from = matches[2]
+            var to = matches[3]
+            var promotion = matches[4]
+        }
+    }
+
+    var moves = generateMoves(boardState)
+    console.log('moves', moves)
+    for (var i = 0, len = moves.length; i < len; i++) {
+        // try the strict parser first, then the sloppy parser if requested
+        // by the user
+        if (
+            clean_move === stripped_san(move_to_san(boardState, moves[i])) ||
+            (sloppy && clean_move === stripped_san(move_to_san(boardState, moves[i], true)))
+        ) {
+                // console.log('')
+                // console.log('if 1')
+                // console.log('clean_move', clean_move)
+                // console.log('stripped_san(move_to_san(moves[i]))', stripped_san(move_to_san(boardState, moves[i])))
+                // console.log('move_to_san(moves[i])', move_to_san(boardState, moves[i]))
+                // console.log('moves[i]', moves[i])
+                // console.log('')
+
+            return moves[i]
+        } else {
+            if (
+                matches &&
+                (!piece || piece.toLowerCase() == moves[i].piece) &&
+                SQUARES[from] == moves[i].from &&
+                SQUARES[to] == moves[i].to &&
+                (!promotion || promotion.toLowerCase() == moves[i].promotion)
+            ) {
+                console.log('if 2')
+                return moves[i]
+            }
+        }
+    }
+
+    return null
+}
+
 /**
  * If there's moveObject.notation then use it, if not then use moveObject.from and moveObject.to.
  * 
@@ -321,13 +497,14 @@ const state = getStateFromStateString(DEFAULT_STATE_STRING)
 // console.log(generateMovesForOneSquare(state.boardState, SQUARES.e3))
 // console.log(generateMoves(state.boardState))
 
-// console.log(ascii(state.boardState))
+console.log(ascii(state.boardState))
 
-const newBoardState = changePiecePosition(state.boardState, SQUARES.e3, SQUARES.e4)
-// console.log(newBoardState)
-console.log(ascii(newBoardState))
+// const newBoardState = changePiecePosition(state.boardState, SQUARES.e3, SQUARES.e4)
+// // console.log(newBoardState)
+// console.log(ascii(newBoardState))
 
-console.log('step', R.omit(['boardState'])(step(state)))
+// console.log('step', R.omit(['boardState'])(step(state)))
 
 // console.log(extract0x88Move({ notation: 're2' }))
-console.log(notationRegex.map(regex => 'naf3'.match(regex)))
+// console.log(notationRegex.map(regex => 'naf3'.match(regex)))
+console.log(move_from_san(state.boardState, 'Me2'))

@@ -55,6 +55,25 @@ const SQUARES = {
 const FIRST_SQUARE = SQUARES.a1
 const LAST_SQUARE = SQUARES.h8
 
+const FLAGS = {
+    NORMAL: 'n',
+    CAPTURE: 'c',
+    BIG_PAWN: 'b',
+    EP_CAPTURE: 'e',
+    PROMOTION: 'p',
+    KSIDE_CASTLE: 'k',
+    QSIDE_CASTLE: 'q'
+}
+
+const BITS = {
+    NORMAL: 1,
+    CAPTURE: 2,
+    BIG_PAWN: 4,
+    EP_CAPTURE: 8,
+    PROMOTION: 16,
+    KSIDE_CASTLE: 32,
+    QSIDE_CASTLE: 64
+}
 
 module.exports = {
     WHITE,
@@ -82,4 +101,7 @@ module.exports = {
     SQUARES,
     FIRST_SQUARE,
     LAST_SQUARE,
+
+    FLAGS,
+    BITS,
 }
