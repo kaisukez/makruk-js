@@ -29,6 +29,24 @@ const {
 
     FLAGS,
     BITS,
+
+    RANK_1,
+    RANK_2,
+    RANK_3,
+    RANK_4,
+    RANK_5,
+    RANK_6,
+    RANK_7,
+    RANK_8,
+    
+    FILE_A,
+    FILE_B,
+    FILE_C,
+    FILE_D,
+    FILE_E,
+    FILE_F,
+    FILE_G,
+    FILE_H,
 } = require('./constants')
 
 
@@ -104,7 +122,7 @@ const generateMovesForOneSquare = (boardState, square) => {
     const moves = []
 
     // if the square is off the board
-    if ((square & 0x88)) {
+    if (square & 0x88) {
         return moves
     }
 
@@ -132,13 +150,21 @@ const generateMovesForOneSquare = (boardState, square) => {
             // if it's a opponent piece
             if (targetSquare) {
                 if (targetSquare.color !== color) {
-                    moves.push({
+                    const move = {
                         piece,
                         color,
                         from: square,
                         to: squarePointer,
-                        type: 'capture'
-                    })
+                        flags: BITS.CAPTURE
+                    }
+                    if (
+                        piece === BIA &&
+                        (rank(squarePointer) === RANK_3 || rank(squarePointer) === RANK_6)
+                    ) {
+                        move.promotion = FLIPPED_BIA
+                        move.flags |= BITS.PROMOTION
+                    }
+                    moves.push(move)
                 }
                 break
             }
@@ -163,13 +189,21 @@ const generateMovesForOneSquare = (boardState, square) => {
 
             // if it's a empty square
             if (!targetSquare) {
-                moves.push({
+                const move = {
                     piece,
                     color,
                     from: square,
                     to: squarePointer,
-                    type: 'normal'
-                })
+                    flags: BITS.NORMAL
+                }
+                if (
+                    piece === BIA &&
+                    (rank(squarePointer) === RANK_3 || rank(squarePointer) === RANK_6)
+                ) {
+                    move.promotion = FLIPPED_BIA
+                    move.flags |= BITS.PROMOTION
+                }
+                moves.push(move)
             } else {
                 break
             }
@@ -360,29 +394,23 @@ const move_to_san = (boardState, move, sloppy) => {
     // console.log('move-to-san', move)
     var output = ''
 
-    if (move.flags & BITS.KSIDE_CASTLE) {
-        output = 'O-O'
-    } else if (move.flags & BITS.QSIDE_CASTLE) {
-        output = 'O-O-O'
-    } else {
-        var disambiguator = get_disambiguator(boardState, move, sloppy)
+    var disambiguator = get_disambiguator(boardState, move, sloppy)
 
-        if (move.piece !== BIA) {
-            output += move.piece.toUpperCase() + disambiguator
+    if (move.piece !== BIA) {
+        output += move.piece.toUpperCase() + disambiguator
+    }
+
+    if (move.flags & BITS.CAPTURE) {
+        if (move.piece === BIA) {
+            output += algebraic(move.from)[0]
         }
+        output += 'x'
+    }
 
-        if (move.flags & (BITS.CAPTURE | BITS.EP_CAPTURE)) {
-            if (move.piece === BIA) {
-                output += algebraic(move.from)[0]
-            }
-            output += 'x'
-        }
+    output += algebraic(move.to)
 
-        output += algebraic(move.to)
-
-        if (move.flags & BITS.PROMOTION) {
-            output += '=' + move.promotion.toUpperCase()
-        }
+    if (move.flags & BITS.PROMOTION) {
+        output += '=' + move.promotion.toUpperCase()
     }
 
     // make_move(move)
@@ -415,7 +443,6 @@ const move_from_san = (boardState, move, sloppy) => {
             var piece = matches[1]
             var from = matches[2]
             var to = matches[3]
-            var promotion = matches[4]
         }
     }
 
