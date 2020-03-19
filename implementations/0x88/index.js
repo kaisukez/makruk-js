@@ -296,7 +296,7 @@ const step = R.pipe(
 //     /(?<piece>[brqnkBRQNK])(?<fromRank>[1-8])(?<to>[a-h][1-8])/,
 // ]
 
-const sanRegex = /^(?<piece>[FEMTRK])?(?<fromFlie>[a-h])?(?<fromRank>[1-8])?(?<capture>[x:])?(?<to>[a-h][1-8])(?<promotion>=(?<promoteTo>[F]))?(?<check>(?<normalCheck>[+†])|(?<doubleCheck>\+{2}|‡))?(?<checkmate>[#≠])?$/
+const sanRegex = /^(?<piece>[FEMTRK])?(?<fromFlie>[a-h]|[\u0E01\u0E02\u0E04\u0E07\u0E08\u0E09\u0E0A\u0E0D])?(?<fromRank>[1-8])?(?<capture>[x:])?(?<to>[a-h]|[\u0E01\u0E02\u0E04\u0E07\u0E08\u0E09\u0E0A\u0E0D][1-8])(?<promotion>=(?<promoteTo>[F]))?(?<check>(?<normalCheck>[+†])|(?<doubleCheck>\+{2}|‡))?(?<checkmate>[#≠])?$/
 
 // /**
 //  * If there's moveObject.notation then use it, if not then use moveObject.from and moveObject.to.
@@ -535,5 +535,5 @@ console.log(ascii(state.boardState))
 // console.log('step', R.omit(['boardState'])(step(state)))
 
 // console.log(extract0x88Move({ notation: 're2' }))
-console.log('e7=F≠'.match(sanRegex))
+console.log('ญ7=F≠'.match(sanRegex))
 // console.log(move_from_san(state.boardState, 'Me2'))
