@@ -509,9 +509,63 @@ const makeMoveObjectLowLevel = moveObject => {
     return moveObject
 }
 
-const move = (state, moveObject) => {
-    const lowLevelMoveObject = makeMoveObjectLowLevel(moveObject)
-    return lowLevelMove(state, lowLevelMoveObject)
+// const move = (state, moveObject) => {
+//     const lowLevelMoveObject = makeMoveObjectLowLevel(moveObject)
+//     return lowLevelMove(state, lowLevelMoveObject)
+// }
+
+const moveFromSan = (boardState, san) => {
+    // strip off any move decorations: e.g Nf3+?!
+    const clean_move = stripped_san(san)
+
+    const moves = generateMoves(boardState)
+
+    let result
+    for (const move of moves) {
+        if (clean_move === stripped_san(move_to_san(boardState, move))) {
+            result = move
+        }
+    }
+
+    return result
+}
+
+const moveFromMoveObject = (boardState, moveObject={}) => {
+    const moves = generateMoves(boardState)
+
+    let result
+    for (const move of moves) {
+        if (
+            moveObject.from === algebraic(move.from) &&
+            moveObject.to === algebraic(move.to)
+        ) {
+            result = move
+        }
+    }
+
+    return result
+}
+
+/**
+ * 
+ * @param {Object} state 
+ * @param {String | Object} move SAN or moveObject
+ * 
+ * moveObject = {
+ *     from: Number, algebraic position like e4 d7 ...
+ *     to: Number, algebraic position like e4 d7 ...
+ * }
+ * 
+ */
+const move = (state, move) => {
+    let moveObject
+    if (typeof move === 'string') {
+        moveObject = moveFromSan(state.boardState, move)
+    } else if (typeof move === 'object') {
+        moveObject = moveFromMoveObject(state.boardState, move)
+    }
+
+    return moveObject
 }
 
 // const info = getInfoFromStateString(DEFAULT_STATE_STRING)
@@ -535,5 +589,8 @@ console.log(ascii(state.boardState))
 // console.log('step', R.omit(['boardState'])(step(state)))
 
 // console.log(extract0x88Move({ notation: 're2' }))
-console.log('ญ7=F≠'.match(sanRegex))
+// console.log('ญ7=F≠'.match(sanRegex))
 // console.log(move_from_san(state.boardState, 'Me2'))
+
+console.log(move(state, 'e4'))
+console.log(move(state, { from: 'e3', to: 'e7' }))
