@@ -329,55 +329,40 @@ const stripped_san = move => {
 }
 
 /* this function is used to uniquely identify ambiguous moves */
-const get_disambiguator = (boardState, move, sloppy) => {
-    var moves = generateMoves(boardState, { legal: !sloppy })
+const get_disambiguator = (boardState, move) => {
+    const { from, to, piece } = move
 
-    var from = move.from
-    var to = move.to
-    var piece = move.piece
+    const moves = generateMoves(boardState)
+    const samePieceAndDestinationMoves = moves.filter(
+        move => move.piece === piece && move.to === to && move.from !== from
+    )
 
-    var ambiguities = 0
-    var same_rank = 0
-    var same_file = 0
-
-    for (var i = 0, len = moves.length; i < len; i++) {
-        var ambig_from = moves[i].from
-        var ambig_to = moves[i].to
-        var ambig_piece = moves[i].piece
-
-        /* if a move of the same piece type ends on the same to square, we'll
-            * need to add a disambiguator to the algebraic notation
-            */
-        if (piece === ambig_piece && from !== ambig_from && to === ambig_to) {
-            ambiguities++
-
-            if (rank(from) === rank(ambig_from)) {
-                same_rank++
-            }
-
-            if (file(from) === file(ambig_from)) {
-                same_file++
-            }
+    let sameRank = 0
+    let sameFile = 0
+    samePieceAndDestinationMoves.forEach(move => {
+        if (rank(move.from) === rank(from)) {
+            sameRank++
         }
-    }
 
-    if (ambiguities > 0) {
-        /* if there exists a similar moving piece on the same rank and file as
-            * the move in question, use the square as the disambiguator
-            */
-        if (same_rank > 0 && same_file > 0) {
-            return algebraic(from)
-        } else if (same_file > 0) {
-            /* if the moving piece rests on the same file, use the rank symbol as the
-                * disambiguator
-                */
-            return algebraic(from).charAt(1)
-        } else {
-            /* else use the file symbol */
-            return algebraic(from).charAt(0)
+        if (file(move.from) === file(from)) {
+            sameFile++
         }
-    }
+    })
 
+    /* if there exists a similar moving piece on the same rank and file as
+        * the move in question, use the square as the disambiguator
+        */
+    if (sameRank > 0 && sameFile > 0) {
+        return algebraic(from)
+    } else if (sameFile > 0) {
+        /* if the moving piece rests on the same file, use the rank symbol as the
+            * disambiguator
+            */
+        return algebraic(from).charAt(1)
+    } else if (sameRank > 0) {
+        /* else use the file symbol */
+        return algebraic(from).charAt(0)
+    }
 
     return ''
 }
@@ -392,11 +377,10 @@ const get_disambiguator = (boardState, move, sloppy) => {
 * 4. ... Nge7 is overly disambiguated because the knight on c6 is pinned
 * 4. ... Ne7 is technically the valid SAN
 */
-const move_to_san = (boardState, move, sloppy) => {
-    // console.log('move-to-san', move)
+const move_to_san = (boardState, move) => {
     var output = ''
 
-    var disambiguator = get_disambiguator(boardState, move, sloppy)
+    var disambiguator = get_disambiguator(boardState, move)
 
     if (move.piece !== BIA) {
         output += move.piece.toUpperCase() + disambiguator
@@ -597,4 +581,5 @@ console.log(ascii(state.boardState))
 // console.log(move_from_san(state.boardState, 'Me2'))
 
 console.log(move(state, 'e4'))
+console.log(move(state, 'Tf2'))
 console.log(move(state, { from: 'e3', to: 'e7' }))
