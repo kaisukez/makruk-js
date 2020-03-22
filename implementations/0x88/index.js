@@ -509,6 +509,10 @@ const makeMoveObjectLowLevel = moveObject => {
     return moveObject
 }
 
+const strippedSan = san => {
+    return san.replace(/[^FEMTRKa-h\u0E01\u0E02\u0E04\u0E07\u0E08\u0E09\u0E0A\u0E0D1-8]/g, '')
+}
+
 // const move = (state, moveObject) => {
 //     const lowLevelMoveObject = makeMoveObjectLowLevel(moveObject)
 //     return lowLevelMove(state, lowLevelMoveObject)
@@ -516,13 +520,13 @@ const makeMoveObjectLowLevel = moveObject => {
 
 const moveFromSan = (boardState, san) => {
     // strip off any move decorations: e.g Nf3+?!
-    const clean_move = stripped_san(san)
+    const clean_move = strippedSan(san)
 
     const moves = generateMoves(boardState)
 
     let result
     for (const move of moves) {
-        if (clean_move === stripped_san(move_to_san(boardState, move))) {
+        if (clean_move === strippedSan(move_to_san(boardState, move))) {
             result = move
         }
     }
