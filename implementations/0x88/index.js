@@ -327,7 +327,7 @@ const getDisambiguator = (boardState, move) => {
 * 4. ... Nge7 is overly disambiguated because the knight on c6 is pinned
 * 4. ... Ne7 is technically the valid SAN
 */
-const move_to_san = (boardState, move) => {
+const moveToSan = (boardState, move) => {
     var output = ''
 
     var disambiguator = getDisambiguator(boardState, move)
@@ -368,13 +368,13 @@ const strippedSan = san => {
 
 const moveFromSan = (boardState, san) => {
     // strip off any move decorations: e.g Nf3+?!
-    const clean_move = strippedSan(san)
+    const cleanMove = strippedSan(san)
 
     const moves = generateMoves(boardState)
 
     let result
     for (const move of moves) {
-        if (clean_move === strippedSan(move_to_san(boardState, move))) {
+        if (cleanMove === strippedSan(moveToSan(boardState, move))) {
             result = move
         }
     }
