@@ -279,11 +279,10 @@ const sanRegex = /^(?<piece>[FEMTRK])?(?<fromFlie>[a-h]|[\u0E01\u0E02\u0E04\u0E0
 
 
 /* this function is used to uniquely identify ambiguous moves */
-const getDisambiguator = (boardState, move) => {
+const getDisambiguator = (possibleMoves, move) => {
     const { from, to, piece } = move
 
-    const moves = generateMoves(boardState)
-    const samePieceAndDestinationMoves = moves.filter(
+    const samePieceAndDestinationMoves = possibleMoves.filter(
         move => move.piece === piece && move.to === to && move.from !== from
     )
 
@@ -327,10 +326,10 @@ const getDisambiguator = (boardState, move) => {
 * 4. ... Nge7 is overly disambiguated because the knight on c6 is pinned
 * 4. ... Ne7 is technically the valid SAN
 */
-const moveToSan = (boardState, move) => {
+const moveToSan = (possibleMoves, move) => {
     var output = ''
 
-    var disambiguator = getDisambiguator(boardState, move)
+    var disambiguator = getDisambiguator(possibleMoves, move)
 
     if (move.piece !== BIA) {
         output += move.piece.toUpperCase() + disambiguator
@@ -366,15 +365,13 @@ const strippedSan = san => {
     return san.replace(/[^FEMTRKa-h\u0E01\u0E02\u0E04\u0E07\u0E08\u0E09\u0E0A\u0E0D1-8]/g, '')
 }
 
-const moveFromSan = (boardState, san) => {
+const moveFromSan = (possibleMoves, san) => {
     // strip off any move decorations: e.g Nf3+?!
     const cleanMove = strippedSan(san)
 
-    const moves = generateMoves(boardState)
-
     let result
-    for (const move of moves) {
-        if (cleanMove === strippedSan(moveToSan(boardState, move))) {
+    for (const move of possibleMoves) {
+        if (cleanMove === strippedSan(moveToSan(possibleMoves, move))) {
             result = move
         }
     }
@@ -382,11 +379,9 @@ const moveFromSan = (boardState, san) => {
     return result
 }
 
-const moveFromMoveObject = (boardState, moveObject={}) => {
-    const moves = generateMoves(boardState)
-
+const moveFromMoveObject = (possibleMoves, moveObject={}) => {
     let result
-    for (const move of moves) {
+    for (const move of possibleMoves) {
         if (
             moveObject.from === algebraic(move.from) &&
             moveObject.to === algebraic(move.to)
@@ -410,11 +405,13 @@ const moveFromMoveObject = (boardState, moveObject={}) => {
  * 
  */
 const move = (state, move) => {
+    const possibleMoves = generateMoves(state.boardState)
+
     let moveObject
     if (typeof move === 'string') {
-        moveObject = moveFromSan(state.boardState, move)
+        moveObject = moveFromSan(possibleMoves, move)
     } else if (typeof move === 'object') {
-        moveObject = moveFromMoveObject(state.boardState, move)
+        moveObject = moveFromMoveObject(possibleMoves, move)
     }
 
     return moveObject
