@@ -275,61 +275,11 @@ const step = R.pipe(
     })
 )
 
-// // https://stackoverflow.com/questions/40007937/regex-help-for-chess-moves-san
-// // https://stackoverflow.com/questions/12317049/how-to-split-a-long-regular-expression-into-multiple-lines-in-javascript
-// const notationRegex = [
-//     /(?<piece>[brqnkBRQNK])(?<to>[a-h][1-8])|/,
-//     /(?<piece>[brqnkBRQNK])(?<fromFile>[a-h])x(?<to>[a-h][1-8]|)/,
-//     /(?<piece>[brqnkBRQNK])(?<from>[a-h][1-8])x(?<to>[a-h][1-8])/,
-//     /(?<piece>[brqnkBRQNK])(?<from>[a-h][1-8])(?<to>[a-h][1-8])/,
-//     /(?<piece>[brqnkBRQNK])(?<fromFile>[a-h])(?<to>[a-h][1-8])/,
-//     /(?<piece>[brqnkBRQNK])x(?<to>[a-h][1-8])/,
-//     /(?<fromFile>[a-h])x(?<to>[a-h][1-8])=(?<promotion>(b+r+q+n+B+R+Q+N))/,
-//     /(?<fromFile>[a-h])x(?<to>[a-h][1-8])/,
-//     /(?<from>[a-h][1-8])x(?<to>[a-h][1-8])=(?<promotion>(b+r+q+n+B+R+Q+N))/,
-//     /(?<from>[a-h][1-8])x(?<to>[a-h][1-8])/,
-//     /(?<from>[a-h][1-8])(?<to>[a-h][1-8])=(?<promotion>(b+r+q+n+B+R+Q+N))/,
-//     /(?<from>[a-h][1-8])(?<to>[a-h][1-8])/,
-//     /(?<from>[a-h][1-8])=(?<promotion>(b+r+q+n+B+R+Q+N))/,
-//     /(?<to>[a-h][1-8])/,
-//     /(?<piece>[brqnkBRQNK])(?<fromRank>[1-8])x(?<to>[a-h][1-8])/,
-//     /(?<piece>[brqnkBRQNK])(?<fromRank>[1-8])(?<to>[a-h][1-8])/,
-// ]
-
 const sanRegex = /^(?<piece>[FEMTRK])?(?<fromFlie>[a-h]|[\u0E01\u0E02\u0E04\u0E07\u0E08\u0E09\u0E0A\u0E0D])?(?<fromRank>[1-8])?(?<capture>[x:])?(?<to>[a-h]|[\u0E01\u0E02\u0E04\u0E07\u0E08\u0E09\u0E0A\u0E0D][1-8])(?<promotion>=(?<promoteTo>[F]))?(?<check>(?<normalCheck>[+†])|(?<doubleCheck>\+{2}|‡))?(?<checkmate>[#≠])?$/
 
-// /**
-//  * If there's moveObject.notation then use it, if not then use moveObject.from and moveObject.to.
-//  * 
-//  * @param {Object} moveObject 
-//  * @param {String} moveObject.notation algebraic notation like ne2 (knight move) or c5 (bia move)
-//  * @param {String} moveObject.from algebraic square like d3 or f7
-//  * @param {String} moveObject.to algebraic square like d3 or f7
-//  * 
-//  */
-// const extract0x88Move = R.cond([
-//     [
-//         R.both(R.has('notation'), R.T),
-//         R.pipe(
-//             R.prop('notation'),
-//             R.match(notationRegex),
-//             R.tap(console.log),
-//             R.applySpec({
-//                 piece: R.prop(1),
-//                 from: R.prop(2),
-//                 to: R.prop(3)
-//             })
-//         )
-//     ]
-// ])
-
-// parses all of the decorators out of a SAN string
-const stripped_san = move => {
-    return move.replace(/=/, '').replace(/[+#]?[?!]*$/, '')
-}
 
 /* this function is used to uniquely identify ambiguous moves */
-const get_disambiguator = (boardState, move) => {
+const getDisambiguator = (boardState, move) => {
     const { from, to, piece } = move
 
     const moves = generateMoves(boardState)
@@ -380,7 +330,7 @@ const get_disambiguator = (boardState, move) => {
 const move_to_san = (boardState, move) => {
     var output = ''
 
-    var disambiguator = get_disambiguator(boardState, move)
+    var disambiguator = getDisambiguator(boardState, move)
 
     if (move.piece !== BIA) {
         output += move.piece.toUpperCase() + disambiguator
@@ -412,95 +362,9 @@ const move_to_san = (boardState, move) => {
     return output
 }
 
-// convert a move from Standard Algebraic Notation (SAN) to 0x88 coordinates
-const move_from_san = (boardState, move, sloppy) => {
-    // strip off any move decorations: e.g Nf3+?!
-    var clean_move = stripped_san(move)
-    // console.log('clean_move', clean_move)
-
-    // if we're using the sloppy parser run a regex to grab piece, to, and from
-    // this should parse invalid SAN like: Pe2-e4, Rc1c4, Qf3xf7
-    if (sloppy) {
-        var matches = clean_move.match(
-            // /([pnbrqkPNBRQK])?([a-h][1-8])x?-?([a-h][1-8])([qrbnQRBN])?/
-            /([bfmterkBFMTERK])?([a-h][1-8])x?-?([a-h][1-8])?/
-        )
-        if (matches) {
-            var piece = matches[1]
-            var from = matches[2]
-            var to = matches[3]
-        }
-    }
-
-    var moves = generateMoves(boardState)
-    console.log('moves', moves)
-    for (var i = 0, len = moves.length; i < len; i++) {
-        // try the strict parser first, then the sloppy parser if requested
-        // by the user
-        if (
-            clean_move === stripped_san(move_to_san(boardState, moves[i])) ||
-            (sloppy && clean_move === stripped_san(move_to_san(boardState, moves[i], true)))
-        ) {
-                // console.log('')
-                // console.log('if 1')
-                // console.log('clean_move', clean_move)
-                // console.log('stripped_san(move_to_san(moves[i]))', stripped_san(move_to_san(boardState, moves[i])))
-                // console.log('move_to_san(moves[i])', move_to_san(boardState, moves[i]))
-                // console.log('moves[i]', moves[i])
-                // console.log('')
-
-            return moves[i]
-        } else {
-            if (
-                matches &&
-                (!piece || piece.toLowerCase() == moves[i].piece) &&
-                SQUARES[from] == moves[i].from &&
-                SQUARES[to] == moves[i].to &&
-                (!promotion || promotion.toLowerCase() == moves[i].promotion)
-            ) {
-                console.log('if 2')
-                return moves[i]
-            }
-        }
-    }
-
-    return null
-}
-
-/**
- * If there's moveObject.notation then use it, if not then use moveObject.from and moveObject.to.
- * 
- * @param {Object} moveObject 
- * @param {String} moveObject.notation algebraic notation like ne2 (knight move) or c5 (bia move)
- * @param {String} moveObject.from algebraic square like d3 or f7
- * @param {String} moveObject.to algebraic square like d3 or f7
- * 
- */
-const makeMoveObjectLowLevel = moveObject => {
-    if (moveObject.notation) {
-        // todo
-        return moveObject
-    } else if (
-        typeof(moveObject.from) === 'string' &&
-        typeof(moveObject.to) === 'string'
-    ) {
-        return {
-            from: SQUARES[moveObject.from],
-            to: SQUARES[moveObject.to]
-        }
-    }
-
-    return moveObject
-}
-
 const strippedSan = san => {
     return san.replace(/[^FEMTRKa-h\u0E01\u0E02\u0E04\u0E07\u0E08\u0E09\u0E0A\u0E0D1-8]/g, '')
 }
-
-// const move = (state, moveObject) => {
-//     const lowLevelMoveObject = makeMoveObjectLowLevel(moveObject)
-//     return lowLevelMove(state, lowLevelMoveObject)
-// }
 
 const moveFromSan = (boardState, san) => {
     // strip off any move decorations: e.g Nf3+?!
