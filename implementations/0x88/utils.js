@@ -1,5 +1,3 @@
-const R = require('ramda')
-
 const {
     WHITE,
     BLACK,
@@ -47,79 +45,49 @@ const {
 } = require('./constants')
 
 
+const swapColor = color => color === WHITE ? BLACK : WHITE
 
-const swapColor = R.ifElse(
-    R.equals(WHITE),
-    R.always(BLACK),
-    R.always(WHITE)
-)
+const getAttackOffsets = (piece, color) => {
+    piece = piece.toLowerCase()
+
+    if (piece === BIA) {
+        return BIA_ATTACK_OFFSETS[color]
+    }
+    
+    if (piece === THON) {
+        return THON_ATTACK_OFFSETS[color]
+    }
+
+    return PIECE_ATTACK_OFFSETS[piece]
+}
 
 
-const getAttackOffsets = R.useWith(
-    (piece, color) => R.cond([
-        [
-            R.equals(BIA),
-            R.always(BIA_ATTACK_OFFSETS[color])
-        ],
-        [
-            R.equals(THON),
-            R.always(THON_ATTACK_OFFSETS[color])
-        ],
-        [
-            R.T,
-            R.always(PIECE_ATTACK_OFFSETS[piece])
-        ]
-    ])(piece),
-    [
-        R.toLower,
-        R.identity
-    ]
-)
+const getMoveOffsets = (piece, color) => {
+    piece = piece.toLowerCase()
 
-const getMoveOffsets = R.useWith(
-    (piece, color) => R.cond([
-        [
-            R.equals(BIA),
-            R.always(BIA_MOVE_OFFSETS[color])
-        ],
-        [
-            R.equals(THON),
-            R.always(THON_MOVE_OFFSETS[color])
-        ],
-        [
-            R.T,
-            R.always(PIECE_MOVE_OFFSETS[piece])
-        ]
-    ])(piece),
-    [
-        R.toLower,
-        R.identity
-    ]
-)
+    if (piece === BIA) {
+        return BIA_MOVE_OFFSETS[color]
+    }
+    
+    if (piece === THON) {
+        return THON_MOVE_OFFSETS[color]
+    }
+
+    return PIECE_MOVE_OFFSETS[piece]
+}
+
 
 const rank = index => index >> 4
 const file = index => index & 7
-const algebraic = R.converge(
-    R.concat,
-    [
-        R.pipe(
-            file,
-            R.flip(R.prop)('abcdefgh')
-        ),
-        R.pipe(
-            rank,
-            R.flip(R.prop)('12345678')
-        ),
-    ]
-)
-const ascii = boardState => {
-    const increase = i => {
-        if ((i + 1) & 0x88) {
-            return i - (SQUARES.h8 - SQUARES.a7)
-        }
-        return i + 1
-    }
 
+const algebraic = squareIndex => {
+    const _file = file(squareIndex)
+    const _rank = rank(squareIndex)
+
+    return 'abcdefgh'[_file] + '12345678'[_rank]
+}
+
+const ascii = boardState => {
     const end = iterator => iterator === SQUARES.h1
 
     var s = '     +------------------------+\n'
@@ -131,8 +99,7 @@ const ascii = boardState => {
         }
         
         /* empty piece */
-        // if (boardState[i] == null) {
-        if (boardState[i] == null || R.not(R.both(R.has('piece'), R.has('color'))(boardState[i]))) {
+        if (boardState[i] == null || !(boardState[i].piece && boardState[i].color)) {
             s += ' . '
         } else {
             var piece = boardState[i].piece
@@ -157,6 +124,20 @@ const ascii = boardState => {
     return s
 }
 
+function clone(obj) {
+    var dupe = obj instanceof Array ? [] : {}
+
+    for (var property in obj) {
+        if (typeof property === 'object') {
+            dupe[property] = clone(obj[property])
+        } else {
+            dupe[property] = obj[property]
+        }
+    }
+
+    return dupe
+}
+
 module.exports = {
     swapColor,
     getAttackOffsets,
@@ -165,4 +146,5 @@ module.exports = {
     file,
     algebraic,
     ascii,
+    clone,
 }
