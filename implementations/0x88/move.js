@@ -1,5 +1,3 @@
-// const R = require('ramda')
-
 const {
     WHITE,
     BLACK,
@@ -220,39 +218,6 @@ const generateMoves = boardState => {
     return moves
 }
 
-// /**
-//  * 
-//  * @param {Object} boardState
-//  * @param {Number} from 0x88 square
-//  * @param {Number} to 0x88 square
-//  * 
-//  */
-// const changePiecePosition = R.cond([
-//     // if "from" or "to" are null then return the same boardState
-//     [
-//         R.pipe(
-//             R.converge(
-//                 R.or,
-//                 [
-//                     R.nthArg(1), // from
-//                     R.nthArg(2) // to
-//                 ]
-//             ),
-//             R.isNil
-//         ),
-//         R.identity
-//     ],
-
-//     // return new boardState
-//     [
-//         R.T,
-//         (boardState, from, to) => R.pipe(
-//             R.update(to, boardState[from]),
-//             R.update(from, null)
-//         )(boardState)
-//     ]
-// ])
-
 /**
  * 
  * @param {Object} boardState
@@ -272,24 +237,6 @@ const changePiecePosition = (boardState, from, to) => {
 
     return newBoardState
 }
-
-// /**
-//  * Increase move counter (if black have made a move) and swap color
-//  * 
-//  * @param {Object} state 
-//  * 
-//  */
-// const step = R.pipe(
-//     R.when(
-//         R.pipe(R.prop('activeColor'), R.equals(BLACK)),
-//         R.evolve({
-//             fullMove: R.inc
-//         })
-//     ),
-//     R.evolve({
-//         activeColor: swapColor
-//     })
-// )
 
 /**
  * Increase move counter (if black have made a move) and swap color

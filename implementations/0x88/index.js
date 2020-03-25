@@ -1,5 +1,3 @@
-const R = require('ramda')
-
 const {
     WHITE,
     BLACK,
@@ -65,63 +63,54 @@ const {
 } = require('./move')
 
 
-const getInfoFromStateString = R.pipe(
-    R.match(/^(?<boardString>\S+)\s+(?<activeColor>[wb])\s+(?<fullMove>\d+)$/),
-    R.prop('groups'),
-    R.evolve({
-        fullMove: R.curry(parseInt)(R.__, 10)
-    })
-)
+const getInfoFromStateString = stateString => {
+    const regex = /^(?<boardString>\S+)\s+(?<activeColor>[wb])\s+(?<fullMove>\d+)$/
+    const result = stateString.match(regex)
 
-// https://stackoverflow.com/a/60673103/10154216
-const getBoardStateFromBoardString = R.pipe(
-    R.split(''),
-    R.reverse,
-    R.chain(
-        R.cond([
-            [
-                R.test(/[bfmterk]/),
-                R.applySpec({
-                    piece: R.identity,
-                    color: R.always(BLACK)
-                })
-            ],
-            [
-                R.test(/[BFMTERK]/),
-                R.applySpec({
-                    piece: R.identity,
-                    color: R.always(WHITE)
-                })
-            ],
-            [
-                R.test(/\d/),
-                R.repeat(null)
-            ],
-            [
-                R.equals('/'),
-                R.always(R.repeat(null, 8))
-            ]
-        ])
-    ),
-    R.concat(R.__, R.repeat(null, 8))
-)
+    if (!result) {
+        return null
+    }
 
-const getStateFromStateString = R.pipe(
-    getInfoFromStateString,
-    R.converge(
-        R.mergeRight,
-        [
-            R.omit(['boardString']),
-            R.pipe(
-                R.prop('boardString'),
-                R.applySpec({
-                    boardState: getBoardStateFromBoardString
-                })
-            )
-        ]
-    )
-)
+    result.groups.fullMove = parseInt(result.groups.fullMove, 10)
 
+    return result.groups
+}
+
+function getBoardStateFromBoardString(boardString) {
+    const boardState = Array(128)
+    let i = 0
+    for (const symbol of boardString.split('').reverse().join('')) {
+        if (/[bfmterk]/.test(symbol)) {
+            boardState[i] = {
+                piece: symbol,
+                color: BLACK
+            }
+            i++
+        } else if (/[BFMTERK]/.test(symbol)) {
+            boardState[i] = {
+                piece: symbol,
+                color: WHITE
+            }
+            i++
+        } else if (/\d/.test(symbol)) {
+            i += parseInt(symbol, 10)
+        } else if (symbol === '/') {
+            i += 8
+        }
+    }
+
+    return boardState
+}
+
+
+const getStateFromStateString = stateString => {
+    const boardInfo = getInfoFromStateString(stateString)
+    
+    boardInfo.boardState = getBoardStateFromBoardString(boardInfo.boardString)
+    delete boardInfo.boardString
+
+    return boardInfo
+}
 
 
 // const info = getInfoFromStateString(DEFAULT_STATE_STRING)
@@ -142,7 +131,6 @@ console.log(ascii(state.boardState))
 // // console.log(newBoardState)
 // console.log(ascii(newBoardState))
 
-// console.log('step', R.omit(['boardState'])(step(state)))
 
 // console.log(extract0x88Move({ notation: 're2' }))
 // console.log('ญ7=F≠'.match(sanRegex))
