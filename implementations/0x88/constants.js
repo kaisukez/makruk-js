@@ -1,6 +1,24 @@
 const WHITE = 'w'
 const BLACK = 'b'
 
+
+
+// https://www.chessprogramming.org/0x88
+const SQUARES = {
+    a8:   112, b8:   112, c8:   114, d8:   115, e8:   116, f8:   117, g8:   118, h8:   119,
+    a7:    96, b7:    97, c7:    98, d7:    99, e7:   100, f7:   101, g7:   102, h7:   103,
+    a6:    80, b6:    81, c6:    82, d6:    83, e6:    84, f6:    85, g6:    86, h6:    87,
+    a5:    64, b5:    65, c5:    66, d5:    67, e5:    68, f5:    69, g5:    70, h5:    71,
+    a4:    48, b4:    49, c4:    50, d4:    51, e4:    52, f4:    53, g4:    54, h4:    55,
+    a3:    32, b3:    33, c3:    34, d3:    35, e3:    36, f3:    37, g3:    38, h3:    39,
+    a2:    16, b2:    17, c2:    18, d2:    19, e2:    20, f2:    21, g2:    22, h2:    23,
+    a1:     0, b1:     1, c1:     2, d1:     3, e1:     4, f1:     5, g1:     6, h1:     7
+}
+const FIRST_SQUARE = SQUARES.a1
+const LAST_SQUARE = SQUARES.h8
+
+
+
 // https://www.chessvariants.com/oriental.dir/thai.html
 const BIA = 'b'
 const FLIPPED_BIA = 'f'
@@ -41,19 +59,76 @@ const IS_SLIDING_PIECE = {
     [RUA]: true
 }
 
-// https://www.chessprogramming.org/0x88
-const SQUARES = {
-    a8:   112, b8:   112, c8:   114, d8:   115, e8:   116, f8:   117, g8:   118, h8:   119,
-    a7:    96, b7:    97, c7:    98, d7:    99, e7:   100, f7:   101, g7:   102, h7:   103,
-    a6:    80, b6:    81, c6:    82, d6:    83, e6:    84, f6:    85, g6:    86, h6:    87,
-    a5:    64, b5:    65, c5:    66, d5:    67, e5:    68, f5:    69, g5:    70, h5:    71,
-    a4:    48, b4:    49, c4:    50, d4:    51, e4:    52, f4:    53, g4:    54, h4:    55,
-    a3:    32, b3:    33, c3:    34, d3:    35, e3:    36, f3:    37, g3:    38, h3:    39,
-    a2:    16, b2:    17, c2:    18, d2:    19, e2:    20, f2:    21, g2:    22, h2:    23,
-    a1:     0, b1:     1, c1:     2, d1:     3, e1:     4, f1:     5, g1:     6, h1:     7
+
+const WHITE_BIA_SHIFT = 0
+const BLACK_BIA_SHIFT = 1
+const FLIPPED_BIA_SHIFT = 2
+const MA_SHIFT = 3
+const WHITE_THON_SHIFT = 4
+const BLACK_THON_SHIFT = 5
+const MET_SHIFT = 6
+const RUA_SHIFT = 7
+const KHUN_SHIFT = 8
+
+const SHIFT = {
+    [WHITE]: {
+        [BIA]: WHITE_BIA_SHIFT,
+        [FLIPPED_BIA]: FLIPPED_BIA_SHIFT,
+        [MA]: MA_SHIFT,
+        [THON]: WHITE_THON_SHIFT,
+        [MET]: MET_SHIFT,
+        [RUA]: RUA_SHIFT,
+        [KHUN]: KHUN_SHIFT,
+    },
+    [BLACK]: {
+        [BIA]: BLACK_BIA_SHIFT,
+        [FLIPPED_BIA]: FLIPPED_BIA_SHIFT,
+        [MA]: MA_SHIFT,
+        [THON]: BLACK_THON_SHIFT,
+        [MET]: MET_SHIFT,
+        [RUA]: RUA_SHIFT,
+        [KHUN]: KHUN_SHIFT,
+    }
 }
-const FIRST_SQUARE = SQUARES.a1
-const LAST_SQUARE = SQUARES.h8
+
+const RAYS = [
+    17,    0,    0,    0,    0,    0,    0,   16,    0,    0,    0,    0,    0,    0,   15,    0,
+     0,   17,    0,    0,    0,    0,    0,   16,    0,    0,    0,    0,    0,   15,    0,    0,
+     0,    0,   17,    0,    0,    0,    0,   16,    0,    0,    0,    0,   15,    0,    0,    0,
+     0,    0,    0,   17,    0,    0,    0,   16,    0,    0,    0,   15,    0,    0,    0,    0,
+     0,    0,    0,    0,   17,    0,    0,   16,    0,    0,   15,    0,    0,    0,    0,    0,
+     0,    0,    0,    0,    0,   17,    0,   16,    0,   15,    0,    0,    0,    0,    0,    0,
+     0,    0,    0,    0,    0,    0,   17,   16,   15,    0,    0,    0,    0,    0,    0,    0,
+     1,    1,    1,    1,    1,    1,    1,    0,   -1,   -1,   -1,   -1,   -1,   -1,   -1,    0,
+     0,    0,    0,    0,    0,    0,  -15,  -16,  -17,    0,    0,    0,    0,    0,    0,    0,
+     0,    0,    0,    0,    0,  -15,    0,  -16,    0,  -17,    0,    0,    0,    0,    0,    0,
+     0,    0,    0,    0,  -15,    0,    0,  -16,    0,    0,  -17,    0,    0,    0,    0,    0,
+     0,    0,    0,  -15,    0,    0,    0,  -16,    0,    0,    0,  -17,    0,    0,    0,    0,
+     0,    0,  -15,    0,    0,    0,    0,  -16,    0,    0,    0,    0,  -17,    0,    0,    0,
+     0,  -15,    0,    0,    0,    0,    0,  -16,    0,    0,    0,    0,    0,  -17,    0,    0,
+   -15,    0,    0,    0,    0,    0,    0,  -16,    0,    0,    0,    0,    0,    0,  -17
+]
+
+const ATTACKS = [
+    20,    0,    0,    0,    0,    0,    0,   24,    0,    0,    0,    0,    0,    0,   20,    0,
+     0,   20,    0,    0,    0,    0,    0,   24,    0,    0,    0,    0,    0,   20,    0,    0,
+     0,    0,   20,    0,    0,    0,    0,   24,    0,    0,    0,    0,   20,    0,    0,    0,
+     0,    0,    0,   20,    0,    0,    0,   24,    0,    0,    0,   20,    0,    0,    0,    0,
+     0,    0,    0,    0,   20,    0,    0,   24,    0,    0,   20,    0,    0,    0,    0,    0,
+     0,    0,    0,    0,    0,   20,    2,   24,    2,   20,    0,    0,    0,    0,    0,    0,
+     0,    0,    0,    0,    0,    2,   53,   56,   53,    2,    0,    0,    0,    0,    0,    0,
+    24,   24,   24,   24,   24,   24,   56,    0,   56,   24,   24,   24,   24,   24,   24,    0,
+     0,    0,    0,    0,    0,    2,   53,   56,   53,    2,    0,    0,    0,    0,    0,    0,
+     0,    0,    0,    0,    0,   20,    2,   24,    2,   20,    0,    0,    0,    0,    0,    0,
+     0,    0,    0,    0,   20,    0,    0,   24,    0,    0,   20,    0,    0,    0,    0,    0,
+     0,    0,    0,   20,    0,    0,    0,   24,    0,    0,    0,   20,    0,    0,    0,    0,
+     0,    0,   20,    0,    0,    0,    0,   24,    0,    0,    0,    0,   20,    0,    0,    0,
+     0,   20,    0,    0,    0,    0,    0,   24,    0,    0,    0,    0,    0,   20,    0,    0,
+    20,    0,    0,    0,    0,    0,    0,   24,    0,    0,    0,    0,    0,    0,   20   
+]
+
+
+
 
 const FLAGS = {
     NORMAL: 'n',
@@ -97,6 +172,10 @@ module.exports = {
     WHITE,
     BLACK,
 
+    SQUARES,
+    FIRST_SQUARE,
+    LAST_SQUARE,
+
     BIA,
     FLIPPED_BIA,
     MA,
@@ -116,9 +195,9 @@ module.exports = {
 
     IS_SLIDING_PIECE,
 
-    SQUARES,
-    FIRST_SQUARE,
-    LAST_SQUARE,
+    SHIFT,
+    RAYS,
+    ATTACKS,
 
     FLAGS,
     BITS,
