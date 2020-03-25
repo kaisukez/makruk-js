@@ -125,11 +125,11 @@ const generateMovesForOneSquare = (boardState, square) => {
         return moves
     }
 
-    let { piece, color } = boardState[square]
+    let { color, piece } = boardState[square]
     piece = piece.toLowerCase()
     let squarePointer = square
 
-    const attackOffsets = getAttackOffsets(piece, color)
+    const attackOffsets = getAttackOffsets(color, piece)
     for (const offset of attackOffsets) {
         squarePointer = square
         while (true) {
@@ -169,7 +169,7 @@ const generateMovesForOneSquare = (boardState, square) => {
         }
     }
 
-    const moveOffsets = getMoveOffsets(piece, color)
+    const moveOffsets = getMoveOffsets(color, piece)
     for (const offset of moveOffsets) {
         squarePointer = square
         while (true) {

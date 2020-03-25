@@ -47,7 +47,7 @@ const {
 
 const swapColor = color => color === WHITE ? BLACK : WHITE
 
-const getAttackOffsets = (piece, color) => {
+const getAttackOffsets = (color, piece) => {
     piece = piece.toLowerCase()
 
     if (piece === BIA) {
@@ -62,7 +62,7 @@ const getAttackOffsets = (piece, color) => {
 }
 
 
-const getMoveOffsets = (piece, color) => {
+const getMoveOffsets = (color, piece) => {
     piece = piece.toLowerCase()
 
     if (piece === BIA) {
