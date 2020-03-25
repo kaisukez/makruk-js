@@ -60,6 +60,59 @@ const {
     clone,
 } = require('./utils')
 
+/**
+ * 
+ * to find out if any of black piece can attack on e7 square
+ * 
+ * canThisColorAttackThisSquare(BLACK, SQUARES.e7)
+ * 
+ */
+function canThisColorAttackThisSquare(boardState, color, targetSquare) {
+    for (let i = SQUARES.a8; i <= SQUARES.h1; i++) {
+        /* did we run off the end of the board */
+        if (i & 0x88) {
+            i += 7
+            continue
+        }
+
+        /* if empty square or wrong color */
+        if (!boardState[i] || boardState[i].color !== color) continue
+
+        const piece = boardState[i]
+        const difference = i - targetSquare
+        const index = difference + 119
+
+        if (ATTACKS[index] & (1 << SHIFTS[piece.type])) {
+            if (piece.type === PAWN) {
+                if (difference > 0) {
+                    if (piece.color === WHITE) return true
+                } else {
+                    if (piece.color === BLACK) return true
+                }
+                continue
+            }
+
+            /* if the piece is a knight or a king */
+            if (piece.type === 'n' || piece.type === 'k') return true
+
+            const offset = RAYS[index]
+            let j = i + offset
+
+            let blocked = false
+            while (j !== targetSquare) {
+                if (boardState[j]) {
+                    blocked = true
+                    break
+                }
+                j += offset
+            }
+
+            if (!blocked) return true
+        }
+    }
+
+    return false
+}
 
 const generateMovesForOneSquare = (boardState, square) => {
     const moves = []
