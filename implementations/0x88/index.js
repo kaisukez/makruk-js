@@ -59,6 +59,7 @@ const {
 } = require('./utils')
 
 const {
+    canThisColorAttackThisSquare,
     move,
 } = require('./move')
 
@@ -147,7 +148,7 @@ const state = getStateFromStateString(DEFAULT_STATE_STRING)
 // console.log(generateMovesForOneSquare(state.boardState, SQUARES.e3))
 // console.log(generateMoves(state.boardState))
 
-console.log(ascii(state.boardState))
+// console.log(ascii(state.boardState))
 
 // const newBoardState = changePiecePosition(state.boardState, SQUARES.e3, SQUARES.e4)
 // // console.log(newBoardState)
@@ -166,8 +167,12 @@ console.log(ascii(state.boardState))
 // console.log(move(state, 'e4'))
 // console.log(move(move(state, 'e4'), 'e5'))
 
-console.log(state)
-const state2 = move(state, 'Kd2')
-console.log(state2)
-const state3 = move(state2, 'Ke7')
-console.log(state3)
+console.log(ascii(state.boardState))
+const state2 = move(state, 'e4')
+console.log(ascii(state2.boardState))
+const state3 = move(state2, 'd5')
+console.log(ascii(state3.boardState))
+
+console.log(canThisColorAttackThisSquare(state.boardState, WHITE, SQUARES.d5))
+console.log(canThisColorAttackThisSquare(state2.boardState, WHITE, SQUARES.d5))
+console.log(canThisColorAttackThisSquare(state3.boardState, WHITE, SQUARES.d5))
