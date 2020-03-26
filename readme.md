@@ -2,8 +2,9 @@
 This is (going to be) thai chess opensource library.
 
 ## Todos
-- [ ] attacked function
+- [x] attacked (its name was changed to canThisColorAttackThisSquare) function
 - [ ] inCheck / inCheckmate / insufficientMaterial / threefoldRepetition / ...
+- [ ] functional programming utility function like "compose" ...
 - [ ] refactor code
 - [x] replace [Ramda](https://ramdajs.com/) with regular js (because it make code hard to read and add friction in development process)
 - [ ] [counting rules](https://www.chessvariants.com/play/makruk-thai-chess)
