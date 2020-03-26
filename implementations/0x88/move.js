@@ -309,9 +309,9 @@ const getDisambiguator = (possibleMoves, move) => {
 * 4. ... Ne7 is technically the valid SAN
 */
 const moveToSan = (possibleMoves, move) => {
-    var output = ''
+    let output = ''
 
-    var disambiguator = getDisambiguator(possibleMoves, move)
+    const disambiguator = getDisambiguator(possibleMoves, move)
 
     if (move.piece !== BIA) {
         output += move.piece.toUpperCase() + disambiguator

@@ -90,8 +90,9 @@ const algebraic = squareIndex => {
 const ascii = boardState => {
     const end = iterator => iterator === SQUARES.h1
 
-    var s = '     +------------------------+\n'
-    var i = SQUARES.a8
+    let s = '     +------------------------+\n'
+    let i = SQUARES.a8
+
     while(true) {
         /* display the rank */
         if (file(i) === FILE_A) {
@@ -102,9 +103,9 @@ const ascii = boardState => {
         if (boardState[i] == null || !(boardState[i].piece && boardState[i].color)) {
             s += ' . '
         } else {
-            var piece = boardState[i].piece
-            var color = boardState[i].color
-            var symbol = color === WHITE ? piece.toUpperCase() : piece.toLowerCase()
+            const piece = boardState[i].piece
+            const color = boardState[i].color
+            const symbol = color === WHITE ? piece.toUpperCase() : piece.toLowerCase()
             s += ' ' + symbol + ' '
         }
 
@@ -125,9 +126,9 @@ const ascii = boardState => {
 }
 
 function clone(obj) {
-    var dupe = obj instanceof Array ? [] : {}
+    const dupe = obj instanceof Array ? [] : {}
 
-    for (var property in obj) {
+    for (const property in obj) {
         if (typeof property === 'object') {
             dupe[property] = clone(obj[property])
         } else {
