@@ -136,6 +136,10 @@ console.log(ascii(state.boardState))
 // console.log('ญ7=F≠'.match(sanRegex))
 // console.log(move_from_san(state.boardState, 'Me2'))
 
-console.log(ascii(move(state, 'e4').boardState))
-console.log(ascii(move(state, 'Tf2').boardState))
-console.log(ascii(move(state, { from: 'e3', to: 'e7' }).boardState))
+// console.log(ascii(move(state, 'e4').boardState))
+// console.log(ascii(move(state, 'Tf2').boardState))
+// console.log(ascii(move(state, { from: 'e3', to: 'e7' }).boardState))
+
+console.log(state)
+console.log(move(state, 'e4'))
+console.log(move(move(state, 'e4'), 'e5'))

@@ -399,12 +399,14 @@ const move = (state, move) => {
         throw new Error('invalid move')
     }
 
-    const newState = clone(state)
+    let newState = clone(state)
     newState.boardState = changePiecePosition(
         state.boardState,
         moveObject.from,
         moveObject.to
     )
+
+    newState = step(newState)
 
     return newState
 }
