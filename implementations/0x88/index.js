@@ -76,19 +76,19 @@ const getInfoFromStateString = stateString => {
     return result.groups
 }
 
-function getBoardStateFromBoardString(boardString) {
+const getBoardStateFromBoardString = boardString => {
     const boardState = Array(128)
     let i = 0
     for (const symbol of boardString.split('').reverse().join('')) {
         if (/[bfmterk]/.test(symbol)) {
             boardState[i] = {
-                piece: symbol,
+                piece: symbol.toLowerCase(),
                 color: BLACK
             }
             i++
         } else if (/[BFMTERK]/.test(symbol)) {
             boardState[i] = {
-                piece: symbol,
+                piece: symbol.toLowerCase(),
                 color: WHITE
             }
             i++
@@ -102,12 +102,34 @@ function getBoardStateFromBoardString(boardString) {
     return boardState
 }
 
+const getKhunPositionsFromBoardState = boardState => {
+    let whiteKhunPosition
+    let blackKhunPosition
+    
+    boardState.forEach((square, index) => {
+        if (square && square.piece === KHUN) {
+            if (square.color === WHITE) {
+                whiteKhunPosition = index
+            } else if (square.color === BLACK) {
+                blackKhunPosition = index
+            }
+        }
+    })
+
+    return {
+        [WHITE]: whiteKhunPosition,
+        [BLACK]: blackKhunPosition
+    }
+}
+
 
 const getStateFromStateString = stateString => {
     const boardInfo = getInfoFromStateString(stateString)
     
     boardInfo.boardState = getBoardStateFromBoardString(boardInfo.boardString)
     delete boardInfo.boardString
+
+    boardInfo.khunPositions = getKhunPositionsFromBoardState(boardInfo.boardState)
 
     return boardInfo
 }
