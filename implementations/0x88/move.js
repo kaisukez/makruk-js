@@ -21,6 +21,10 @@ const {
 
     IS_SLIDING_PIECE,
 
+    SHIFTS,
+    RAYS,
+    ATTACKS,
+
     SQUARES,
     FIRST_SQUARE,
     LAST_SQUARE,
@@ -65,39 +69,31 @@ const {
  * canThisColorAttackThisSquare(BLACK, SQUARES.e7)
  * 
  */
-function canThisColorAttackThisSquare(boardState, color, targetSquare) {
-    for (let i = SQUARES.a8; i <= SQUARES.h1; i++) {
+function canThisColorAttackThisSquare(boardState, color, targetSquareIndex) {
+    for (let fromIndex = SQUARES.a8; i <= SQUARES.h1; fromIndex++) {
         /* did we run off the end of the board */
-        if (i & 0x88) {
-            i += 7
+        if (fromIndex & 0x88) {
+            fromIndex += 7
             continue
         }
 
         /* if empty square or wrong color */
-        if (!boardState[i] || boardState[i].color !== color) continue
+        if (!boardState[fromIndex] || boardState[fromIndex].color !== color) continue
 
-        const piece = boardState[i]
-        const difference = i - targetSquare
-        const index = difference + 119
-
-        if (ATTACKS[index] & (1 << SHIFTS[piece.type])) {
-            if (piece.type === PAWN) {
-                if (difference > 0) {
-                    if (piece.color === WHITE) return true
-                } else {
-                    if (piece.color === BLACK) return true
-                }
-                continue
+        const fromSquare = boardState[fromIndex]
+        if (ATTACKS[index] & (1 << SHIFTS[fromSquare.piece])) {
+            // if not sliding piece then return true
+            if (!IS_SLIDING_PIECE(fromSquare.piece)) {
+                return true
             }
 
-            /* if the piece is a knight or a king */
-            if (piece.type === 'n' || piece.type === 'k') return true
-
-            const offset = RAYS[index]
-            let j = i + offset
+            // if sliding piece then find out if it's blocked by other piece
+            // if it's blocked then we can't attack, otherwise we can
+            const offset = RAYS[fromIndex - targetSquareIndex + 119]
+            let j = fromIndex + offset
 
             let blocked = false
-            while (j !== targetSquare) {
+            while (j !== targetSquareIndex) {
                 if (boardState[j]) {
                     blocked = true
                     break
@@ -105,7 +101,9 @@ function canThisColorAttackThisSquare(boardState, color, targetSquare) {
                 j += offset
             }
 
-            if (!blocked) return true
+            if (!blocked) {
+                return true
+            }
         }
     }
 
