@@ -395,7 +395,18 @@ const move = (state, move) => {
         moveObject = moveFromMoveObject(possibleMoves, move)
     }
 
-    return moveObject
+    if (!moveObject) {
+        throw new Error('invalid move')
+    }
+
+    const newState = clone(state)
+    newState.boardState = changePiecePosition(
+        state.boardState,
+        moveObject.from,
+        moveObject.to
+    )
+
+    return newState
 }
 
 
