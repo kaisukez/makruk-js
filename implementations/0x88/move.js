@@ -210,10 +210,13 @@ const generateMovesForOneSquare = (boardState, square) => {
     return moves
 }
 
-const generateMoves = boardState => {
+const generateMoves = (boardState, color=null) => {
     const moves = []
-    boardState.forEach((_, index) => {
-        moves.push(...generateMovesForOneSquare(boardState, index))
+    boardState.forEach((square, index) => {
+        // if not specify color or specify color and color match
+        if (!color || (color && square && square.color === color)) {
+            moves.push(...generateMovesForOneSquare(boardState, index))
+        }
     })
     return moves
 }
@@ -386,7 +389,7 @@ const moveFromMoveObject = (possibleMoves, moveObject={}) => {
  * 
  */
 const move = (state, move) => {
-    const possibleMoves = generateMoves(state.boardState)
+    const possibleMoves = generateMoves(state.boardState, state.activeColor)
 
     let moveObject
     if (typeof move === 'string') {
@@ -407,6 +410,11 @@ const move = (state, move) => {
     )
 
     newState = step(newState)
+
+    // update Khun position lookup table
+    if (moveObject.piece === KHUN) {
+        newState.khunPositions[state.activeColor] = moveObject.to
+    }
 
     return newState
 }
