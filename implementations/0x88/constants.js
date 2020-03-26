@@ -71,7 +71,7 @@ const MET_SHIFT = 6
 const RUA_SHIFT = 7
 const KHUN_SHIFT = 8
 
-const SHIFT = {
+const SHIFTS = {
     [WHITE]: {
         [BIA]: WHITE_BIA_SHIFT,
         [FLIPPED_BIA]: FLIPPED_BIA_SHIFT,
@@ -240,7 +240,7 @@ module.exports = {
 
     IS_SLIDING_PIECE,
 
-    SHIFT,
+    SHIFTS,
     RAYS,
     ATTACKS,
 
