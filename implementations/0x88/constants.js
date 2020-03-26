@@ -60,6 +60,7 @@ const IS_SLIDING_PIECE = {
 }
 
 
+
 const WHITE_BIA_SHIFT = 0
 const BLACK_BIA_SHIFT = 1
 const FLIPPED_BIA_SHIFT = 2
@@ -131,6 +132,7 @@ const onlyMaDirection = 1 << MA_SHIFT // 8
 const onlyRuaDirection = 1 << RUA_SHIFT // 128
 
 
+
 const RAYS = [
     17,    0,    0,    0,    0,    0,    0,   16,    0,    0,    0,    0,    0,    0,   15,    0,
      0,   17,    0,    0,    0,    0,    0,   16,    0,    0,    0,    0,    0,   15,    0,    0,
@@ -189,6 +191,8 @@ const BITS = {
     QSIDE_CASTLE: 64
 }
 
+
+
 const RANK_1 = 0
 const RANK_2 = 1
 const RANK_3 = 2
@@ -206,6 +210,8 @@ const FILE_E = 4
 const FILE_F = 5
 const FILE_G = 6
 const FILE_H = 7
+
+
 
 module.exports = {
     WHITE,
