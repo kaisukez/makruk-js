@@ -91,6 +91,46 @@ const SHIFT = {
     }
 }
 
+const upLeft = // 373
+    (1 << WHITE_BIA_SHIFT) +
+    (1 << FLIPPED_BIA_SHIFT) +
+    (1 << WHITE_THON_SHIFT) +
+    (1 << BLACK_THON_SHIFT) +
+    (1 << MET_SHIFT) +
+    (1 << KHUN_SHIFT)
+
+const upRight = upLeft // 373
+
+const downLeft = // 374
+    (1 << BLACK_BIA_SHIFT) +
+    (1 << FLIPPED_BIA_SHIFT) +
+    (1 << WHITE_THON_SHIFT) +
+    (1 << BLACK_THON_SHIFT) +
+    (1 << MET_SHIFT) +
+    (1 << KHUN_SHIFT)
+
+const downRight = downLeft // 374
+
+const up = // 400
+    (1 << WHITE_THON_SHIFT) +
+    (1 << RUA_SHIFT) +
+    (1 << KHUN_SHIFT)
+
+const down = // 416
+    (1 << BLACK_THON_SHIFT) +
+    (1 << RUA_SHIFT) +
+    (1 << KHUN_SHIFT)
+
+const left = // 384
+    (1 << RUA_SHIFT) +
+    (1 << KHUN_SHIFT)
+
+const right = left // 384
+
+const onlyMaDirection = 1 << MA_SHIFT // 8
+const onlyRuaDirection = 1 << RUA_SHIFT // 128
+
+
 const RAYS = [
     17,    0,    0,    0,    0,    0,    0,   16,    0,    0,    0,    0,    0,    0,   15,    0,
      0,   17,    0,    0,    0,    0,    0,   16,    0,    0,    0,    0,    0,   15,    0,    0,
@@ -116,9 +156,9 @@ const ATTACKS = [
       0,    0,    0,    0,    0,    0,    0,  128,    0,    0,    0,    0,    0,    0,    0,    0,
       0,    0,    0,    0,    0,    0,    0,  128,    0,    0,    0,    0,    0,    0,    0,    0,
       0,    0,    0,    0,    0,    0,    8,  128,    8,    0,    0,    0,    0,    0,    0,    0,
-      0,    0,    0,    0,    0,    8,   53,   56,   53,    8,    0,    0,    0,    0,    0,    0,
-    128,  128,  128,  128,  128,  128,   56,    0,   56,  128,  128,  128,  128,  128,  128,    0,
-      0,    0,    0,    0,    0,    8,   53,   56,   53,    8,    0,    0,    0,    0,    0,    0,
+      0,    0,    0,    0,    0,    8,  373,  400,  373,    8,    0,    0,    0,    0,    0,    0,
+    128,  128,  128,  128,  128,  128,  384,    0,  384,  128,  128,  128,  128,  128,  128,    0,
+      0,    0,    0,    0,    0,    8,  374,  416,  374,    8,    0,    0,    0,    0,    0,    0,
       0,    0,    0,    0,    0,    0,    8,  128,    8,    0,    0,    0,    0,    0,    0,    0,
       0,    0,    0,    0,    0,    0,    0,  128,    0,    0,    0,    0,    0,    0,    0,    0,
       0,    0,    0,    0,    0,    0,    0,  128,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -126,7 +166,6 @@ const ATTACKS = [
       0,    0,    0,    0,    0,    0,    0,  128,    0,    0,    0,    0,    0,    0,    0,    0,
       0,    0,    0,    0,    0,    0,    0,  128,    0,    0,    0,    0,    0,    0,    0   
 ]
-
 
 
 
