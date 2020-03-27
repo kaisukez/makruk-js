@@ -390,10 +390,11 @@ function getDisambiguator(possibleMoves, move) {
 * 4. ... Nge7 is overly disambiguated because the knight on c6 is pinned
 * 4. ... Ne7 is technically the valid SAN
 */
-function moveToSan(possibleMoves, move) {
-    let output = ''
-
+function moveToSan(state, move) {
+    const possibleMoves = generateLegalMoves(state)
     const disambiguator = getDisambiguator(possibleMoves, move)
+
+    let output = ''
 
     if (move.piece !== BIA) {
         output += move.piece.toUpperCase() + disambiguator
@@ -429,13 +430,15 @@ function strippedSan(san) {
     return san.replace(/[^FEMTRKa-h\u0E01\u0E02\u0E04\u0E07\u0E08\u0E09\u0E0A\u0E0D1-8]/g, '')
 }
 
-function moveFromSan(possibleMoves, san) {
+function moveFromSan(state, san) {
+    const possibleMoves = generateLegalMoves(state)
+
     // strip off any move decorations: e.g Nf3+?!
     const cleanMove = strippedSan(san)
 
     let result
     for (const move of possibleMoves) {
-        if (cleanMove === strippedSan(moveToSan(possibleMoves, move))) {
+        if (cleanMove === strippedSan(moveToSan(state, move))) {
             result = move
         }
     }
@@ -443,7 +446,8 @@ function moveFromSan(possibleMoves, san) {
     return result
 }
 
-function moveFromMoveObject(possibleMoves, moveObject={}) {
+function moveFromMoveObject(state, moveObject={}) {
+    const possibleMoves = generateLegalMoves(state)
     let result
     for (const move of possibleMoves) {
         if (
@@ -469,13 +473,11 @@ function moveFromMoveObject(possibleMoves, moveObject={}) {
  * 
  */
 function move(state, move) {
-    const possibleMoves = generateLegalMoves(state)
-
     let moveObject
     if (typeof move === 'string') {
-        moveObject = moveFromSan(possibleMoves, move)
+        moveObject = moveFromSan(state, move)
     } else if (typeof move === 'object') {
-        moveObject = moveFromMoveObject(possibleMoves, move)
+        moveObject = moveFromMoveObject(state, move)
     }
 
     if (!moveObject) {
