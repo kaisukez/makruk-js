@@ -115,8 +115,7 @@ function canThisColorAttackThisSquare(boardState, color, targetSquareIndex) {
     return false
 }
 
-
-const inCheck = state => {
+function inCheck (state) {
     const { boardState, activeColor, khunPositions } = state
     return canThisColorAttackThisSquare(
         boardState,
@@ -125,11 +124,11 @@ const inCheck = state => {
     )
 }
 
-const inCheckmate = state => {
+function inCheckmate(state) {
     return inCheck(state) && generateLegalMoves(state).length === 0
 }
 
-const inStalemate = state => {
+function inStalemate(state) {
     return !inCheck(state) && generateLegalMoves(state).length === 0
 }
 
@@ -142,7 +141,7 @@ const inStalemate = state => {
  * @param {Number} to 0x88 square
  * 
  */
-const changePiecePosition = (boardState, from, to) => {
+function changePiecePosition(boardState, from, to) {
     if (!from && !to) {
         return boardState
     }
@@ -161,7 +160,7 @@ const changePiecePosition = (boardState, from, to) => {
  * @param {Object} state 
  * 
  */
-const step = state => {
+function step(state) {
     const newState = clone(state)
 
     if (state.activeColor === BLACK) {
@@ -173,7 +172,7 @@ const step = state => {
     return newState
 }
 
-const makeMove = (state, moveObject) => {
+function makeMove(state, moveObject) {
     let newState = clone(state)
     newState.boardState = changePiecePosition(
         state.boardState,
@@ -193,7 +192,7 @@ const makeMove = (state, moveObject) => {
 
 
 
-const generateMovesForOneSquare = (state, square, options={}) => {
+function generateMovesForOneSquare(state, square, options={}) {
     const { boardState } = state
     const moves = []
 
@@ -316,7 +315,7 @@ const generateMovesForOneSquare = (state, square, options={}) => {
     return legalMoves
 }
 
-const generateMoves = (state, options) => {
+function generateMoves(state, options) {
     const moves = []
     state.boardState.forEach((_, index) => {
         moves.push(...generateMovesForOneSquare(state, index, options))
@@ -324,7 +323,7 @@ const generateMoves = (state, options) => {
     return moves
 }
 
-const generateLegalMoves = state => {
+function generateLegalMoves(state) {
     return generateMoves(
         state,
         {
@@ -339,7 +338,7 @@ const sanRegex = /^(?<piece>[FEMTRK])?(?<fromFlie>[a-h]|[\u0E01\u0E02\u0E04\u0E0
 
 
 /* this function is used to uniquely identify ambiguous moves */
-const getDisambiguator = (possibleMoves, move) => {
+function getDisambiguator(possibleMoves, move) {
     const { from, to, piece } = move
 
     const samePieceAndDestinationMoves = possibleMoves.filter(
@@ -386,7 +385,7 @@ const getDisambiguator = (possibleMoves, move) => {
 * 4. ... Nge7 is overly disambiguated because the knight on c6 is pinned
 * 4. ... Ne7 is technically the valid SAN
 */
-const moveToSan = (possibleMoves, move) => {
+function moveToSan(possibleMoves, move) {
     let output = ''
 
     const disambiguator = getDisambiguator(possibleMoves, move)
@@ -421,11 +420,11 @@ const moveToSan = (possibleMoves, move) => {
     return output
 }
 
-const strippedSan = san => {
+function strippedSan(san) {
     return san.replace(/[^FEMTRKa-h\u0E01\u0E02\u0E04\u0E07\u0E08\u0E09\u0E0A\u0E0D1-8]/g, '')
 }
 
-const moveFromSan = (possibleMoves, san) => {
+function moveFromSan(possibleMoves, san) {
     // strip off any move decorations: e.g Nf3+?!
     const cleanMove = strippedSan(san)
 
@@ -439,7 +438,7 @@ const moveFromSan = (possibleMoves, san) => {
     return result
 }
 
-const moveFromMoveObject = (possibleMoves, moveObject={}) => {
+function moveFromMoveObject(possibleMoves, moveObject={}) {
     let result
     for (const move of possibleMoves) {
         if (
@@ -464,7 +463,7 @@ const moveFromMoveObject = (possibleMoves, moveObject={}) => {
  * }
  * 
  */
-const move = (state, move) => {
+function move(state, move) {
     const possibleMoves = generateLegalMoves(state)
 
     let moveObject

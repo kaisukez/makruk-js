@@ -64,7 +64,7 @@ const {
 } = require('./move')
 
 
-const getInfoFromStateString = stateString => {
+function getInfoFromStateString(stateString) {
     const regex = /^(?<boardString>\S+)\s+(?<activeColor>[wb])\s+(?<fullMove>\d+)$/
     const result = stateString.match(regex)
 
@@ -77,7 +77,7 @@ const getInfoFromStateString = stateString => {
     return result.groups
 }
 
-const getBoardStateFromBoardString = boardString => {
+function getBoardStateFromBoardString(boardString) {
     const boardState = Array(128)
     let i = 0
     for (const symbol of boardString.split('').reverse().join('')) {
@@ -103,7 +103,7 @@ const getBoardStateFromBoardString = boardString => {
     return boardState
 }
 
-const getKhunPositionsFromBoardState = boardState => {
+function getKhunPositionsFromBoardState(boardState) {
     let whiteKhunPosition
     let blackKhunPosition
     
@@ -124,7 +124,7 @@ const getKhunPositionsFromBoardState = boardState => {
 }
 
 
-const getStateFromStateString = stateString => {
+function getStateFromStateString(stateString) {
     const boardInfo = getInfoFromStateString(stateString)
     
     boardInfo.boardState = getBoardStateFromBoardString(boardInfo.boardString)
