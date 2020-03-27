@@ -114,7 +114,7 @@ function canThisColorAttackThisSquare(boardState, color, targetSquareIndex) {
     return false
 }
 
-const generateMovesForOneSquare = (boardState, square) => {
+const generateMovesForOneSquare = (boardState, square, options={}) => {
     const moves = []
 
     // if the square is off the board
@@ -127,9 +127,15 @@ const generateMovesForOneSquare = (boardState, square) => {
         return moves
     }
 
-    let { color, piece } = boardState[square]
-    piece = piece.toLowerCase()
+    const forColor = options.color
+    const legal = options.legal
+    const { color, piece } = boardState[square]
+
     let squarePointer = square
+
+    if (forColor !== color) {
+        return moves
+    }
 
     const attackOffsets = getAttackOffsets(color, piece)
     for (const offset of attackOffsets) {
@@ -212,13 +218,10 @@ const generateMovesForOneSquare = (boardState, square) => {
     return moves
 }
 
-const generateMoves = (boardState, color=null) => {
+const generateMoves = (boardState, options) => {
     const moves = []
-    boardState.forEach((square, index) => {
-        // if not specify color or specify color and color match
-        if (!color || (color && square && square.color === color)) {
-            moves.push(...generateMovesForOneSquare(boardState, index))
-        }
+    boardState.forEach((_, index) => {
+        moves.push(...generateMovesForOneSquare(boardState, index, options))
     })
     return moves
 }
@@ -391,7 +394,13 @@ const moveFromMoveObject = (possibleMoves, moveObject={}) => {
  * 
  */
 const move = (state, move) => {
-    const possibleMoves = generateMoves(state.boardState, state.activeColor)
+    const possibleMoves = generateMoves(
+        state.boardState,
+        {
+            color: state.activeColor,
+            legal: true
+        }
+    )
 
     let moveObject
     if (typeof move === 'string') {
