@@ -413,15 +413,14 @@ function moveToSan(state, move) {
         output += '=' + move.promotion.toUpperCase()
     }
 
-    // make_move(move)
-    // if (in_check()) {
-    //     if (in_checkmate()) {
-    //         output += '#'
-    //     } else {
-    //         output += '+'
-    //     }
-    // }
-    // undo_move()
+    const newState = makeMove(state, move)
+    if (inCheck(newState)) {
+        if (inCheckmate(newState)) {
+            output += '#'
+        } else {
+            output += '+'
+        }
+    }
 
     return output
 }
