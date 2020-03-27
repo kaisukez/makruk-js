@@ -114,7 +114,8 @@ function canThisColorAttackThisSquare(boardState, color, targetSquareIndex) {
     return false
 }
 
-const generateMovesForOneSquare = (boardState, square, options={}) => {
+const generateMovesForOneSquare = (state, square, options={}) => {
+    const { boardState } = state
     const moves = []
 
     // if the square is off the board
@@ -218,10 +219,10 @@ const generateMovesForOneSquare = (boardState, square, options={}) => {
     return moves
 }
 
-const generateMoves = (boardState, options) => {
+const generateMoves = (state, options) => {
     const moves = []
-    boardState.forEach((_, index) => {
-        moves.push(...generateMovesForOneSquare(boardState, index, options))
+    state.boardState.forEach((_, index) => {
+        moves.push(...generateMovesForOneSquare(state, index, options))
     })
     return moves
 }
@@ -395,7 +396,7 @@ const moveFromMoveObject = (possibleMoves, moveObject={}) => {
  */
 const move = (state, move) => {
     const possibleMoves = generateMoves(
-        state.boardState,
+        state,
         {
             color: state.activeColor,
             legal: true
