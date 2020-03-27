@@ -45,9 +45,11 @@ const {
 } = require('./constants')
 
 
-const swapColor = color => color === WHITE ? BLACK : WHITE
+function swapColor(color) {
+    return color === WHITE ? BLACK : WHITE
+}
 
-const getAttackOffsets = (color, piece) => {
+function getAttackOffsets(color, piece) {
     piece = piece.toLowerCase()
 
     if (piece === BIA) {
@@ -62,7 +64,7 @@ const getAttackOffsets = (color, piece) => {
 }
 
 
-const getMoveOffsets = (color, piece) => {
+function getMoveOffsets(color, piece) {
     piece = piece.toLowerCase()
 
     if (piece === BIA) {
@@ -77,17 +79,22 @@ const getMoveOffsets = (color, piece) => {
 }
 
 
-const rank = index => index >> 4
-const file = index => index & 7
+function rank(index) {
+    return index >> 4
+}
 
-const algebraic = squareIndex => {
+function file(index) {
+    return index & 7
+}
+
+function algebraic(squareIndex) {
     const _file = file(squareIndex)
     const _rank = rank(squareIndex)
 
     return 'abcdefgh'[_file] + '12345678'[_rank]
 }
 
-const ascii = boardState => {
+function ascii(boardState) {
     const end = iterator => iterator === SQUARES.h1
 
     let s = '     +------------------------+\n'
