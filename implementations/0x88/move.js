@@ -68,6 +68,65 @@ const {
 } = require('./moveValidation')
 
 
+
+/**
+ * 
+ * @param {Object} boardState
+ * @param {Number} from 0x88 square
+ * @param {Number} to 0x88 square
+ * 
+ */
+const changePiecePosition = (boardState, from, to) => {
+    if (!from && !to) {
+        return boardState
+    }
+
+    const newBoardState = clone(boardState)
+
+    newBoardState[to] = newBoardState[from]
+    newBoardState[from] = null
+
+    return newBoardState
+}
+
+/**
+ * Increase move counter (if black have made a move) and swap color
+ * 
+ * @param {Object} state 
+ * 
+ */
+const step = state => {
+    const newState = clone(state)
+
+    if (state.activeColor === BLACK) {
+        newState.fullMove++
+    }
+
+    newState.activeColor = swapColor(newState.activeColor)
+
+    return newState
+}
+
+const makeMove = (state, moveObject) => {
+    let newState = clone(state)
+    newState.boardState = changePiecePosition(
+        state.boardState,
+        moveObject.from,
+        moveObject.to
+    )
+
+    newState = step(newState)
+
+    // update Khun position lookup table
+    if (moveObject.piece === KHUN) {
+        newState.khunPositions[state.activeColor] = moveObject.to
+    }
+
+    return newState
+}
+
+
+
 const generateMovesForOneSquare = (state, square, options={}) => {
     const { boardState } = state
     const moves = []
@@ -169,6 +228,16 @@ const generateMovesForOneSquare = (state, square, options={}) => {
             }
         }
     }
+
+    if (!legal) {
+        return moves
+    }
+
+    const legal_moves = []
+    for (const move of moves) {
+        const newBoardState = makeMove(state, move)
+    }
+
     return moves
 }
 
@@ -180,43 +249,6 @@ const generateMoves = (state, options) => {
     return moves
 }
 
-/**
- * 
- * @param {Object} boardState
- * @param {Number} from 0x88 square
- * @param {Number} to 0x88 square
- * 
- */
-const changePiecePosition = (boardState, from, to) => {
-    if (!from && !to) {
-        return boardState
-    }
-
-    const newBoardState = clone(boardState)
-
-    newBoardState[to] = newBoardState[from]
-    newBoardState[from] = null
-
-    return newBoardState
-}
-
-/**
- * Increase move counter (if black have made a move) and swap color
- * 
- * @param {Object} state 
- * 
- */
-const step = state => {
-    const newState = clone(state)
-
-    if (state.activeColor === BLACK) {
-        newState.fullMove++
-    }
-
-    newState.activeColor = swapColor(newState.activeColor)
-
-    return newState
-}
 
 const sanRegex = /^(?<piece>[FEMTRK])?(?<fromFlie>[a-h]|[\u0E01\u0E02\u0E04\u0E07\u0E08\u0E09\u0E0A\u0E0D])?(?<fromRank>[1-8])?(?<capture>[x:])?(?<to>[a-h]|[\u0E01\u0E02\u0E04\u0E07\u0E08\u0E09\u0E0A\u0E0D][1-8])(?<promotion>=(?<promoteTo>[F]))?(?<check>(?<normalCheck>[+†])|(?<doubleCheck>\+{2}|‡))?(?<checkmate>[#≠])?$/
 
@@ -367,19 +399,7 @@ const move = (state, move) => {
         throw new Error('invalid move')
     }
 
-    let newState = clone(state)
-    newState.boardState = changePiecePosition(
-        state.boardState,
-        moveObject.from,
-        moveObject.to
-    )
-
-    newState = step(newState)
-
-    // update Khun position lookup table
-    if (moveObject.piece === KHUN) {
-        newState.khunPositions[state.activeColor] = moveObject.to
-    }
+    const newState = makeMove(state, moveObject)
 
     return newState
 }
