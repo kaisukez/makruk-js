@@ -233,12 +233,21 @@ const generateMovesForOneSquare = (state, square, options={}) => {
         return moves
     }
 
-    const legal_moves = []
+    const legalMoves = []
     for (const move of moves) {
-        const newBoardState = makeMove(state, move)
+        const newState = makeMove(state, move)
+        if (
+            !canThisColorAttackThisSquare(
+                newState.boardState,
+                newState.activeColor,
+                newState.khunPositions[swapColor(newState.activeColor)]
+            )
+        ) {
+            legalMoves.push(move)
+        }
     }
 
-    return moves
+    return legalMoves
 }
 
 const generateMoves = (state, options) => {
