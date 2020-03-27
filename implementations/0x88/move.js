@@ -62,57 +62,11 @@ const {
     clone,
 } = require('./utils')
 
-/**
- * 
- * to find out if any of black piece can attack on e7 square
- * 
- * canThisColorAttackThisSquare(BLACK, SQUARES.e7)
- * 
- */
-function canThisColorAttackThisSquare(boardState, color, targetSquareIndex) {
-    for (let fromIndex = SQUARES.a1; fromIndex <= SQUARES.h8; fromIndex++) {
-        /* did we run off the end of the board */
-        if (fromIndex & 0x88) {
-            fromIndex += 7
-            continue
-        }
-        
-        /* if empty square or wrong color */
-        if (!boardState[fromIndex] || boardState[fromIndex].color !== color) {
-            continue
-        }
-        
-        const fromSquare = boardState[fromIndex]
-        const lookUpIndex = fromIndex - targetSquareIndex + 119
 
-        if (ATTACKS[lookUpIndex] & (1 << SHIFTS[fromSquare.color][fromSquare.piece])) {
-            // if not sliding piece then return true
-            if (!IS_SLIDING_PIECE[fromSquare.piece]) {
-                return true
-            }
+const {
+    canThisColorAttackThisSquare
+} = require('./moveValidation')
 
-            // if sliding piece then find out if it's blocked by other piece
-            // if it's blocked then we can't attack, otherwise we can
-            const offset = RAYS[lookUpIndex]
-            let j = fromIndex + offset
-
-            let blocked = false
-            while (j !== targetSquareIndex) {
-                if (boardState[j]) {
-                    blocked = true
-                    break
-                }
-                j += offset
-            }
-            
-            if (!blocked) {
-                return true
-            }
-        }
-    }
-
-    return false
-}
 
 const generateMovesForOneSquare = (state, square, options={}) => {
     const { boardState } = state
@@ -397,7 +351,7 @@ const move = (state, move) => {
     const possibleMoves = generateMoves(
         state,
         {
-            color: state.activeColor,
+            forColor: state.activeColor,
             legal: true
         }
     )
@@ -432,6 +386,5 @@ const move = (state, move) => {
 
 
 module.exports = {
-    canThisColorAttackThisSquare,
     move,
 }
