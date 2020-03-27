@@ -128,8 +128,7 @@ const generateMovesForOneSquare = (state, square, options={}) => {
         return moves
     }
 
-    const forColor = options.color
-    const legal = options.legal
+    const { forColor, legal } = options
     const { color, piece } = boardState[square]
 
     let squarePointer = square
