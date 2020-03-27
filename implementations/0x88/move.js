@@ -63,9 +63,75 @@ const {
 } = require('./utils')
 
 
-const {
-    canThisColorAttackThisSquare
-} = require('./moveValidation')
+/**
+ * 
+ * to find out if any of black piece can attack on e7 square
+ * 
+ * canThisColorAttackThisSquare(BLACK, SQUARES.e7)
+ * 
+ */
+function canThisColorAttackThisSquare(boardState, color, targetSquareIndex) {
+    for (let fromIndex = SQUARES.a1; fromIndex <= SQUARES.h8; fromIndex++) {
+        /* did we run off the end of the board */
+        if (fromIndex & 0x88) {
+            fromIndex += 7
+            continue
+        }
+        
+        /* if empty square or wrong color */
+        if (!boardState[fromIndex] || boardState[fromIndex].color !== color) {
+            continue
+        }
+        
+        const fromSquare = boardState[fromIndex]
+        const lookUpIndex = fromIndex - targetSquareIndex + 119
+
+        if (ATTACKS[lookUpIndex] & (1 << SHIFTS[fromSquare.color][fromSquare.piece])) {
+            // if not sliding piece then return true
+            if (!IS_SLIDING_PIECE[fromSquare.piece]) {
+                return true
+            }
+
+            // if sliding piece then find out if it's blocked by other piece
+            // if it's blocked then we can't attack, otherwise we can
+            const offset = RAYS[lookUpIndex]
+            let j = fromIndex + offset
+
+            let blocked = false
+            while (j !== targetSquareIndex) {
+                if (boardState[j]) {
+                    blocked = true
+                    break
+                }
+                j += offset
+            }
+            
+            if (!blocked) {
+                return true
+            }
+        }
+    }
+
+    return false
+}
+
+
+const inCheck = state => {
+    const { boardState, activeColor, khunPositions } = state
+    return canThisColorAttackThisSquare(
+        boardState,
+        activeColor,
+        khunPositions[swapColor(activeColor)]
+    )
+}
+
+const inCheckmate = state => {
+    return inCheck(state) && generateLegalMoves(state).length === 0
+}
+
+const inStalemate = state => {
+    return !inCheck(state) && generateLegalMoves(state).length === 0
+}
 
 
 
@@ -258,6 +324,16 @@ const generateMoves = (state, options) => {
     return moves
 }
 
+const generateLegalMoves = state => {
+    return generateMoves(
+        state,
+        {
+            forColor: state.activeColor,
+            legal: true
+        }
+    )
+}
+
 
 const sanRegex = /^(?<piece>[FEMTRK])?(?<fromFlie>[a-h]|[\u0E01\u0E02\u0E04\u0E07\u0E08\u0E09\u0E0A\u0E0D])?(?<fromRank>[1-8])?(?<capture>[x:])?(?<to>[a-h]|[\u0E01\u0E02\u0E04\u0E07\u0E08\u0E09\u0E0A\u0E0D][1-8])(?<promotion>=(?<promoteTo>[F]))?(?<check>(?<normalCheck>[+†])|(?<doubleCheck>\+{2}|‡))?(?<checkmate>[#≠])?$/
 
@@ -389,13 +465,7 @@ const moveFromMoveObject = (possibleMoves, moveObject={}) => {
  * 
  */
 const move = (state, move) => {
-    const possibleMoves = generateMoves(
-        state,
-        {
-            forColor: state.activeColor,
-            legal: true
-        }
-    )
+    const possibleMoves = generateLegalMoves(state)
 
     let moveObject
     if (typeof move === 'string') {
@@ -415,5 +485,11 @@ const move = (state, move) => {
 
 
 module.exports = {
+    canThisColorAttackThisSquare,
+
+    changePiecePosition,
+    step,
+    makeMove,
+
     move,
 }

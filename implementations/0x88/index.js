@@ -59,12 +59,9 @@ const {
 } = require('./utils')
 
 const {
+    canThisColorAttackThisSquare,
     move,
 } = require('./move')
-
-const {
-    canThisColorAttackThisSquare
-} = require('./moveValidation')
 
 
 const getInfoFromStateString = stateString => {
