@@ -197,6 +197,10 @@ function makeMove(state, moveObject) {
         moveObject.to
     )
 
+    if (moveObject.flags | BITS.PROMOTION) {
+        newState.boardState[moveObject.to].piece = moveObject.promotion
+    }
+
     newState = step(newState)
 
     // update Khun position lookup table
@@ -205,13 +209,14 @@ function makeMove(state, moveObject) {
     }
 
     newState.history.push(moveObject)
+    newState.future = []
 
     return newState
 }
 
 function nextMove(state) {
     if (!state.future || state.future && state.future.length === 0) {
-        throw { code: 'NO_NEXT_MOVE' }
+        throw { code: 'NO_FUTURE_MOVE' }
     }
 
     let newState = clone(state)
@@ -220,6 +225,27 @@ function nextMove(state) {
     return newState
 }
 
+function undoMove(state) {
+    if (state.history || state.history && state.history.length === 0) {
+        throw { code: 'NO_MOVE_HISTORY' }
+    }
+
+    let newState = clone(state)
+    newState = stepBack(newState)
+    const lastMove = newState.history.pop()
+
+    const { piece, from, to, flags, captured } = lastMove
+    const { boardState, activeColor } = newState
+    boardState[from] = boardState[to]
+    boradState[from].type = piece // undo promotion
+    boardState[to] = null
+
+    if (flags & BITS.CAPTURE) {
+        boardState[to] = { piece: captured, color: swapColor(activeColor) }
+    }
+
+    return newState
+}
 
 
 function generateMovesForOneSquare(state, square, options={}) {
@@ -265,7 +291,8 @@ function generateMovesForOneSquare(state, square, options={}) {
                         color,
                         from: square,
                         to: squarePointer,
-                        flags: BITS.CAPTURE
+                        flags: BITS.CAPTURE,
+                        captured: targetSquare.piece
                     }
                     if (
                         piece === BIA &&
