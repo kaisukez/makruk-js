@@ -87,6 +87,15 @@ function file(index) {
     return index & 7
 }
 
+function squareColor(index) {
+    const _file = index & 1
+    const _rank = (index & 16) >> 4
+
+    const isWhite = _file ^ _rank
+    
+    return isWhite ? WHITE : BLACK
+}
+
 function algebraic(squareIndex) {
     const _file = file(squareIndex)
     const _rank = rank(squareIndex)
@@ -163,6 +172,7 @@ module.exports = {
     getMoveOffsets,
     rank,
     file,
+    squareColor,
     algebraic,
     ascii,
     clone,

@@ -4,7 +4,7 @@ This is (going to be) thai chess opensource library.
 ## Todos
 - [x] attacked (its name was changed to canThisColorAttackThisSquare) function
 - [x] inCheck / inCheckmate / inStalemate / inThreefoldRepetition
-- [ ] insufficientMaterial
+- [x] insufficientMaterial (half finished but it's ok for now)
 - [ ] functional programming utility function like "compose" ...
 - [ ] refactor code
 - [x] replace [Ramda](https://ramdajs.com/) with regular js (because it make code hard to read and add friction in development process)
