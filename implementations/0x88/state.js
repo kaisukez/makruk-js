@@ -144,7 +144,6 @@ function exportFen(state) {
 
     let empty = 0
     let fen = ''
-
     for (let i = SQUARES.a1; i <= SQUARES.h8; i++) {
         if (!boardState[i]) {
             empty++
