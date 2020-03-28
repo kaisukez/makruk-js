@@ -28,7 +28,7 @@ const MET = 'e' // using e because 'm' is already use for 'MA'
 const RUA = 'r'
 const KHUN = 'k'
 
-const DEFAULT_STATE_STRING = 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1'
+const INITIAL_FEN = 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1'
 
 const BIA_MOVE_OFFSETS = {
     [WHITE]: [16],
@@ -225,7 +225,7 @@ module.exports = {
     RUA,
     KHUN,
 
-    DEFAULT_STATE_STRING,
+    INITIAL_FEN,
 
     BIA_MOVE_OFFSETS,
     BIA_ATTACK_OFFSETS,

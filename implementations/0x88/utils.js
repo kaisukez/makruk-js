@@ -10,7 +10,7 @@ const {
     RUA,
     KHUN,
 
-    DEFAULT_STATE_STRING,
+    INITIAL_FEN,
 
     BIA_MOVE_OFFSETS,
     BIA_ATTACK_OFFSETS,

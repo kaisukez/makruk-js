@@ -10,7 +10,7 @@ const {
     RUA,
     KHUN,
 
-    DEFAULT_STATE_STRING,
+    INITIAL_FEN,
 
     BIA_MOVE_OFFSETS,
     BIA_ATTACK_OFFSETS,
@@ -65,9 +65,9 @@ const {
 
 
 
-function getInfoFromStateString(stateString) {
+function extractInfoFromFen(fen) {
     const regex = /^(?<boardString>\S+)\s+(?<activeColor>[wb])\s+(?<fullMove>\d+)$/
-    const result = stateString.match(regex)
+    const result = fen.match(regex)
 
     if (!result) {
         return null
@@ -125,21 +125,21 @@ function getKhunPositionsFromBoardState(boardState) {
 }
 
 
-function getStateFromStateString(stateString) {
-    const boardInfo = getInfoFromStateString(stateString)
+function importFen(fen) {
+    const state = extractInfoFromFen(fen)
     
-    boardInfo.boardState = getBoardStateFromBoardString(boardInfo.boardString)
-    delete boardInfo.boardString
+    state.boardState = getBoardStateFromBoardString(state.boardString)
+    delete state.boardString
 
-    boardInfo.khunPositions = getKhunPositionsFromBoardState(boardInfo.boardState)
+    state.khunPositions = getKhunPositionsFromBoardState(state.boardState)
 
-    boardInfo.history = []
+    state.history = []
 
-    return boardInfo
+    return state
 }
 
 
-function generateFen(state) {
+function exportFen(state) {
     const { boardState, activeColor, fullMove } = state
 
     let empty = 0
@@ -177,9 +177,6 @@ function generateFen(state) {
 
 
 module.exports = {
-    getInfoFromStateString,
-    getBoardStateFromBoardString,
-    getKhunPositionsFromBoardState,
-    getStateFromStateString,
-    generateFen,
+    importFen,
+    exportFen,
 }
