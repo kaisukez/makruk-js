@@ -232,7 +232,7 @@ function makeMove(state, moveObject) {
         moveObject.to
     )
 
-    if (moveObject.flags | BITS.PROMOTION) {
+    if (moveObject.flags & BITS.PROMOTION) {
         newState.boardState[moveObject.to].piece = moveObject.promotion
     }
 
@@ -261,7 +261,7 @@ function nextMove(state) {
 }
 
 function undoMove(state) {
-    if (state.history || state.history && state.history.length === 0) {
+    if (!state.history || state.history && state.history.length === 0) {
         throw { code: 'NO_MOVE_HISTORY' }
     }
 
@@ -272,7 +272,7 @@ function undoMove(state) {
     const { piece, from, to, flags, captured } = lastMove
     const { boardState, activeColor } = newState
     boardState[from] = boardState[to]
-    boradState[from].type = piece // undo promotion
+    boardState[from].type = piece // undo promotion
     boardState[to] = null
 
     if (flags & BITS.CAPTURE) {
@@ -322,8 +322,8 @@ function generateMovesForOneSquare(state, square, options={}) {
             if (targetSquare) {
                 if (targetSquare.color !== color) {
                     const move = {
-                        piece,
                         color,
+                        piece,
                         from: square,
                         to: squarePointer,
                         flags: BITS.CAPTURE,
@@ -362,8 +362,8 @@ function generateMovesForOneSquare(state, square, options={}) {
             // if it's a empty square
             if (!targetSquare) {
                 const move = {
-                    piece,
                     color,
+                    piece,
                     from: square,
                     to: squarePointer,
                     flags: BITS.NORMAL
@@ -536,9 +536,19 @@ function moveFromMoveObject(state, moveObject={}) {
     const possibleMoves = generateLegalMoves(state)
     let result
     for (const move of possibleMoves) {
+        let from, to
+
+        if (typeof moveObject.from === 'number') {
+            from = move.from
+            to = move.to
+        } else if (moveObject.from === 'string') {
+            from = algebraic(move.from)
+            to = algebraic(move.to)
+        }
+
         if (
-            moveObject.from === algebraic(move.from) &&
-            moveObject.to === algebraic(move.to)
+            moveObject.from === from &&
+            moveObject.to === to
         ) {
             result = move
         }
@@ -578,10 +588,18 @@ function move(state, move) {
 
 module.exports = {
     canThisColorAttackThisSquare,
+    isKhunAttacked,
+    inCheck,
+    inCheckmate,
+    inStalemate,
+    inDraw,
+    gameOver,
 
     changePiecePosition,
     step,
     makeMove,
 
+    generateMoves,
+    generateLegalMoves,
     move,
 }

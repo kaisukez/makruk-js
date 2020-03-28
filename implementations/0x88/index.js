@@ -60,7 +60,9 @@ const {
 
 const {
     canThisColorAttackThisSquare,
+    generateLegalMoves,
     move,
+    gameOver,
 } = require('./move')
 
 const {
@@ -82,7 +84,7 @@ const state = importFen(INITIAL_FEN)
 // console.log(generateMovesForOneSquare(state.boardState, SQUARES.e3))
 // console.log(generateMoves(state.boardState))
 
-console.log(ascii(state.boardState))
+// console.log(ascii(state.boardState))
 
 // const newBoardState = changePiecePosition(state.boardState, SQUARES.e3, SQUARES.e4)
 // // console.log(newBoardState)
@@ -112,5 +114,24 @@ console.log(ascii(state.boardState))
 // console.log(canThisColorAttackThisSquare(state3.boardState, WHITE, SQUARES.d5))
 // console.log(state3)
 
-console.log(state)
-console.log(exportFen(state))
+// console.log(state)
+// console.log(exportFen(state))
+
+function getRandomInt(max) {
+    return Math.floor(Math.random() * Math.floor(max))
+}
+
+function performanceTest() {
+    let state = importFen(INITIAL_FEN)
+    let i = 0
+    while(!gameOver(state)) {
+        console.log('round', i)
+        const moves = generateLegalMoves(state)
+        const choosenMove = moves[getRandomInt(moves.length)]
+        state = move(state, choosenMove)
+        i++
+    }
+    console.log('game over!')
+}
+
+performanceTest()

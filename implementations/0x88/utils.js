@@ -133,17 +133,28 @@ function ascii(boardState) {
 }
 
 function clone(obj) {
-    const duplicate = obj instanceof Array ? [] : {}
+    // if (!obj) {
+    //     return obj
+    // }
 
-    for (const property in obj) {
-        if (typeof obj[property] === 'object') {
-            duplicate[property] = clone(obj[property])
-        } else {
-            duplicate[property] = obj[property]
-        }
-    }
+    // let duplicate
+    // if (Array.isArray(obj)) {
+    //     duplicate = []
+    // } else {
+    //     duplicate = {}
+    // }
 
-    return duplicate
+    // for (const property in obj) {
+    //     if (typeof obj[property] === 'object') {
+    //         duplicate[property] = clone(obj[property])
+    //     } else {
+    //         duplicate[property] = obj[property]
+    //     }
+    // }
+
+    // return duplicate
+
+    return JSON.parse(JSON.stringify(obj))
 }
 
 module.exports = {
