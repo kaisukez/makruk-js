@@ -177,6 +177,18 @@ function step(state) {
     return newState
 }
 
+function stepBack(state) {
+    const newState = clone(state)
+
+    if (state.activeColor === WHITE) {
+        newState.fullMove--
+    }
+
+    newState.activeColor = swapColor(newState.activeColor)
+
+    return newState
+}
+
 function makeMove(state, moveObject) {
     let newState = clone(state)
     newState.boardState = changePiecePosition(
@@ -192,8 +204,19 @@ function makeMove(state, moveObject) {
         newState.khunPositions[state.activeColor] = moveObject.to
     }
 
-    newState.moveHistory.push(moveObject)
+    newState.history.push(moveObject)
 
+    return newState
+}
+
+function nextMove(state) {
+    if (!state.future || state.future && state.future.length === 0) {
+        throw { code: 'NO_NEXT_MOVE' }
+    }
+
+    let newState = clone(state)
+    const nextMove = newState.future.shift()
+    newState = makeMove(newState, nextMove)
     return newState
 }
 
@@ -482,7 +505,7 @@ function move(state, move) {
     }
 
     if (!moveObject) {
-        throw new Error('invalid move')
+        throw { code: 'INVALID_MOVE' }
     }
 
     const newState = makeMove(state, moveObject)

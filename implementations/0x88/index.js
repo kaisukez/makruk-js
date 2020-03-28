@@ -132,7 +132,7 @@ function getStateFromStateString(stateString) {
 
     boardInfo.khunPositions = getKhunPositionsFromBoardState(boardInfo.boardState)
 
-    boardInfo.moveHistory = []
+    boardInfo.history = []
 
     return boardInfo
 }
