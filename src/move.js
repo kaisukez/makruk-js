@@ -58,6 +58,7 @@ const {
     getMoveOffsets,
     rank,
     file,
+    squareColor,
     algebraic,
     clone,
 } = require('./utils')
@@ -146,6 +147,7 @@ function inStalemate(state) {
 function inDraw(state) {
     return (
         inStalemate(state)
+        // || insufficientMaterial(state)
         || inThreefoldRepetition(state)
     )
 }
@@ -169,6 +171,46 @@ function inThreefoldRepetition(state) {
         }
 
         currentState = undoMove(currentState)
+    }
+
+    return false
+}
+
+function insufficientMaterial(state) {
+    // TODO: find out more conditions
+
+    const pieceCount = {}
+    let numPieces = 0
+
+    for (let i = SQUARES.a1; i <= SQUARES.h8; i++) {
+        if (i & 0x88) {
+            i += 7
+            continue
+        }
+
+        const _squareColor = squareColor(i)
+        const square = state.boardState[i]
+        if (square) {
+            pieceCount[square.piece] =
+                square.piece in pieceCount
+                ? pieceCount[square.piece] + 1
+                : 1
+            numPieces++
+        }
+    }
+
+    if (numPieces === 2) {
+        return true
+    } else if (
+        numPieces === 3 &&
+        (
+            pieceCount[BIA] === 1 ||
+            pieceCount[FLIPPED_BIA] === 1 ||
+            pieceCount[MET] === 1 ||
+            pieceCount[MA] === 1
+        )
+    ) {
+        return true
     }
 
     return false
