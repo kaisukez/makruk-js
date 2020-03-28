@@ -143,6 +143,20 @@ function inStalemate(state) {
     return !inCheck(state) && generateLegalMoves(state).length === 0
 }
 
+function inDraw(state) {
+    return (
+        inStalemate(state)
+        || inThreefoldRepetition(state)
+    )
+}
+
+function gameOver(state) {
+    return (
+        inDraw(state)
+        || inCheckmate(state)
+    )
+}
+
 function inThreefoldRepetition(state) {
     const positions = {}
     let currentState = state
