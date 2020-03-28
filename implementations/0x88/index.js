@@ -83,14 +83,14 @@ function getBoardStateFromBoardString(boardString) {
     for (const symbol of boardString.split('').reverse().join('')) {
         if (/[bfmterk]/.test(symbol)) {
             boardState[i] = {
-                piece: symbol.toLowerCase(),
-                color: BLACK
+                color: BLACK,
+                piece: symbol.toLowerCase()
             }
             i++
         } else if (/[BFMTERK]/.test(symbol)) {
             boardState[i] = {
-                piece: symbol.toLowerCase(),
-                color: WHITE
+                color: WHITE,
+                piece: symbol.toLowerCase()
             }
             i++
         } else if (/\d/.test(symbol)) {
@@ -138,6 +138,43 @@ function getStateFromStateString(stateString) {
 }
 
 
+function generateFen(state) {
+    const { boardState, activeColor, fullMove } = state
+
+    let empty = 0
+    let fen = ''
+
+    for (let i = SQUARES.a1; i <= SQUARES.h8; i++) {
+        if (!boardState[i]) {
+            empty++
+        } else {
+            if (empty > 0) {
+                fen += empty
+                empty = 0
+            }
+
+            const { color, piece } = boardState[i]
+            fen += color === WHITE ? piece.toUpperCase() : piece.toLowerCase()
+        }
+
+        if ((i + 1) & 0x88) {
+            if (empty > 0) {
+                fen += empty
+            }
+
+            if (i !== SQUARES.h8) {
+                fen += '/'
+            }
+
+            empty = 0
+            i += 8
+        }
+    }
+
+    return [fen.split('').reverse().join(''), activeColor, fullMove].join(' ')
+}
+
+
 // const info = getInfoFromStateString(DEFAULT_STATE_STRING)
 // const boardState = getBoardStateFromBoardString(info.boardString)
 // console.log(boardState)
@@ -150,7 +187,7 @@ const state = getStateFromStateString(DEFAULT_STATE_STRING)
 // console.log(generateMovesForOneSquare(state.boardState, SQUARES.e3))
 // console.log(generateMoves(state.boardState))
 
-// console.log(ascii(state.boardState))
+console.log(ascii(state.boardState))
 
 // const newBoardState = changePiecePosition(state.boardState, SQUARES.e3, SQUARES.e4)
 // // console.log(newBoardState)
@@ -169,13 +206,16 @@ const state = getStateFromStateString(DEFAULT_STATE_STRING)
 // console.log(move(state, 'e4'))
 // console.log(move(move(state, 'e4'), 'e5'))
 
-console.log(ascii(state.boardState))
-const state2 = move(state, 'e4')
-console.log(ascii(state2.boardState))
-const state3 = move(state2, 'd5')
-console.log(ascii(state3.boardState))
+// console.log(ascii(state.boardState))
+// const state2 = move(state, 'e4')
+// console.log(ascii(state2.boardState))
+// const state3 = move(state2, 'd5')
+// console.log(ascii(state3.boardState))
 
-console.log(canThisColorAttackThisSquare(state.boardState, WHITE, SQUARES.d5))
-console.log(canThisColorAttackThisSquare(state2.boardState, WHITE, SQUARES.d5))
-console.log(canThisColorAttackThisSquare(state3.boardState, WHITE, SQUARES.d5))
-console.log(state3)
+// console.log(canThisColorAttackThisSquare(state.boardState, WHITE, SQUARES.d5))
+// console.log(canThisColorAttackThisSquare(state2.boardState, WHITE, SQUARES.d5))
+// console.log(canThisColorAttackThisSquare(state3.boardState, WHITE, SQUARES.d5))
+// console.log(state3)
+
+console.log(state)
+console.log(generateFen(state))
