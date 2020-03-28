@@ -63,6 +63,12 @@ const {
 } = require('./utils')
 
 
+const {
+    importFen,
+    exportFen,
+} = require('./state')
+
+
 /**
  * 
  * to find out if any of black piece can attack on e7 square
@@ -137,7 +143,22 @@ function inStalemate(state) {
     return !inCheck(state) && generateLegalMoves(state).length === 0
 }
 
+function inThreefoldRepetition(state) {
+    const positions = {}
+    let currentState = state
 
+    while(currentState && currentState.history && currentState.history.length) {
+        const fen = exportFen(currentState)
+        positions[fen] = fen in positions ? positions[fen] + 1 : 1
+        if (positions[fen] >= 3) {
+            return true
+        }
+
+        currentState = undoMove(currentState)
+    }
+
+    return false
+}
 
 /**
  * 
