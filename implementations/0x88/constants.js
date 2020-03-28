@@ -182,13 +182,9 @@ const FLAGS = {
 }
 
 const BITS = {
-    NORMAL: 1,
-    CAPTURE: 2,
-    BIG_PAWN: 4,
-    EP_CAPTURE: 8,
-    PROMOTION: 16,
-    KSIDE_CASTLE: 32,
-    QSIDE_CASTLE: 64
+    NORMAL: 1, // 1 << 0,
+    CAPTURE: 2, // 1 << 1,
+    PROMOTION: 4 // 1 << 2,
 }
 
 
