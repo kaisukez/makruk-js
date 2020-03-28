@@ -10,7 +10,7 @@ const {
     RUA,
     KHUN,
 
-    DEFAULT_STATE_STRING,
+    INITIAL_FEN,
 
     BIA_MOVE_OFFSETS,
     BIA_ATTACK_OFFSETS,
@@ -64,20 +64,17 @@ const {
 } = require('./move')
 
 const {
-    getInfoFromStateString,
-    getBoardStateFromBoardString,
-    getKhunPositionsFromBoardState,
-    getStateFromStateString,
-    generateFen,
+    importFen,
+    exportFen,
 } = require('./state')
 
 
 
-// const info = getInfoFromStateString(DEFAULT_STATE_STRING)
+// const info = getInfoFromStateString(INITIAL_FEN)
 // const boardState = getBoardStateFromBoardString(info.boardString)
 // console.log(boardState)
 
-const state = getStateFromStateString(DEFAULT_STATE_STRING)
+const state = importFen(INITIAL_FEN)
 // console.log(state)
 // const allMoves = generateAllMoves(state)
 // console.log(allMoves)
@@ -116,4 +113,4 @@ console.log(ascii(state.boardState))
 // console.log(state3)
 
 console.log(state)
-console.log(generateFen(state))
+console.log(exportFen(state))
