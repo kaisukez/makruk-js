@@ -192,6 +192,8 @@ function makeMove(state, moveObject) {
         newState.khunPositions[state.activeColor] = moveObject.to
     }
 
+    newState.moveHistory.push(moveObject)
+
     return newState
 }
 

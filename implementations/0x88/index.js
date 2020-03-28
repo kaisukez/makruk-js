@@ -132,6 +132,8 @@ function getStateFromStateString(stateString) {
 
     boardInfo.khunPositions = getKhunPositionsFromBoardState(boardInfo.boardState)
 
+    boardInfo.moveHistory = []
+
     return boardInfo
 }
 
@@ -176,3 +178,4 @@ console.log(ascii(state3.boardState))
 console.log(canThisColorAttackThisSquare(state.boardState, WHITE, SQUARES.d5))
 console.log(canThisColorAttackThisSquare(state2.boardState, WHITE, SQUARES.d5))
 console.log(canThisColorAttackThisSquare(state3.boardState, WHITE, SQUARES.d5))
+console.log(state3)
