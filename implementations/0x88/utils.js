@@ -133,17 +133,17 @@ function ascii(boardState) {
 }
 
 function clone(obj) {
-    const dupe = obj instanceof Array ? [] : {}
+    const duplicate = obj instanceof Array ? [] : {}
 
     for (const property in obj) {
-        if (typeof property === 'object') {
-            dupe[property] = clone(obj[property])
+        if (typeof obj[property] === 'object') {
+            duplicate[property] = clone(obj[property])
         } else {
-            dupe[property] = obj[property]
+            duplicate[property] = obj[property]
         }
     }
 
-    return dupe
+    return duplicate
 }
 
 module.exports = {
