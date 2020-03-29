@@ -116,11 +116,13 @@ function ascii(boardState) {
         }
         
         /* empty piece */
-        if (boardState[i] == null || !(boardState[i].piece && boardState[i].color)) {
+        // if (boardState[i] == null || !(boardState[i].piece && boardState[i].color)) {
+        if (!boardState[i]) {
             s += ' . '
         } else {
-            const piece = boardState[i].piece
-            const color = boardState[i].color
+            // const piece = boardState[i].piece
+            // const color = boardState[i].color
+            const [color, piece] = boardState[i]
             const symbol = color === WHITE ? piece.toUpperCase() : piece.toLowerCase()
             s += ' ' + symbol + ' '
         }

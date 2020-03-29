@@ -85,6 +85,8 @@ function performanceTest() {
         const choosenMove = moves[getRandomInt(moves.length)]
         state = move(state, choosenMove)
         i++
+
+        console.log(ascii(state.boardState))
     }
     console.log('game over!')
 }
@@ -117,7 +119,7 @@ const state = importFen(INITIAL_FEN)
 // console.log(ascii(move(state, 'Tf2').boardState))
 // console.log(ascii(move(state, { from: 'e3', to: 'e7' }).boardState))
 
-console.log(state)
+// console.log(state)
 // console.log(move(state, 'e4'))
 // console.log(move(move(state, 'e4'), 'e5'))
 
@@ -135,4 +137,6 @@ console.log(state)
 // console.log(state)
 // console.log(exportFen(state))
 
-// performanceTest()
+performanceTest()
+
+// console.log(JSON.stringify(state).length)
