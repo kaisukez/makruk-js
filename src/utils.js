@@ -169,21 +169,15 @@ function clone(obj) {
 
 // https://stackoverflow.com/a/728694/10154216
 function clone(obj) {
-    var copy
+    let copy
 
     // Handle the 3 simple types, and null or undefined
     if (null == obj || "object" != typeof obj) return obj
 
-    // Handle Set
-    if (obj instanceof Set) {
-        copy = new Set(obj)
-        return copy
-    }
-
     // Handle Array
     if (obj instanceof Array) {
         copy = []
-        for (var i = 0, len = obj.length; i < len; i++) {
+        for (let i = 0, len = obj.length; i < len; i++) {
             copy[i] = clone(obj[i])
         }
         return copy
@@ -192,7 +186,7 @@ function clone(obj) {
     // Handle Object
     if (obj instanceof Object) {
         copy = {}
-        for (var attr in obj) {
+        for (const attr in obj) {
             if (obj.hasOwnProperty(attr)) copy[attr] = clone(obj[attr])
         }
         return copy
