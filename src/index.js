@@ -72,6 +72,24 @@ const {
 
 
 
+function getRandomInt(max) {
+    return Math.floor(Math.random() * Math.floor(max))
+}
+
+function performanceTest() {
+    let state = importFen(INITIAL_FEN)
+    let i = 0
+    while(!gameOver(state)) {
+        console.log('round', i)
+        const moves = generateLegalMoves(state)
+        const choosenMove = moves[getRandomInt(moves.length)]
+        state = move(state, choosenMove)
+        i++
+    }
+    console.log('game over!')
+}
+
+
 // const info = getInfoFromStateString(INITIAL_FEN)
 // const boardState = getBoardStateFromBoardString(info.boardString)
 // console.log(boardState)
@@ -99,7 +117,7 @@ const state = importFen(INITIAL_FEN)
 // console.log(ascii(move(state, 'Tf2').boardState))
 // console.log(ascii(move(state, { from: 'e3', to: 'e7' }).boardState))
 
-// console.log(state)
+console.log(state)
 // console.log(move(state, 'e4'))
 // console.log(move(move(state, 'e4'), 'e5'))
 
@@ -117,21 +135,4 @@ const state = importFen(INITIAL_FEN)
 // console.log(state)
 // console.log(exportFen(state))
 
-function getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max))
-}
-
-function performanceTest() {
-    let state = importFen(INITIAL_FEN)
-    let i = 0
-    while(!gameOver(state)) {
-        console.log('round', i)
-        const moves = generateLegalMoves(state)
-        const choosenMove = moves[getRandomInt(moves.length)]
-        state = move(state, choosenMove)
-        i++
-    }
-    console.log('game over!')
-}
-
-performanceTest()
+// performanceTest()
