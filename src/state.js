@@ -178,6 +178,7 @@ function importFen(fen) {
     state.khunPositions = getKhunPositionsFromBoardState(state.boardState)
 
     state.history = []
+    state.future = []
     state.piecePositions = getPiecePositions(state.boardState)
 
     return state
