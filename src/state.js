@@ -183,8 +183,6 @@ function importFen(fen) {
     state.boardState = getBoardStateFromBoardString(state.boardString)
     delete state.boardString
 
-    state.khunPositions = getKhunPositionsFromBoardState(state.boardState)
-
     state.history = []
     state.future = []
     state.piecePositions = getPiecePositions(state.boardState)

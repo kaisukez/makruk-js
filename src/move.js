@@ -122,18 +122,17 @@ function canThisColorAttackThisSquare(boardState, color, targetSquareIndex) {
     return false
 }
 
-// isKhunAttacked(boardState, WHITE) = is white khun attacked
-function isKhunAttacked(boardState, color, khunPositions) {
+// isKhunAttacked(state, WHITE) = is white khun attacked
+function isKhunAttacked(state, color) {
     return canThisColorAttackThisSquare(
-        boardState,
+        state.boardState,
         swapColor(color),
-        khunPositions[color]
+        state.piecePositions[color][KHUN][0]
     )
 }
 
 function inCheck (state) {
-    const { boardState, activeColor, khunPositions } = state
-    return isKhunAttacked(boardState, activeColor, khunPositions)
+    return isKhunAttacked(state, state.activeColor)
 }
 
 function inCheckmate(state) {
@@ -282,7 +281,7 @@ function makeMove(state, moveObject) {
 
     // update Khun position lookup table
     if (moveObject.piece === KHUN) {
-        newState.khunPositions[state.activeColor] = moveObject.to
+        newState.piecePositions[state.activeColor][KHUN] = [moveObject.to]
     }
 
     newState.history.push(moveObject)
@@ -439,9 +438,8 @@ function generateMovesForOneSquare(state, square, options={}) {
         const newState = makeMove(state, move)
         if (
             !isKhunAttacked(
-                newState.boardState,
-                swapColor(newState.activeColor),
-                newState.khunPositions
+                newState,
+                swapColor(newState.activeColor)
             )
         ) {
             legalMoves.push(move)
@@ -578,6 +576,8 @@ function moveFromSan(state, san) {
 
 function moveFromMoveObject(state, moveObject={}) {
     const possibleMoves = generateLegalMoves(state)
+    console.log('possiblemoves', possibleMoves)
+
     let result
     for (const move of possibleMoves) {
         let from, to
