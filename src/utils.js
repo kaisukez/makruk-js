@@ -166,6 +166,20 @@ function clone(obj) {
     return JSON.parse(JSON.stringify(obj))
 }
 
+// https://gist.github.com/JamieMason/172460a36a0eaef24233e6edb2706f83
+const compose = (...fns) =>
+    (...args) => fns.reduceRight(
+        (params, f) => Array.isArray(params) ? f(...params) : f(params),
+        args
+    )
+
+const pipe = (...fns) =>
+    (...args) => fns.reduce(
+        (params, f) => Array.isArray(params) ? f(...params) : f(params),
+        args
+    )
+
+
 module.exports = {
     swapColor,
     getAttackOffsets,
@@ -176,4 +190,6 @@ module.exports = {
     algebraic,
     ascii,
     clone,
+    compose,
+    pipe
 }
