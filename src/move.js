@@ -65,6 +65,7 @@ const {
 
 
 const {
+    updatePiecePositionDictionary,
     importFen,
     exportFen,
 } = require('./state')
@@ -279,10 +280,11 @@ function makeMove(state, moveObject) {
 
     newState = step(newState)
 
-    // update Khun position lookup table
-    if (moveObject.piece === KHUN) {
-        newState.piecePositions[state.activeColor][KHUN] = [moveObject.to]
-    }
+    // update position lookup table
+    newState.piecePositions = updatePiecePositionDictionary(
+        newState.piecePositions,
+        moveObject
+    )
 
     newState.history.push(moveObject)
     newState.future = []
@@ -560,6 +562,7 @@ function strippedSan(san) {
 
 function moveFromSan(state, san) {
     const possibleMoves = generateLegalMoves(state)
+    console.log(possibleMoves)
 
     // strip off any move decorations: e.g Nf3+?!
     const cleanMove = strippedSan(san)
