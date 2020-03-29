@@ -60,6 +60,7 @@ const {
 
 const {
     canThisColorAttackThisSquare,
+    generateMoves,
     generateLegalMoves,
     move,
     gameOver,
@@ -97,6 +98,7 @@ function performanceTest() {
 // console.log(boardState)
 
 const state = importFen(INITIAL_FEN)
+// const state = importFen('T7/8/8/8/8/8/8/T7 w 1')
 // console.log(state)
 // const allMoves = generateAllMoves(state)
 // console.log(allMoves)
@@ -104,7 +106,8 @@ const state = importFen(INITIAL_FEN)
 // console.log(generateMovesForOneSquare(state.boardState, SQUARES.e3))
 // console.log(generateMoves(state.boardState))
 
-// console.log(ascii(state.boardState))
+console.log(ascii(state.boardState))
+// console.log(generateMoves(state))
 
 // const newBoardState = changePiecePosition(state.boardState, SQUARES.e3, SQUARES.e4)
 // // console.log(newBoardState)
@@ -135,8 +138,8 @@ const state = importFen(INITIAL_FEN)
 // console.log(state3)
 
 // console.log(state)
-// console.log(exportFen(state))
+console.log(exportFen(state))
 
-performanceTest()
+// performanceTest()
 
 // console.log(JSON.stringify(state).length)

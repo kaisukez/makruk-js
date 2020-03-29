@@ -345,7 +345,7 @@ function generateMovesForOneSquare(state, square, options={}) {
 
     let squarePointer = square
 
-    if (forColor !== color) {
+    if (forColor && forColor !== color) {
         return moves
     }
 
@@ -576,7 +576,6 @@ function moveFromSan(state, san) {
 
 function moveFromMoveObject(state, moveObject={}) {
     const possibleMoves = generateLegalMoves(state)
-    console.log('possiblemoves', possibleMoves)
 
     let result
     for (const move of possibleMoves) {

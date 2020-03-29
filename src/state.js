@@ -81,7 +81,7 @@ function extractInfoFromFen(fen) {
 function getBoardStateFromBoardString(boardString) {
     const boardState = Array(128)
     let i = 0
-    for (const symbol of boardString.split('').reverse().join('')) {
+    for (const symbol of boardString.split('/').reverse().join('/')) {
         if (/[bfmterk]/.test(symbol)) {
             // boardState[i] = {
             //     color: BLACK,
@@ -223,7 +223,7 @@ function exportFen(state) {
         }
     }
 
-    return [fen.split('').reverse().join(''), activeColor, fullMove].join(' ')
+    return [fen.split('/').reverse().join('/'), activeColor, fullMove].join(' ')
 }
 
 
