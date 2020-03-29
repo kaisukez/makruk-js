@@ -86,16 +86,16 @@ function canThisColorAttackThisSquare(boardState, color, targetSquareIndex) {
         }
         
         /* if empty square or wrong color */
-        if (!boardState[fromIndex] || boardState[fromIndex].color !== color) {
+        if (!boardState[fromIndex] || boardState[fromIndex][0] !== color) {
             continue
         }
         
         const fromSquare = boardState[fromIndex]
         const lookUpIndex = fromIndex - targetSquareIndex + 119
 
-        if (ATTACKS[lookUpIndex] & (1 << SHIFTS[fromSquare.color][fromSquare.piece])) {
+        if (ATTACKS[lookUpIndex] & (1 << SHIFTS[fromSquare[0]][fromSquare[1]])) {
             // if not sliding piece then return true
-            if (!IS_SLIDING_PIECE[fromSquare.piece]) {
+            if (!IS_SLIDING_PIECE[fromSquare[1]]) {
                 return true
             }
 
@@ -191,9 +191,9 @@ function insufficientMaterial(state) {
         const _squareColor = squareColor(i)
         const square = state.boardState[i]
         if (square) {
-            pieceCount[square.piece] =
-                square.piece in pieceCount
-                ? pieceCount[square.piece] + 1
+            pieceCount[square[1]] =
+                square[1] in pieceCount
+                ? pieceCount[square[1]] + 1
                 : 1
             numPieces++
         }
@@ -275,7 +275,7 @@ function makeMove(state, moveObject) {
     )
 
     if (moveObject.flags & BITS.PROMOTION) {
-        newState.boardState[moveObject.to].piece = moveObject.promotion
+        newState.boardState[moveObject.to][1] = moveObject.promotion
     }
 
     newState = step(newState)
@@ -314,11 +314,13 @@ function undoMove(state) {
     const { piece, from, to, flags, captured } = lastMove
     const { boardState, activeColor } = newState
     boardState[from] = boardState[to]
-    boardState[from].type = piece // undo promotion
+    // boardState[from].type = piece // undo promotion
+    boardState[from][1] = piece // undo promotion
     boardState[to] = null
 
     if (flags & BITS.CAPTURE) {
-        boardState[to] = { piece: captured, color: swapColor(activeColor) }
+        // boardState[to] = { piece: captured, color: swapColor(activeColor) }
+        boardState[to] = [ swapColor(activeColor), captured ]
     }
 
     return newState
@@ -340,7 +342,7 @@ function generateMovesForOneSquare(state, square, options={}) {
     }
 
     const { forColor, legal } = options
-    const { color, piece } = boardState[square]
+    const [color, piece] = boardState[square]
 
     let squarePointer = square
 
@@ -362,14 +364,14 @@ function generateMovesForOneSquare(state, square, options={}) {
 
             // if it's a opponent piece
             if (targetSquare) {
-                if (targetSquare.color !== color) {
+                if (targetSquare[0] !== color) {
                     const move = {
                         color,
                         piece,
                         from: square,
                         to: squarePointer,
                         flags: BITS.CAPTURE,
-                        captured: targetSquare.piece
+                        captured: targetSquare[1]
                     }
                     if (
                         piece === BIA &&

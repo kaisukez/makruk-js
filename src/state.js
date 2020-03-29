@@ -83,16 +83,24 @@ function getBoardStateFromBoardString(boardString) {
     let i = 0
     for (const symbol of boardString.split('').reverse().join('')) {
         if (/[bfmterk]/.test(symbol)) {
-            boardState[i] = {
-                color: BLACK,
-                piece: symbol.toLowerCase()
-            }
+            // boardState[i] = {
+            //     color: BLACK,
+            //     piece: symbol.toLowerCase()
+            // }
+            boardState[i] = [
+                BLACK,
+                symbol.toLowerCase()
+            ]
             i++
         } else if (/[BFMTERK]/.test(symbol)) {
-            boardState[i] = {
-                color: WHITE,
-                piece: symbol.toLowerCase()
-            }
+            // boardState[i] = {
+            //     color: WHITE,
+            //     piece: symbol.toLowerCase()
+            // }
+            boardState[i] = [
+                WHITE,
+                symbol.toLowerCase()
+            ]
             i++
         } else if (/\d/.test(symbol)) {
             i += parseInt(symbol, 10)
@@ -109,10 +117,10 @@ function getKhunPositionsFromBoardState(boardState) {
     let blackKhunPosition
     
     boardState.forEach((square, index) => {
-        if (square && square.piece === KHUN) {
-            if (square.color === WHITE) {
+        if (square && square[1] === KHUN) {
+            if (square[0] === WHITE) {
                 whiteKhunPosition = index
-            } else if (square.color === BLACK) {
+            } else if (square[0] === BLACK) {
                 blackKhunPosition = index
             }
         }
@@ -161,7 +169,7 @@ function getPiecePositions(boardState) {
         }
     }
 
-    forEachPieceFromBoardState(boardState, ({ color, piece }, index) => {
+    forEachPieceFromBoardState(boardState, ([color, piece], index) => {
         piecePositions[color][piece] = piecePositions[color][piece].concat(index)
     })
 
@@ -199,7 +207,7 @@ function exportFen(state) {
                 empty = 0
             }
 
-            const { color, piece } = boardState[i]
+            const [color, piece] = boardState[i]
             fen += color === WHITE ? piece.toUpperCase() : piece.toLowerCase()
         }
 
