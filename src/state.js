@@ -56,6 +56,7 @@ const {
     file,
     algebraic,
     ascii,
+    clone,
 } = require('./utils')
 
 const {
@@ -176,6 +177,43 @@ function getPiecePositions(boardState) {
     return piecePositions
 }
 
+/**
+ * moveObject = { from: 21, to: 22 }
+ * piecePositions = [5, 21, 49]
+ * 
+ * updatePiecePositionDictionary(piceePositions, moveObject)
+ * newPiecePosition = [5, 22, 49]
+ */
+function updatePiecePositionDictionary(piecePositions, moveObject) {
+    const newPiecePositions = clone(piecePositions)
+
+    const { color, piece, from, to, promotion, captured } = moveObject
+    if (Array.isArray(newPiecePositions[color][piece])) {
+        const index = newPiecePositions[color][piece].indexOf(from)
+        if (index !== -1) {
+            newPiecePositions[color][piece][index] = to
+        }
+
+        if (moveObject.flags & BITS.PROMOTION) {
+            const toDeleteIndex = newPiecePositions[color][piece].indexOf(to)
+            if (toDeleteIndex !== -1) {
+                newPiecePositions[color][piece].splice(toDeleteIndex, 1)
+            }
+            newPiecePositions[color][promotion].concat(to)
+        }
+    
+        if (moveObject.flags & BITS.CAPTURE) {
+            const toDeleteIndex = newPiecePositions[swapColor(color)][captured].indexOf(to)
+            if (toDeleteIndex !== -1) {
+                newPiecePositions[swapColor(color)][captured].splice(toDeleteIndex, 1)
+            }
+        }
+    }
+
+
+    return newPiecePositions
+}
+
 
 function importFen(fen) {
     const state = extractInfoFromFen(fen)
@@ -228,6 +266,7 @@ function exportFen(state) {
 
 
 module.exports = {
+    updatePiecePositionDictionary,
     importFen,
     exportFen,
 }
