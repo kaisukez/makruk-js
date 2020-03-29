@@ -166,6 +166,41 @@ function clone(obj) {
     return JSON.parse(JSON.stringify(obj))
 }
 
+
+// https://stackoverflow.com/a/728694/10154216
+function clone(obj) {
+    var copy
+
+    // Handle the 3 simple types, and null or undefined
+    if (null == obj || "object" != typeof obj) return obj
+
+    // Handle Set
+    if (obj instanceof Set) {
+        copy = new Set(obj)
+        return copy
+    }
+
+    // Handle Array
+    if (obj instanceof Array) {
+        copy = []
+        for (var i = 0, len = obj.length; i < len; i++) {
+            copy[i] = clone(obj[i])
+        }
+        return copy
+    }
+
+    // Handle Object
+    if (obj instanceof Object) {
+        copy = {}
+        for (var attr in obj) {
+            if (obj.hasOwnProperty(attr)) copy[attr] = clone(obj[attr])
+        }
+        return copy
+    }
+
+    throw new Error("Unable to copy obj! Its type isn't supported.")
+}
+
 // https://gist.github.com/JamieMason/172460a36a0eaef24233e6edb2706f83
 const compose = (...fns) =>
     (...args) => fns.reduceRight(
