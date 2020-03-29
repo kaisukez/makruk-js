@@ -75,7 +75,7 @@ function extractInfoFromFen(fen) {
 
     result.groups.fullMove = parseInt(result.groups.fullMove, 10)
 
-    return result.groups
+    return { ...result.groups }
 }
 
 function getBoardStateFromBoardString(boardString) {
@@ -124,6 +124,50 @@ function getKhunPositionsFromBoardState(boardState) {
     }
 }
 
+function forEachPieceFromBoardState(boardState, func) {
+    for (let i = SQUARES.a1; i <= SQUARES.h8; i++) {
+        if (i & 0x88) {
+            i += 7
+            continue
+        }
+
+        if (!boardState[i]) {
+            continue
+        }
+
+        func(boardState[i], i)
+    }
+}
+
+function getPiecePositions(boardState) {
+    const piecePositions = {
+        [WHITE]: {
+            [BIA]: [],
+            [FLIPPED_BIA]: [],
+            [MA]: [],
+            [THON]: [],
+            [MET]: [],
+            [RUA]: [],
+            [KHUN]: []
+        },
+        [BLACK]: {
+            [BIA]: [],
+            [FLIPPED_BIA]: [],
+            [MA]: [],
+            [THON]: [],
+            [MET]: [],
+            [RUA]: [],
+            [KHUN]: []
+        }
+    }
+
+    forEachPieceFromBoardState(boardState, ({ color, piece }, index) => {
+        piecePositions[color][piece] = piecePositions[color][piece].concat(index)
+    })
+
+    return piecePositions
+}
+
 
 function importFen(fen) {
     const state = extractInfoFromFen(fen)
@@ -134,6 +178,7 @@ function importFen(fen) {
     state.khunPositions = getKhunPositionsFromBoardState(state.boardState)
 
     state.history = []
+    state.piecePositions = getPiecePositions(state.boardState)
 
     return state
 }
