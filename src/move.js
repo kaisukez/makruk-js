@@ -65,7 +65,9 @@ const {
 
 
 const {
+    forEachPieceFromBoardState,
     updatePiecePositionDictionary,
+    forEachPiece,
     importFen,
     exportFen,
 } = require('./state')
@@ -182,22 +184,14 @@ function insufficientMaterial(state) {
     const pieceCount = {}
     let numPieces = 0
 
-    for (let i = SQUARES.a1; i <= SQUARES.h8; i++) {
-        if (i & 0x88) {
-            i += 7
-            continue
-        }
-
-        const _squareColor = squareColor(i)
-        const square = state.boardState[i]
-        if (square) {
-            pieceCount[square[1]] =
-                square[1] in pieceCount
-                ? pieceCount[square[1]] + 1
-                : 1
-            numPieces++
-        }
-    }
+    forEachPiece(state.piecePositions, (color, piece, position) => {
+        // const _squareColor = squareColor(position)
+        pieceCount[piece] =
+            piece in pieceCount
+            ? pieceCount[piece] + 1
+            : 1
+        numPieces++
+    })
 
     if (numPieces === 2) {
         return true
@@ -579,6 +573,7 @@ function moveFromSan(state, san) {
 
 function moveFromMoveObject(state, moveObject={}) {
     const possibleMoves = generateLegalMoves(state)
+    // console.log(possibleMoves)
 
     let result
     for (const move of possibleMoves) {

@@ -113,26 +113,6 @@ function getBoardStateFromBoardString(boardString) {
     return boardState
 }
 
-function getKhunPositionsFromBoardState(boardState) {
-    let whiteKhunPosition
-    let blackKhunPosition
-    
-    boardState.forEach((square, index) => {
-        if (square && square[1] === KHUN) {
-            if (square[0] === WHITE) {
-                whiteKhunPosition = index
-            } else if (square[0] === BLACK) {
-                blackKhunPosition = index
-            }
-        }
-    })
-
-    return {
-        [WHITE]: whiteKhunPosition,
-        [BLACK]: blackKhunPosition
-    }
-}
-
 function forEachPieceFromBoardState(boardState, func) {
     for (let i = SQUARES.a1; i <= SQUARES.h8; i++) {
         if (i & 0x88) {
@@ -175,6 +155,19 @@ function getPiecePositions(boardState) {
     })
 
     return piecePositions
+}
+
+function forEachPiece(piecePositions, func) {
+    for (const piece in piecePositions[WHITE]) {
+        for (const position of piecePositions[WHITE][piece]) {
+            func(WHITE, piece, position)
+        }
+    }
+    for (const piece in piecePositions[BLACK]) {
+        for (const position of piecePositions[BLACK][piece]) {
+            func(BLACK, piece, position)
+        }
+    }
 }
 
 /**
@@ -266,7 +259,9 @@ function exportFen(state) {
 
 
 module.exports = {
+    forEachPieceFromBoardState,
     updatePiecePositionDictionary,
+    forEachPiece,
     importFen,
     exportFen,
 }

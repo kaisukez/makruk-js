@@ -67,6 +67,7 @@ const {
 } = require('./move')
 
 const {
+    forEachPiece,
     importFen,
     exportFen,
 } = require('./state')
@@ -145,6 +146,8 @@ console.log(state3.piecePositions[BLACK][BIA])
 
 console.log(state4.piecePositions[WHITE][BIA])
 console.log(state4.piecePositions[BLACK][BIA])
+
+forEachPiece(state4.piecePositions, console.log)
 
 // console.log(canThisColorAttackThisSquare(state.boardState, WHITE, SQUARES.d5))
 // console.log(canThisColorAttackThisSquare(state2.boardState, WHITE, SQUARES.d5))
