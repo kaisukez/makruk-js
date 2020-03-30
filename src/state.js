@@ -174,6 +174,10 @@ function countPiece(piecePositions) {
     const pieceCount = {
         all: 0,
 
+        color: {
+            [WHITE]: 0,
+            [BLACK]: 0
+        },
         piece: {
             [BIA]: 0,
             [FLIPPED_BIA]: 0,
@@ -206,6 +210,7 @@ function countPiece(piecePositions) {
 
     forEachPiece(piecePositions, (color, piece) => {
         pieceCount.all++
+        pieceCount.color[color]++
         pieceCount.piece[piece]++
         pieceCount[color][piece]++
     })

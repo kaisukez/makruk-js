@@ -68,6 +68,7 @@ const {
     forEachPieceFromBoardState,
     updatePiecePositionDictionary,
     forEachPiece,
+    countPiece,
     importFen,
     exportFen,
 } = require('./state')
@@ -149,7 +150,7 @@ function inStalemate(state) {
 function inDraw(state) {
     return (
         inStalemate(state)
-        // || insufficientMaterial(state)
+        || insufficientMaterial(state)
         || inThreefoldRepetition(state)
     )
 }
@@ -181,22 +182,12 @@ function inThreefoldRepetition(state) {
 function insufficientMaterial(state) {
     // TODO: find out more conditions
 
-    const pieceCount = {}
-    let numPieces = 0
+    const pieceCount = countPiece(state.piecePositions)
 
-    forEachPiece(state.piecePositions, (color, piece, position) => {
-        // const _squareColor = squareColor(position)
-        pieceCount[piece] =
-            piece in pieceCount
-            ? pieceCount[piece] + 1
-            : 1
-        numPieces++
-    })
-
-    if (numPieces === 2) {
+    if (pieceCount.all === 2) {
         return true
     } else if (
-        numPieces === 3 &&
+        pieceCount.all === 3 &&
         (
             pieceCount[BIA] === 1 ||
             pieceCount[FLIPPED_BIA] === 1 ||

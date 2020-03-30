@@ -99,8 +99,8 @@ function performanceTest(state) {
 // const boardState = getBoardStateFromBoardString(info.boardString)
 // console.log(boardState)
 
-// const state = importFen(INITIAL_FEN)
-const state = importFen('T6T/8/5K2/8/2k5/8/8/t6t w 1')
+const state = importFen(INITIAL_FEN)
+// const state = importFen('T6T/8/5K2/8/2k5/8/8/t6t w 1')
 // console.log(state)
 // const allMoves = generateAllMoves(state)
 // console.log(allMoves)
