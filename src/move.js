@@ -201,6 +201,38 @@ function insufficientMaterial(state) {
     return false
 }
 
+function calulateMoveCountdown(state) {
+    // NOTE: this function is not finished yet
+
+    const pieceCount = countPiece(state.piecePositions)
+    
+    const different = pieceCount.color[WHITE] - pieceCount.color[BLACK]
+    const advantage = Math.abs(different)
+
+    let advantageSide
+    let disadvantageSide
+
+    if (different > 0) {
+        advantageSide = WHITE
+        disadvantageSide = BLACK
+    } else if (different < 0) {
+        advantageSide = BLACK
+        disadvantageSide = WHITE
+    }
+
+    // if no one has advantage over the other
+    // or bia still exists on the board
+    // or active color is not in disadvantage side
+    if (!advantage || pieceCount[BIA] || state.activeColor !== disadvantageSide) {
+        return null
+    }
+
+    const advantangeData = { advantageSide, disadvantageSide, advantage }
+
+    // board count
+    if (pieceCount[disadvantageSide] )
+}
+
 /**
  * 
  * @param {Object} boardState
