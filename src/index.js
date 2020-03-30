@@ -68,6 +68,7 @@ const {
 
 const {
     forEachPiece,
+    countPiece,
     importFen,
     exportFen,
 } = require('./state')
@@ -157,7 +158,8 @@ console.log(ascii(state.boardState))
 // console.log(state)
 // console.log(exportFen(state))
 
-performanceTest(state)
+// performanceTest()
+console.log(countPiece(state.piecePositions))
 // console.log(generateMoves(state))
 
 // console.log(JSON.stringify(state).length)
