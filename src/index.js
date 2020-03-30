@@ -78,8 +78,8 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max))
 }
 
-function performanceTest() {
-    let state = importFen(INITIAL_FEN)
+function performanceTest(state) {
+    state = state || importFen(INITIAL_FEN)
     let i = 0
     while(!gameOver(state)) {
         console.log('round', i)
@@ -98,8 +98,8 @@ function performanceTest() {
 // const boardState = getBoardStateFromBoardString(info.boardString)
 // console.log(boardState)
 
-const state = importFen(INITIAL_FEN)
-// const state = importFen('T7/8/8/8/8/8/8/T7 w 1')
+// const state = importFen(INITIAL_FEN)
+const state = importFen('T6T/8/5K2/8/2k5/8/8/t6t w 1')
 // console.log(state)
 // const allMoves = generateAllMoves(state)
 // console.log(allMoves)
@@ -127,27 +127,27 @@ console.log(ascii(state.boardState))
 // console.log(move(state, 'e4'))
 // console.log(move(move(state, 'e4'), 'e5'))
 
-console.log(ascii(state.boardState))
-const state2 = move(state, 'e4')
-console.log(ascii(state2.boardState))
-const state3 = move(state2, 'd5')
-console.log(ascii(state3.boardState))
-const state4 = move(state3, 'exd5')
-console.log(ascii(state4.boardState))
+// console.log(ascii(state.boardState))
+// const state2 = move(state, 'e4')
+// console.log(ascii(state2.boardState))
+// const state3 = move(state2, 'd5')
+// console.log(ascii(state3.boardState))
+// const state4 = move(state3, 'exd5')
+// console.log(ascii(state4.boardState))
 
-console.log(state.piecePositions[WHITE][BIA])
-console.log(state.piecePositions[BLACK][BIA])
+// console.log(state.piecePositions[WHITE][BIA])
+// console.log(state.piecePositions[BLACK][BIA])
 
-console.log(state2.piecePositions[WHITE][BIA])
-console.log(state2.piecePositions[BLACK][BIA])
+// console.log(state2.piecePositions[WHITE][BIA])
+// console.log(state2.piecePositions[BLACK][BIA])
 
-console.log(state3.piecePositions[WHITE][BIA])
-console.log(state3.piecePositions[BLACK][BIA])
+// console.log(state3.piecePositions[WHITE][BIA])
+// console.log(state3.piecePositions[BLACK][BIA])
 
-console.log(state4.piecePositions[WHITE][BIA])
-console.log(state4.piecePositions[BLACK][BIA])
+// console.log(state4.piecePositions[WHITE][BIA])
+// console.log(state4.piecePositions[BLACK][BIA])
 
-forEachPiece(state4.piecePositions, console.log)
+// forEachPiece(state4.piecePositions, console.log)
 
 // console.log(canThisColorAttackThisSquare(state.boardState, WHITE, SQUARES.d5))
 // console.log(canThisColorAttackThisSquare(state2.boardState, WHITE, SQUARES.d5))
@@ -157,6 +157,7 @@ forEachPiece(state4.piecePositions, console.log)
 // console.log(state)
 // console.log(exportFen(state))
 
-// performanceTest()
+performanceTest(state)
+// console.log(generateMoves(state))
 
 // console.log(JSON.stringify(state).length)

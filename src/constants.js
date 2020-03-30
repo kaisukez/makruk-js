@@ -5,7 +5,7 @@ const BLACK = 'b'
 
 // https://www.chessprogramming.org/0x88
 const SQUARES = {
-    a8:   112, b8:   112, c8:   114, d8:   115, e8:   116, f8:   117, g8:   118, h8:   119,
+    a8:   112, b8:   113, c8:   114, d8:   115, e8:   116, f8:   117, g8:   118, h8:   119,
     a7:    96, b7:    97, c7:    98, d7:    99, e7:   100, f7:   101, g7:   102, h7:   103,
     a6:    80, b6:    81, c6:    82, d6:    83, e6:    84, f6:    85, g6:    86, h6:    87,
     a5:    64, b5:    65, c5:    66, d5:    67, e5:    68, f5:    69, g5:    70, h5:    71,
@@ -41,7 +41,7 @@ const BIA_ATTACK_OFFSETS = {
 
 const THON_ATTACK_OFFSETS = {
     [WHITE]: [15, 16, 17, -15, -17],
-    [BLACK]: [-15, -16, -17, 17, 17]
+    [BLACK]: [-15, -16, -17, 15, 17]
 }
 const THON_MOVE_OFFSETS = THON_ATTACK_OFFSETS
 

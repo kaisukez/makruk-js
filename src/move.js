@@ -556,7 +556,7 @@ function strippedSan(san) {
 
 function moveFromSan(state, san) {
     const possibleMoves = generateLegalMoves(state)
-    console.log(possibleMoves)
+    // console.log(possibleMoves)
 
     // strip off any move decorations: e.g Nf3+?!
     const cleanMove = strippedSan(san)
