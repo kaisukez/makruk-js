@@ -170,6 +170,49 @@ function forEachPiece(piecePositions, func) {
     }
 }
 
+function countPiece(piecePositions) {
+    const pieceCount = {
+        all: 0,
+
+        piece: {
+            [BIA]: 0,
+            [FLIPPED_BIA]: 0,
+            [MA]: 0,
+            [THON]: 0,
+            [MET]: 0,
+            [RUA]: 0,
+            [KHUN]: 0,
+        },
+        
+        [WHITE]: {
+            [BIA]: 0,
+            [FLIPPED_BIA]: 0,
+            [MA]: 0,
+            [THON]: 0,
+            [MET]: 0,
+            [RUA]: 0,
+            [KHUN]: 0
+        },
+        [BLACK]: {
+            [BIA]: 0,
+            [FLIPPED_BIA]: 0,
+            [MA]: 0,
+            [THON]: 0,
+            [MET]: 0,
+            [RUA]: 0,
+            [KHUN]: 0
+        }
+    }
+
+    forEachPiece(piecePositions, (color, piece) => {
+        pieceCount.all++
+        pieceCount.piece[piece]++
+        pieceCount[color][piece]++
+    })
+
+    return pieceCount
+}
+
 /**
  * moveObject = { from: 21, to: 22 }
  * piecePositions = [5, 21, 49]
@@ -262,6 +305,7 @@ module.exports = {
     forEachPieceFromBoardState,
     updatePiecePositionDictionary,
     forEachPiece,
+    countPiece,
     importFen,
     exportFen,
 }
