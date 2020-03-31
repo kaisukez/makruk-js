@@ -60,6 +60,17 @@ const IS_SLIDING_PIECE = {
 }
 
 
+// http://bgsthai.com/2018/04/30/howtoplay/
+const PIECE_POWER = {
+    [BIA]: 1,
+    [FLIPPED_BIA]: 1.7,
+    [MA]: 3,
+    [THON]: 2.6,
+    [MET]: 1.7,
+    [RUA]: 5,
+    [KHUN]: 0,
+}
+
 
 const WHITE_BIA_SHIFT = 0
 const BLACK_BIA_SHIFT = 1
@@ -235,6 +246,8 @@ module.exports = {
     PIECE_ATTACK_OFFSETS,
 
     IS_SLIDING_PIECE,
+
+    PIECE_POWER,
 
     SHIFTS,
     RAYS,
