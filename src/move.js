@@ -230,7 +230,7 @@ function calulateMoveCountdown(state) {
     const advantangeData = { advantageSide, disadvantageSide, advantage }
 
     // board count
-    if (pieceCount[disadvantageSide] )
+    // if (pieceCount[disadvantageSide] )
 }
 
 /**
