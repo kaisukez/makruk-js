@@ -69,6 +69,7 @@ const {
 const {
     forEachPiece,
     countPiece,
+    evalulatePower,
     importFen,
     exportFen,
 } = require('./state')
@@ -109,6 +110,7 @@ const state = importFen(INITIAL_FEN)
 // console.log(generateMoves(state.boardState))
 
 console.log(ascii(state.boardState))
+console.log(evalulatePower(countPiece(state.piecePositions)))
 // console.log(generateMoves(state))
 
 // const newBoardState = changePiecePosition(state.boardState, SQUARES.e3, SQUARES.e4)
@@ -159,7 +161,7 @@ console.log(ascii(state.boardState))
 // console.log(exportFen(state))
 
 // performanceTest()
-console.log(countPiece(state.piecePositions))
+// console.log(countPiece(state.piecePositions))
 // console.log(generateMoves(state))
 
 // console.log(JSON.stringify(state).length)
