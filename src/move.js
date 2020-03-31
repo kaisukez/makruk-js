@@ -21,6 +21,8 @@ const {
 
     IS_SLIDING_PIECE,
 
+    PIECE_POWER,
+    
     SHIFTS,
     RAYS,
     ATTACKS,
@@ -69,6 +71,7 @@ const {
     updatePiecePositionDictionary,
     forEachPiece,
     countPiece,
+    evalulatePower,
     importFen,
     exportFen,
 } = require('./state')
@@ -205,32 +208,14 @@ function calulateMoveCountdown(state) {
     // NOTE: this function is not finished yet
 
     const pieceCount = countPiece(state.piecePositions)
+    const power = evalulatePower(pieceCount)
     
-    const different = pieceCount.color[WHITE] - pieceCount.color[BLACK]
-    const advantage = Math.abs(different)
-
-    let advantageSide
-    let disadvantageSide
-
-    if (different > 0) {
-        advantageSide = WHITE
-        disadvantageSide = BLACK
-    } else if (different < 0) {
-        advantageSide = BLACK
-        disadvantageSide = WHITE
+    if (pieceCount[state.activeColor] === 1) {
+        return {
+            pieceCount: true,
+            countTo: e
+        }
     }
-
-    // if no one has advantage over the other
-    // or bia still exists on the board
-    // or active color is not in disadvantage side
-    if (!advantage || pieceCount[BIA] || state.activeColor !== disadvantageSide) {
-        return null
-    }
-
-    const advantangeData = { advantageSide, disadvantageSide, advantage }
-
-    // board count
-    // if (pieceCount[disadvantageSide] )
 }
 
 /**

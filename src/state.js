@@ -21,6 +21,8 @@ const {
 
     IS_SLIDING_PIECE,
 
+    PIECE_POWER,
+
     SQUARES,
     FIRST_SQUARE,
     LAST_SQUARE,
@@ -218,6 +220,24 @@ function countPiece(piecePositions) {
     return pieceCount
 }
 
+function evalulatePower(pieceCount) {
+    const power = {
+        [WHITE]: 0,
+        [BLACK]: 0
+    }
+
+    for (const piece in pieceCount[WHITE]) {
+        power[WHITE] += pieceCount[WHITE][piece] * PIECE_POWER[piece]
+    }
+
+    for (const piece in pieceCount[BLACK]) {
+        power[BLACK] += pieceCount[BLACK][piece] * PIECE_POWER[piece]
+    }
+
+    return power
+}
+
+
 /**
  * moveObject = { from: 21, to: 22 }
  * piecePositions = [5, 21, 49]
@@ -311,6 +331,7 @@ module.exports = {
     updatePiecePositionDictionary,
     forEachPiece,
     countPiece,
+    evalulatePower,
     importFen,
     exportFen,
 }
