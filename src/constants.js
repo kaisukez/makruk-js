@@ -220,6 +220,11 @@ const FILE_H = 7
 
 
 
+const PIECE_POWER_COUNTDOWN = 'PIECE_POWER_COUNTDOWN'
+const BOARD_POWER_COUNTDOWN = 'BOARD_POWER_COUNTDOWN'
+
+
+
 module.exports = {
     WHITE,
     BLACK,
@@ -273,4 +278,7 @@ module.exports = {
     FILE_F,
     FILE_G,
     FILE_H,
+
+    PIECE_POWER_COUNTDOWN,
+    BOARD_POWER_COUNTDOWN
 }

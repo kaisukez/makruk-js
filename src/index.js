@@ -64,6 +64,7 @@ const {
     generateLegalMoves,
     move,
     gameOver,
+    calculateCountdown,
 } = require('./move')
 
 const {
@@ -100,8 +101,8 @@ function performanceTest(state) {
 // const boardState = getBoardStateFromBoardString(info.boardString)
 // console.log(boardState)
 
-const state = importFen(INITIAL_FEN)
-// const state = importFen('T6T/8/5K2/8/2k5/8/8/t6t w 1')
+// const state = importFen(INITIAL_FEN)
+const state = importFen('T6T/8/5K2/8/2k5/8/8/t6t w 1')
 // console.log(state)
 // const allMoves = generateAllMoves(state)
 // console.log(allMoves)
@@ -111,6 +112,7 @@ const state = importFen(INITIAL_FEN)
 
 console.log(ascii(state.boardState))
 console.log(evalulatePower(countPiece(state.piecePositions)))
+console.log(calculateCountdown(state))
 // console.log(generateMoves(state))
 
 // const newBoardState = changePiecePosition(state.boardState, SQUARES.e3, SQUARES.e4)

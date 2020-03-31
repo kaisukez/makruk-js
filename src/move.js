@@ -51,6 +51,9 @@ const {
     FILE_F,
     FILE_G,
     FILE_H,
+
+    PIECE_POWER_COUNTDOWN,
+    BOARD_POWER_COUNTDOWN,
 } = require('./constants')
 
 
@@ -204,18 +207,82 @@ function insufficientMaterial(state) {
     return false
 }
 
-function calulateMoveCountdown(state) {
-    // NOTE: this function is not finished yet
-
+function calculatePiecePowerCountdown(state) {
     const pieceCount = countPiece(state.piecePositions)
-    const power = evalulatePower(pieceCount)
     
-    if (pieceCount[state.activeColor] === 1) {
+    // to activate piece power countdown
+    // one must only have Khun left and there must be no Bia left on the board
+    if (pieceCount.color[state.activeColor] !== 1 || pieceCount.piece[BIA] !== 0) {
+        return null
+    }
+    
+    const opponentPieceCount = pieceCount[swapColor(state.activeColor)]
+    if (opponentPieceCount[RUA] in [1, 2]) {
         return {
-            pieceCount: true,
-            countTo: e
+            countFrom: 1,
+            countTo: 16 / opponentPieceCount[RUA]
         }
     }
+
+    if (opponentPieceCount[THON] in [1, 2]) {
+        return {
+            countFrom: 1,
+            countTo: 44 / opponentPieceCount[THON]
+        }
+    }
+
+    if (opponentPieceCount[MA] in [1, 2]) {
+        return {
+            countFrom: 1,
+            countTo: 64 / opponentPieceCount[MA]
+        }
+    }
+
+    return {
+        countFrom: 1,
+        countTo: 64
+    }
+}
+
+function calculateBoardPowerCountdown(state) {
+    const pieceCount = countPiece(state.piecePositions)
+
+    // to activate board power countdown
+    // one must have more than 1 piece (including Khun)
+    // and there must be no Bia left on the board
+    if (pieceCount.color[state.activeColor] === 1 || pieceCount.piece[BIA] !== 0) {
+        return null
+    }
+
+    return {
+        countFrom: pieceCount.all,
+        countTo: 64
+    }
+}
+
+function calculateCountdown(state) {
+    const piecePowerCountdown = calculatePiecePowerCountdown(state)
+    const boardPowerCountdown = calculateBoardPowerCountdown(state)
+
+    if (piecePowerCountdown) {
+        return {
+            color: state.activeColor, // which side want to count
+            type: PIECE_POWER_COUNTDOWN, // count type
+            count: piecePowerCountdown.countFrom, // current count
+            ...piecePowerCountdown
+        }
+    }
+
+    if (boardPowerCountdown) {
+        return {
+            color: state.activeColor,
+            type: BOARD_POWER_COUNTDOWN,
+            count: boardPowerCountdown.countFrom,
+            ...boardPowerCountdown
+        }
+    }
+
+    return null
 }
 
 /**
@@ -268,7 +335,7 @@ function stepBack(state) {
     return newState
 }
 
-function makeMove(state, moveObject) {
+function makeMove(state, moveObject, optional={}) {
     let newState = clone(state)
     newState.boardState = changePiecePosition(
         state.boardState,
@@ -288,7 +355,7 @@ function makeMove(state, moveObject) {
         moveObject
     )
 
-    newState.history.push(moveObject)
+    newState.history.push({ ...moveObject, optional })
     newState.future = []
 
     return newState
@@ -643,6 +710,7 @@ module.exports = {
     inStalemate,
     inDraw,
     gameOver,
+    calculateCountdown,
 
     changePiecePosition,
     step,
