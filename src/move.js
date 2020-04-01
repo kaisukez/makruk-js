@@ -266,6 +266,7 @@ function calculateCountdown(state) {
 
     if (piecePowerCountdown) {
         return {
+            fromMove: state.fullMove,
             color: state.activeColor, // which side want to count
             type: PIECE_POWER_COUNTDOWN, // count type
             count: piecePowerCountdown.countFrom, // current count
@@ -275,6 +276,7 @@ function calculateCountdown(state) {
 
     if (boardPowerCountdown) {
         return {
+            fromMove: state.fullMove,
             color: state.activeColor,
             type: BOARD_POWER_COUNTDOWN,
             count: boardPowerCountdown.countFrom,
@@ -335,6 +337,129 @@ function stepBack(state) {
     return newState
 }
 
+function anyStartCountdownFlag(flags={}) {
+    const {
+        startPiecePowerCountdown,
+        startBoardPowerCountdown,
+        startCountdown,
+    } = flags
+
+    return (
+        startPiecePowerCountdown ||
+        startBoardPowerCountdown ||
+        startCountdown
+    )
+}
+
+function anyStopCountdownFlag(flags={}) {
+    const {
+        stopPiecePowerCountdown,
+        stopBoardPowerCountdown,
+        stopCountdown
+    } = flags
+
+    return (
+        stopPiecePowerCountdown ||
+        stopBoardPowerCountdown ||
+        stopCountdown
+    )
+}
+
+function anyCountdownFlag(flags={}) {
+    return anyStartCountdownFlag(flags) || anyStopCountdownFlag(flags)
+}
+
+function stepCountdown(state, flags={}) {
+    const {
+        startPiecePowerCountdown,
+        startBoardPowerCountdown,
+        startCountdown,
+
+        stopPiecePowerCountdown,
+        stopBoardPowerCountdown,
+        stopCountdown
+    } = flags
+
+    // if there's no countdown flag then return the same state
+    // if (!anyCountdownFlag(flags)) {
+    //     return state
+    // }
+
+
+    // if we didn't count yet but you give coundown flag then throw error
+    if (!state.countdown && anyStopCountdownFlag(flags)) {
+        throw { code: 'CANNOT_STOP_UNCOUNTED_STATE' }
+    }
+
+    
+    // if we already count but you give coundown flag again then throw error
+    if (state.countdown && anyStartCountdownFlag(flags)) {
+        throw { code: 'CANNOT_START_ALREADY_COUNTED_STATE' }
+    }
+
+
+    const newState = clone(state)
+    const countdown = calculateCountdown(state)
+    
+    
+    // if we didn't count yet and we give countdown flag
+    // then start counting if countdown flag is valid
+    if (!newState.countdown) {
+        if (
+            startPiecePowerCountdown && countdown.type === PIECE_POWER_COUNTDOWN ||
+            startBoardPowerCountdown && countdown.type === BOARD_POWER_COUNTDOWN ||
+            startCountdown
+        ) {
+            newState.countdown = countdown
+        } else if (anyStartCountdownFlag(flags)) {
+            console.log(flags, newState.countdown)
+            throw { code: 'WRONG_COUNTDOWN_TYPE' }
+        }
+    }
+
+    // if we alrealdy count
+    else {
+        // if we give stop countdown flag
+        if (anyStopCountdownFlag(flags)) {
+            if (
+                (
+                    stopPiecePowerCountdown &&
+                    newState.countdown.type === PIECE_POWER_COUNTDOWN
+                )
+                || (
+                    stopBoardPowerCountdown &&
+                    newState.countdown.type === BOARD_POWER_COUNTDOWN
+                )
+                || stopCountdown
+            ){
+                newState.countdownHistory.push(newState.countdown)
+                newState.countdown = null
+            } else {
+                throw { code: 'WRONG_STOP_COUNTDOWN_FLAG' }
+            }
+        }
+
+        // continue counting the same type
+        else if (
+            newState.countdown.type === countdown.type &&
+            newState.activeColor === newState.countdown.color
+        ) {
+            newState.countdown.count++
+        }
+
+        // continue counting different type only if we change from
+        // board power countdown to piece power countdown
+        else if (
+            newState.countdown.type === BOARD_POWER_COUNTDOWN &&
+            countdown.type === PIECE_POWER_COUNTDOWN
+        ) {
+            newState.countdown = countdown
+        }
+    }
+    
+    return newState
+}
+
 function makeMove(state, moveObject, optional={}) {
     let newState = clone(state)
     newState.boardState = changePiecePosition(
@@ -342,6 +467,8 @@ function makeMove(state, moveObject, optional={}) {
         moveObject.from,
         moveObject.to
     )
+
+    newState = stepCountdown(newState, optional)
 
     if (moveObject.flags & BITS.PROMOTION) {
         newState.boardState[moveObject.to][1] = moveObject.promotion
@@ -358,6 +485,7 @@ function makeMove(state, moveObject, optional={}) {
     newState.history.push({ ...moveObject, optional })
     newState.future = []
 
+
     return newState
 }
 
@@ -368,7 +496,7 @@ function nextMove(state) {
 
     let newState = clone(state)
     const nextMove = newState.future.shift()
-    newState = makeMove(newState, nextMove)
+    newState = makeMove(newState, nextMove, nextMove.optional)
     return newState
 }
 
@@ -684,7 +812,7 @@ function moveFromMoveObject(state, moveObject={}) {
  * }
  * 
  */
-function move(state, move) {
+function move(state, move, optional) {
     let moveObject
     if (typeof move === 'string') {
         moveObject = moveFromSan(state, move)
@@ -696,7 +824,7 @@ function move(state, move) {
         throw { code: 'INVALID_MOVE' }
     }
 
-    const newState = makeMove(state, moveObject)
+    const newState = makeMove(state, moveObject, optional)
 
     return newState
 }
@@ -714,6 +842,7 @@ module.exports = {
 
     changePiecePosition,
     step,
+    stepCountdown,
     makeMove,
 
     generateMoves,
