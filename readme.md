@@ -12,5 +12,6 @@ This is (going to be) thai chess opensource library.
 - [x] import / export [FEN](https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation)
 - [ ] import / export [PGN](https://en.wikipedia.org/wiki/Portable_Game_Notation)
 - [ ] write test (Why write test last? I don't know. I'm not familiar with TDD or any kind of tests so I will put it last to be more focused on chess algorithm.)
+- [ ] write documentation
 - [ ] release version 0.1.0 to npm
 - [ ] decide what to do next. Maybe optimize existing code or rewrite entire library using bitboard.
