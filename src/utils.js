@@ -194,7 +194,8 @@ function clone(obj) {
         return copy
     }
 
-    throw new Error("Unable to copy obj! Its type isn't supported.")
+    // throw new Error("Unable to copy obj! Its type isn't supported.")
+    throw { code: 'OBJECT_TYPE_IS_NOT_SUPPORTED' }
 }
 
 // https://gist.github.com/JamieMason/172460a36a0eaef24233e6edb2706f83

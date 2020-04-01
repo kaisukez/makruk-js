@@ -65,6 +65,7 @@ const {
     move,
     gameOver,
     calculateCountdown,
+    stepCountdown,
 } = require('./move')
 
 const {
@@ -102,7 +103,7 @@ function performanceTest(state) {
 // console.log(boardState)
 
 // const state = importFen(INITIAL_FEN)
-const state = importFen('T6T/8/5K2/8/2k5/8/8/t6t w 1')
+const state = importFen('T6T/8/5K2/8/2k5/8/8/t6t w 25')
 // console.log(state)
 // const allMoves = generateAllMoves(state)
 // console.log(allMoves)
@@ -111,9 +112,27 @@ const state = importFen('T6T/8/5K2/8/2k5/8/8/t6t w 1')
 // console.log(generateMoves(state.boardState))
 
 console.log(ascii(state.boardState))
-console.log(evalulatePower(countPiece(state.piecePositions)))
-console.log(calculateCountdown(state))
+// console.log(evalulatePower(countPiece(state.piecePositions)))
+// console.log(calculateCountdown(state))
 // console.log(generateMoves(state))
+
+// console.log('state.activeColor', state.activeColor)
+
+const state2 = move(state, 'Ke6', { startBoardPowerCountdown: true })
+console.log(ascii(state2.boardState))
+console.log('2', state2.countdown)
+
+const state3 = move(state2, 'Kd4')
+console.log(ascii(state3.boardState))
+console.log('3', state3.countdown)
+
+const state4 = move(state3, 'Kf7')
+console.log(ascii(state4.boardState))
+console.log('4', state4.countdown)
+
+// const state5 = move(state4, 'Kc3')
+// console.log(ascii(state5.boardState))
+// console.log('5', state5.countdown)
 
 // const newBoardState = changePiecePosition(state.boardState, SQUARES.e3, SQUARES.e4)
 // // console.log(newBoardState)
