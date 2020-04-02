@@ -285,6 +285,7 @@ function importFen(fen) {
     state.history = []
     state.future = []
     state.piecePositions = getPiecePositions(state.boardState)
+
     state.countdown = null
     state.countdownHistory = []
 

@@ -56,6 +56,7 @@ const {
     file,
     algebraic,
     ascii,
+    pipe,
 } = require('./utils')
 
 const {
@@ -65,7 +66,11 @@ const {
     move,
     gameOver,
     calculateCountdown,
+    undoMove,
+    nextMove,
+    stepBack,
     stepCountdown,
+    stepBackCountdown,
 } = require('./move')
 
 const {
@@ -118,17 +123,47 @@ console.log(ascii(state.boardState))
 
 // console.log('state.activeColor', state.activeColor)
 
-const state2 = move(state, 'Ke6', { startBoardPowerCountdown: true })
-console.log(ascii(state2.boardState))
-console.log('2', state2.countdown)
+function testCount() {
+    const state = importFen('T6T/8/5K2/8/2k5/8/8/t6t w 25')
+    console.log(ascii(state.boardState))
 
-const state3 = move(state2, 'Kd4')
-console.log(ascii(state3.boardState))
-console.log('3', state3.countdown)
-
-const state4 = move(state3, 'Kf7')
-console.log(ascii(state4.boardState))
-console.log('4', state4.countdown)
+    const state2 = move(state, 'Ke6', { startBoardPowerCountdown: true })
+    console.log(ascii(state2.boardState))
+    console.log('2', state2.countdown)
+    
+    const state3 = move(state2, 'Kd4')
+    console.log(ascii(state3.boardState))
+    console.log('3', state3.countdown)
+    
+    const state4 = move(state3, 'Kf7')
+    console.log(ascii(state4.boardState))
+    console.log('4', state4.countdown)
+    
+    
+    const state3undo = undoMove(state4)
+    console.log(ascii(state3undo.boardState))
+    console.log('3 undo', state3undo.countdown)
+    
+    const state2undo = undoMove(state3undo)
+    console.log(ascii(state2undo.boardState))
+    console.log('2 undo', state2undo.countdown)
+    
+    const stateundo = undoMove(state2undo)
+    console.log(ascii(stateundo.boardState))
+    console.log('1 undo', stateundo.countdown)
+    
+    const state2next = nextMove(stateundo)
+    console.log(ascii(state2next.boardState))
+    console.log('2 next', state2next.countdown)
+    
+    const state3next = nextMove(state2next)
+    console.log(ascii(state3next.boardState))
+    console.log('2 next', state3next)
+    
+    const state4next = nextMove(state3next)
+    console.log(ascii(state4next.boardState))
+    console.log('2 next', state4next)
+}
 
 // const state5 = move(state4, 'Kc3')
 // console.log(ascii(state5.boardState))
