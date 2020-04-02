@@ -109,6 +109,10 @@ function ascii(boardState) {
     let s = '     +------------------------+\n'
     let i = SQUARES.a8
 
+    if (!boardState) {
+        throw { code: 'NO_BOARD_STATE' }
+    }
+
     while(true) {
         /* display the rank */
         if (file(i) === FILE_A) {

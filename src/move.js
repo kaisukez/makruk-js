@@ -156,6 +156,7 @@ function inStalemate(state) {
 function inDraw(state) {
     return (
         inStalemate(state)
+        || isFinishedCounting(state)
         || insufficientMaterial(state)
         || inThreefoldRepetition(state)
     )
@@ -206,6 +207,17 @@ function insufficientMaterial(state) {
 
     return false
 }
+
+function isFinishedCounting(state) {
+    const { countdown, activeColor } = state
+
+    return (
+        countdown &&
+        countdown.color === activeColor &&
+        countdown.count >= countdown.countTo
+    )
+}
+
 
 function calculatePiecePowerCountdown(state) {
     const pieceCount = countPiece(state.piecePositions)
