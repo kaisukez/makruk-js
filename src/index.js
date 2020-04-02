@@ -162,8 +162,28 @@ function testCount() {
     
     const state4next = nextMove(state3next)
     console.log(ascii(state4next.boardState))
-    console.log('2 next', state4next)
+    console.log('2 next', state4next.countdown)
+
+
+    state4next.countdown.countTo = 8
+    const state5 = move(state4next, 'Ke4')
+    console.log(ascii(state5.boardState))
+    console.log(state5.countdown)
+
+    const state6 = move(state5, 'Kg6')
+    console.log(ascii(state6.boardState))
+    console.log(state6.countdown)
+
+    const state7 = move(state6, 'Kf4')
+    console.log(ascii(state7.boardState))
+    console.log(state7.countdown)
+
+    console.log('gameover', gameOver(state5))
+    console.log('gameover', gameOver(state6))
+    console.log('gameover', gameOver(state7))
 }
+
+testCount()
 
 // const state5 = move(state4, 'Kc3')
 // console.log(ascii(state5.boardState))
