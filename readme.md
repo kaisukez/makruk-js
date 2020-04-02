@@ -8,7 +8,7 @@ This is (going to be) thai chess opensource library.
 - [x] functional programming utility function like "compose" ...
 - [ ] refactor code
 - [x] replace [Ramda](https://ramdajs.com/) with regular js (because it make code hard to read and add friction in development process)
-- [ ] [counting rules](https://www.chessvariants.com/play/makruk-thai-chess)
+- [x] [counting rules](https://www.chessvariants.com/play/makruk-thai-chess)
 - [x] import / export [FEN](https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation)
 - [ ] import / export [PGN](https://en.wikipedia.org/wiki/Portable_Game_Notation)
 - [ ] write test (Why write test last? I don't know. I'm not familiar with TDD or any kind of tests so I will put it last to be more focused on chess algorithm.)
