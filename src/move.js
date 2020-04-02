@@ -460,7 +460,24 @@ function stepCountdown(state, flags={}) {
     return newState
 }
 
-function makeMove(state, moveObject, optional={}) {
+function stepBackCountdown(state) {
+    const newState = clone(state)
+
+    const { countdown, activeColor } = newState
+
+    if (countdown && countdown.color === activeColor) {
+        const { count, countFrom } = countdown
+        if (count > countFrom) {
+            countdown.count--
+        } else {
+            newState.countdown = null
+        }
+    }
+
+    return newState
+}
+
+function makeMove(state, moveObject, optional={}, keepFuture=false) {
     let newState = clone(state)
     newState.boardState = changePiecePosition(
         state.boardState,
@@ -483,7 +500,9 @@ function makeMove(state, moveObject, optional={}) {
     )
 
     newState.history.push({ ...moveObject, optional })
-    newState.future = []
+    if (!keepFuture) {
+        newState.future = []
+    }
 
 
     return newState
@@ -496,7 +515,7 @@ function nextMove(state) {
 
     let newState = clone(state)
     const nextMove = newState.future.shift()
-    newState = makeMove(newState, nextMove, nextMove.optional)
+    newState = makeMove(newState, nextMove, nextMove.optional, true)
     return newState
 }
 
@@ -507,7 +526,9 @@ function undoMove(state) {
 
     let newState = clone(state)
     newState = stepBack(newState)
+    newState = stepBackCountdown(newState)
     const lastMove = newState.history.pop()
+    newState.future.unshift(lastMove)
 
     const { piece, from, to, flags, captured } = lastMove
     const { boardState, activeColor } = newState
@@ -843,7 +864,10 @@ module.exports = {
     changePiecePosition,
     step,
     stepCountdown,
+    stepBackCountdown,
     makeMove,
+    undoMove,
+    nextMove,
 
     generateMoves,
     generateLegalMoves,
