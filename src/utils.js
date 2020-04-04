@@ -84,7 +84,7 @@ function rank(index) {
 }
 
 function file(index) {
-    return index & 7
+    return index & 15
 }
 
 function squareColor(index) {
@@ -96,11 +96,19 @@ function squareColor(index) {
     return isWhite ? WHITE : BLACK
 }
 
-function algebraic(squareIndex) {
+function algebraic(squareIndex, optional={}) {
+    const { thai } = optional
+    
     const _file = file(squareIndex)
     const _rank = rank(squareIndex)
 
-    return 'abcdefgh'[_file] + '12345678'[_rank]
+    let fileSymbols = 'abcdefgh'
+    let rankSymbols = '12345678'
+    if (thai) {
+        fileSymbols = 'กขคงจฉชญ'
+    }
+
+    return fileSymbols[_file] + rankSymbols[_rank]
 }
 
 function ascii(boardState) {
