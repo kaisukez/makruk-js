@@ -1,5 +1,5 @@
 {
-    "name": "thai-chess",
+    "name": "makruk-js",
     "version": "0.0.1",
     "description": "",
     "main": "index.js",
@@ -9,13 +9,13 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/kaisukez/thai-chess-js.git"
+        "url": "git+https://github.com/kaisukez/makruk-js.git"
     },
     "author": "kaisukez",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/kaisukez/thai-chess-js/issues"
+        "url": "https://github.com/kaisukez/makruk-js/issues"
     },
-    "homepage": "https://github.com/kaisukez/thai-chess-js#readme",
+    "homepage": "https://github.com/kaisukez/makruk-js#readme",
     "dependencies": {}
 }
