@@ -1,5 +1,5 @@
-# Thai Chess JS
-This is (going to be) thai chess opensource library.
+# Makruk JS
+This is (going to be) makruk opensource library.
 
 ## Todos
 - [x] attacked (its name was changed to canThisColorAttackThisSquare) function
