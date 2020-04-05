@@ -850,3 +850,106 @@ describe('updatePiecePositionDictionary', () => {
         })
     })
 })
+
+
+describe('import export fen', () => {
+    const fen = 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1'
+    const state = {
+        boardState: [
+            [WHITE, RUA],
+            [WHITE, MA],
+            [WHITE, THON],
+            [WHITE, KHUN],
+            [WHITE, MET],
+            [WHITE, THON],
+            [WHITE, MA],
+            [WHITE, RUA],
+            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+            [WHITE, BIA],
+            [WHITE, BIA],
+            [WHITE, BIA],
+            [WHITE, BIA],
+            [WHITE, BIA],
+            [WHITE, BIA],
+            [WHITE, BIA],
+            [WHITE, BIA],
+            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+            [BLACK, BIA],
+            [BLACK, BIA],
+            [BLACK, BIA],
+            [BLACK, BIA],
+            [BLACK, BIA],
+            [BLACK, BIA],
+            [BLACK, BIA],
+            [BLACK, BIA],
+            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+            [BLACK, RUA],
+            [BLACK, MA],
+            [BLACK, THON],
+            [BLACK, MET],
+            [BLACK, KHUN],
+            [BLACK, THON],
+            [BLACK, MA],
+            [BLACK, RUA],
+            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        ],
+        activeColor: WHITE,
+        moveNumber: 1,
+        history: [],
+        future: [],
+        countdownHistory: [],
+        countdown: null,
+        piecePositions: {
+            [WHITE]: {
+                [BIA]: [
+                    SQUARES.a3, SQUARES.b3, SQUARES.c3, SQUARES.d3,
+                    SQUARES.e3, SQUARES.f3, SQUARES.g3, SQUARES.h3
+                ],
+                [FLIPPED_BIA]: [],
+                [MA]: [ SQUARES.b1, SQUARES.g1 ],
+                [THON]: [ SQUARES.c1, SQUARES.f1 ],
+                [MET]: [ SQUARES.e1 ],
+                [RUA]: [ SQUARES.a1, SQUARES.h1 ],
+                [KHUN]: [ SQUARES.d1 ]
+            },
+            [BLACK]: {
+                [BIA]: [
+                    SQUARES.a6, SQUARES.b6, SQUARES.c6, SQUARES.d6,
+                    SQUARES.e6, SQUARES.f6, SQUARES.g6, SQUARES.h6
+                ],
+                [FLIPPED_BIA]: [],
+                [MA]: [ SQUARES.b8, SQUARES.g8 ],
+                [THON]: [ SQUARES.c8, SQUARES.f8 ],
+                [MET]: [ SQUARES.d8 ],
+                [RUA]: [ SQUARES.a8, SQUARES.h8 ],
+                [KHUN]: [ SQUARES.e8 ]
+            }
+        }
+    }
+
+    test('should import fen to state correctly', () => {
+        const stateResult = importFen(fen)
+        expect(stateResult).toEqual(state)
+    })
+
+    test('should export state to fen correctly', () => {
+        const fenResult = exportFen(state)
+        expect(fenResult).toBe(fen)
+    })
+
+    // TODO: test import/export fen with countdown
+})
