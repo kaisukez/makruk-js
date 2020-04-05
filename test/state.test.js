@@ -530,3 +530,75 @@ describe('forEachPiece', () => {
         expect(newPiecePositions).toEqual(piecePositions)
     })
 })
+
+
+describe('countPiece', () => {
+    const piecePositions = {
+        [WHITE]: {
+            [BIA]: [
+                SQUARES.a3, SQUARES.b3, SQUARES.c3, SQUARES.d3,
+                SQUARES.e3, SQUARES.f3, SQUARES.g3, SQUARES.h3
+            ],
+            [FLIPPED_BIA]: [],
+            [MA]: [ SQUARES.b1, SQUARES.g1 ],
+            [THON]: [ SQUARES.c1, SQUARES.f1 ],
+            [MET]: [ SQUARES.e1 ],
+            [RUA]: [ SQUARES.a1, SQUARES.h1 ],
+            [KHUN]: [ SQUARES.d1 ]
+        },
+        [BLACK]: {
+            [BIA]: [
+                SQUARES.a6, SQUARES.b6, SQUARES.c6, SQUARES.d6,
+                SQUARES.e6, SQUARES.f6, SQUARES.g6, SQUARES.h6
+            ],
+            [FLIPPED_BIA]: [],
+            [MA]: [ SQUARES.b8, SQUARES.g8 ],
+            [THON]: [ SQUARES.c8, SQUARES.f8 ],
+            [MET]: [ SQUARES.d8 ],
+            [RUA]: [ SQUARES.a8, SQUARES.h8 ],
+            [KHUN]: [ SQUARES.e8 ]
+        }
+    }
+
+    const pieceCount = {
+        all: 32,
+
+        color: {
+            [WHITE]: 16,
+            [BLACK]: 16
+        },
+        piece: {
+            [BIA]: 16,
+            [FLIPPED_BIA]: 0,
+            [MA]: 4,
+            [THON]: 4,
+            [MET]: 2,
+            [RUA]: 4,
+            [KHUN]: 2,
+        },
+        
+        [WHITE]: {
+            [BIA]: 8,
+            [FLIPPED_BIA]: 0,
+            [MA]: 2,
+            [THON]: 2,
+            [MET]: 1,
+            [RUA]: 2,
+            [KHUN]: 1,
+        },
+        [BLACK]: {
+            [BIA]: 8,
+            [FLIPPED_BIA]: 0,
+            [MA]: 2,
+            [THON]: 2,
+            [MET]: 1,
+            [RUA]: 2,
+            [KHUN]: 1,
+        }
+    }
+    
+    test('should count piece correctly', () => {
+        const pieceCountResult = countPiece(piecePositions)        
+        expect(pieceCountResult).toEqual(pieceCount)
+    })
+})
