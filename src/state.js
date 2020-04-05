@@ -68,15 +68,32 @@ const {
 
 
 
+function throwIfWrongFenResult(result) {
+    // TODO
+    if (!result) {
+        throw { code: 'WRONG_AMOUNT_OF_INPUTS' }
+    }
+
+    console.log(result)
+
+    const {
+        boardString,
+        activeColor,
+        moveNumber,
+        countColor,
+        countType,
+        count
+    } = result
+
+} 
+
 function extractInfoFromFen(fen) {
-    const regex = /^(?<boardString>\S+)\s+(?<activeColor>[wb])\s+(?<moveNumber>\d+)$/
-    const result = fen.match(regex)
+    const regex = /^(?<boardString>\S+)\s+(?<activeColor>\S+)\s+(?<moveNumber>\S+)(\s+(?<countColor>\S+)\s+(?<countType>\S+)\s+(?<count>\S+))?$/
+    const result = fen.trim().match(regex)
 
     if (!result) {
         return null
     }
-
-    result.groups.moveNumber = parseInt(result.groups.moveNumber, 10)
 
     return { ...result.groups }
 }
@@ -278,6 +295,8 @@ function updatePiecePositionDictionary(piecePositions, moveObject) {
 
 function importFen(fen) {
     const state = extractInfoFromFen(fen)
+    throwIfWrongFenResult(state)
+    state.moveNumber = parseInt(state.moveNumber, 10)
     
     state.boardState = getBoardStateFromBoardString(state.boardString)
     delete state.boardString
