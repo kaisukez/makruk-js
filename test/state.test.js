@@ -110,3 +110,62 @@ test('extractInfoFromFen (number of inputs should be 3 or 6)', () => {
         expect(extractInfoFromFen(invalidInput)).toBeNull()
     }
 })
+
+
+test('getBoardStateFromBoardString', () => {
+    const boardString = 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR'
+    const boardState = [
+        [WHITE, RUA],
+        [WHITE, MA],
+        [WHITE, THON],
+        [WHITE, KHUN],
+        [WHITE, MET],
+        [WHITE, THON],
+        [WHITE, MA],
+        [WHITE, RUA],
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        [WHITE, BIA],
+        [WHITE, BIA],
+        [WHITE, BIA],
+        [WHITE, BIA],
+        [WHITE, BIA],
+        [WHITE, BIA],
+        [WHITE, BIA],
+        [WHITE, BIA],
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        [BLACK, BIA],
+        [BLACK, BIA],
+        [BLACK, BIA],
+        [BLACK, BIA],
+        [BLACK, BIA],
+        [BLACK, BIA],
+        [BLACK, BIA],
+        [BLACK, BIA],
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        [BLACK, RUA],
+        [BLACK, MA],
+        [BLACK, THON],
+        [BLACK, MET],
+        [BLACK, KHUN],
+        [BLACK, THON],
+        [BLACK, MA],
+        [BLACK, RUA],
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+    ]
+
+    expect(getBoardStateFromBoardString(boardString)).toEqual(boardState)
+})
