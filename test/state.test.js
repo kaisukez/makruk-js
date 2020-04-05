@@ -297,3 +297,88 @@ test('forEachPieceFromBoardState', () => {
     expect(colorPieceNum[BLACK][RUA]).toBe(2)
     expect(colorPieceNum[BLACK][KHUN]).toBe(1)
 })
+
+
+test('getPiecePositions', () => {
+    const boardState = [
+        [WHITE, RUA],
+        [WHITE, MA],
+        [WHITE, THON],
+        [WHITE, KHUN],
+        [WHITE, MET],
+        [WHITE, THON],
+        [WHITE, MA],
+        [WHITE, RUA],
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        [WHITE, BIA],
+        [WHITE, BIA],
+        [WHITE, BIA],
+        [WHITE, BIA],
+        [WHITE, BIA],
+        [WHITE, BIA],
+        [WHITE, BIA],
+        [WHITE, BIA],
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        [BLACK, BIA],
+        [BLACK, BIA],
+        [BLACK, BIA],
+        [BLACK, BIA],
+        [BLACK, BIA],
+        [BLACK, BIA],
+        [BLACK, BIA],
+        [BLACK, BIA],
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        [BLACK, RUA],
+        [BLACK, MA],
+        [BLACK, THON],
+        [BLACK, MET],
+        [BLACK, KHUN],
+        [BLACK, THON],
+        [BLACK, MA],
+        [BLACK, RUA],
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+    ]
+
+    const piecePositions = {
+        [WHITE]: {
+            [BIA]: [
+                SQUARES.a3, SQUARES.b3, SQUARES.c3, SQUARES.d3,
+                SQUARES.e3, SQUARES.f3, SQUARES.g3, SQUARES.h3
+            ],
+            [FLIPPED_BIA]: [],
+            [MA]: [ SQUARES.b1, SQUARES.g1 ],
+            [THON]: [ SQUARES.c1, SQUARES.f1 ],
+            [MET]: [ SQUARES.e1 ],
+            [RUA]: [ SQUARES.a1, SQUARES.h1 ],
+            [KHUN]: [ SQUARES.d1 ]
+        },
+        [BLACK]: {
+            [BIA]: [
+                SQUARES.a6, SQUARES.b6, SQUARES.c6, SQUARES.d6,
+                SQUARES.e6, SQUARES.f6, SQUARES.g6, SQUARES.h6
+            ],
+            [FLIPPED_BIA]: [],
+            [MA]: [ SQUARES.b8, SQUARES.g8 ],
+            [THON]: [ SQUARES.c8, SQUARES.f8 ],
+            [MET]: [ SQUARES.d8 ],
+            [RUA]: [ SQUARES.a8, SQUARES.h8 ],
+            [KHUN]: [ SQUARES.e8 ]
+        }
+    }
+
+    expect(getPiecePositions(boardState)).toEqual(piecePositions)
+})
