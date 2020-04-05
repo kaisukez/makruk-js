@@ -24,7 +24,7 @@ const BIA = 'b'
 const FLIPPED_BIA = 'f'
 const MA = 'm'
 const THON = 't' // using THON instead of KHON to distinguish between 't' and 'k'
-const MET = 'e' // using e because 'm' is already use for 'MA'
+const MET = 'e' // using e because 'm' is already used for 'MA'
 const RUA = 'r'
 const KHUN = 'k'
 
