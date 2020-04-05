@@ -278,7 +278,7 @@ function calculateCountdown(state) {
 
     if (piecePowerCountdown) {
         return {
-            fromMove: state.fullMove,
+            fromMove: state.moveNumber,
             color: state.activeColor, // which side want to count
             type: PIECE_POWER_COUNTDOWN, // count type
             count: piecePowerCountdown.countFrom, // current count
@@ -288,7 +288,7 @@ function calculateCountdown(state) {
 
     if (boardPowerCountdown) {
         return {
-            fromMove: state.fullMove,
+            fromMove: state.moveNumber,
             color: state.activeColor,
             type: BOARD_POWER_COUNTDOWN,
             count: boardPowerCountdown.countFrom,
@@ -329,7 +329,7 @@ function step(state) {
     const newState = clone(state)
 
     if (state.activeColor === BLACK) {
-        newState.fullMove++
+        newState.moveNumber++
     }
 
     newState.activeColor = swapColor(newState.activeColor)
@@ -341,7 +341,7 @@ function stepBack(state) {
     const newState = clone(state)
 
     if (state.activeColor === WHITE) {
-        newState.fullMove--
+        newState.moveNumber--
     }
 
     newState.activeColor = swapColor(newState.activeColor)

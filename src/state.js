@@ -69,14 +69,14 @@ const {
 
 
 function extractInfoFromFen(fen) {
-    const regex = /^(?<boardString>\S+)\s+(?<activeColor>[wb])\s+(?<fullMove>\d+)$/
+    const regex = /^(?<boardString>\S+)\s+(?<activeColor>[wb])\s+(?<moveNumber>\d+)$/
     const result = fen.match(regex)
 
     if (!result) {
         return null
     }
 
-    result.groups.fullMove = parseInt(result.groups.fullMove, 10)
+    result.groups.moveNumber = parseInt(result.groups.moveNumber, 10)
 
     return { ...result.groups }
 }
@@ -294,7 +294,7 @@ function importFen(fen) {
 
 
 function exportFen(state) {
-    const { boardState, activeColor, fullMove } = state
+    const { boardState, activeColor, moveNumber } = state
 
     let empty = 0
     let fen = ''
@@ -325,16 +325,18 @@ function exportFen(state) {
         }
     }
 
-    return [fen.split('/').reverse().join('/'), activeColor, fullMove].join(' ')
+    return [fen.split('/').reverse().join('/'), activeColor, moveNumber].join(' ')
 }
 
 
 module.exports = {
+    extractInfoFromFen,
+    getBoardStateFromBoardString,
     forEachPieceFromBoardState,
-    updatePiecePositionDictionary,
     forEachPiece,
     countPiece,
     evalulatePower,
+    updatePiecePositionDictionary,
     importFen,
     exportFen,
 }
