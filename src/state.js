@@ -343,6 +343,10 @@ function importFen(fen) {
     state.countdown = null
     state.countdownHistory = []
 
+    delete state.countColor
+    delete state.countType
+    delete state.count
+
     return state
 }
 
