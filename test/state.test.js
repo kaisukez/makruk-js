@@ -227,11 +227,11 @@ test('forEachPieceFromBoardState', () => {
     ]
 
     let num = 0
-    let colorNum = {
+    const colorNum = {
         [WHITE]: 0,
         [BLACK]: 0
     }
-    let pieceNum = {
+    const pieceNum = {
         [BIA]: 0,
         [FLIPPED_BIA]: 0,
         [MA]: 0,
@@ -240,7 +240,7 @@ test('forEachPieceFromBoardState', () => {
         [RUA]: 0,
         [KHUN]: 0
     }
-    let colorPieceNum = {
+    const colorPieceNum = {
         [WHITE]: {
             [BIA]: 0,
             [FLIPPED_BIA]: 0,
@@ -381,4 +381,138 @@ test('getPiecePositions', () => {
     }
 
     expect(getPiecePositions(boardState)).toEqual(piecePositions)
+})
+
+
+describe('forEachPiece', () => {
+    const piecePositions = {
+        [WHITE]: {
+            [BIA]: [
+                SQUARES.a3, SQUARES.b3, SQUARES.c3, SQUARES.d3,
+                SQUARES.e3, SQUARES.f3, SQUARES.g3, SQUARES.h3
+            ],
+            [FLIPPED_BIA]: [],
+            [MA]: [ SQUARES.b1, SQUARES.g1 ],
+            [THON]: [ SQUARES.c1, SQUARES.f1 ],
+            [MET]: [ SQUARES.e1 ],
+            [RUA]: [ SQUARES.a1, SQUARES.h1 ],
+            [KHUN]: [ SQUARES.d1 ]
+        },
+        [BLACK]: {
+            [BIA]: [
+                SQUARES.a6, SQUARES.b6, SQUARES.c6, SQUARES.d6,
+                SQUARES.e6, SQUARES.f6, SQUARES.g6, SQUARES.h6
+            ],
+            [FLIPPED_BIA]: [],
+            [MA]: [ SQUARES.b8, SQUARES.g8 ],
+            [THON]: [ SQUARES.c8, SQUARES.f8 ],
+            [MET]: [ SQUARES.d8 ],
+            [RUA]: [ SQUARES.a8, SQUARES.h8 ],
+            [KHUN]: [ SQUARES.e8 ]
+        }
+    }
+
+    test('piece count must be the same', () => {
+    
+        let num = 0
+        const colorNum = {
+            [WHITE]: 0,
+            [BLACK]: 0
+        }
+        const pieceNum = {
+            [BIA]: 0,
+            [FLIPPED_BIA]: 0,
+            [MA]: 0,
+            [THON]: 0,
+            [MET]: 0,
+            [RUA]: 0,
+            [KHUN]: 0
+        }
+        const colorPieceNum = {
+            [WHITE]: {
+                [BIA]: 0,
+                [FLIPPED_BIA]: 0,
+                [MA]: 0,
+                [THON]: 0,
+                [MET]: 0,
+                [RUA]: 0,
+                [KHUN]: 0
+            },
+            [BLACK]: {
+                [BIA]: 0,
+                [FLIPPED_BIA]: 0,
+                [MA]: 0,
+                [THON]: 0,
+                [MET]: 0,
+                [RUA]: 0,
+                [KHUN]: 0
+            }
+        }
+    
+        forEachPiece(piecePositions, (color, piece) => {
+            num++
+            colorNum[color]++
+            pieceNum[piece]++
+            colorPieceNum[color][piece]++
+        })
+    
+        expect(num).toBe(32)
+    
+        expect(colorNum[WHITE]).toBe(16)
+        expect(colorNum[BLACK]).toBe(16)
+    
+        expect(pieceNum[BIA]).toBe(16)
+        expect(pieceNum[FLIPPED_BIA]).toBe(0)
+        expect(pieceNum[MA]).toBe(4)
+        expect(pieceNum[THON]).toBe(4)
+        expect(pieceNum[MET]).toBe(2)
+        expect(pieceNum[RUA]).toBe(4)
+        expect(pieceNum[KHUN]).toBe(2)
+    
+        expect(colorPieceNum[WHITE][BIA]).toBe(8)
+        expect(colorPieceNum[WHITE][FLIPPED_BIA]).toBe(0)
+        expect(colorPieceNum[WHITE][MA]).toBe(2)
+        expect(colorPieceNum[WHITE][THON]).toBe(2)
+        expect(colorPieceNum[WHITE][MET]).toBe(1)
+        expect(colorPieceNum[WHITE][RUA]).toBe(2)
+        expect(colorPieceNum[WHITE][KHUN]).toBe(1)
+    
+        expect(colorPieceNum[BLACK][BIA]).toBe(8)
+        expect(colorPieceNum[BLACK][FLIPPED_BIA]).toBe(0)
+        expect(colorPieceNum[BLACK][MA]).toBe(2)
+        expect(colorPieceNum[BLACK][THON]).toBe(2)
+        expect(colorPieceNum[BLACK][MET]).toBe(1)
+        expect(colorPieceNum[BLACK][RUA]).toBe(2)
+        expect(colorPieceNum[BLACK][KHUN]).toBe(1)
+    })
+
+
+    test('piece position must be the same', () => {
+        const newPiecePositions = {
+            [WHITE]: {
+                [BIA]: [],
+                [FLIPPED_BIA]: [],
+                [MA]: [],
+                [THON]: [],
+                [MET]: [],
+                [RUA]: [],
+                [KHUN]: []
+            },
+            [BLACK]: {
+                [BIA]: [],
+                [FLIPPED_BIA]: [],
+                [MA]: [],
+                [THON]: [],
+                [MET]: [],
+                [RUA]: [],
+                [KHUN]: []
+            }
+        }
+
+        forEachPiece(piecePositions, (color, piece, position) => {
+            newPiecePositions[color][piece].push(position)
+        })
+
+        expect(newPiecePositions).toEqual(piecePositions)
+    })
 })
