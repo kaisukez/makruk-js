@@ -352,6 +352,7 @@ module.exports = {
     extractInfoFromFen,
     getBoardStateFromBoardString,
     forEachPieceFromBoardState,
+    getPiecePositions,
     forEachPiece,
     countPiece,
     evalulatePower,
