@@ -27,6 +27,9 @@ const {
     FIRST_SQUARE,
     LAST_SQUARE,
 
+    FLAGS,
+    BITS,
+
     RANK_1,
     RANK_2,
     RANK_3,
@@ -659,5 +662,191 @@ describe('evalulatePower', () => {
 
     test('should evaluate power correctly', () => {
         expect(evalulatePower(pieceCount)).toEqual(expectedResult)
+    })
+})
+
+
+describe('updatePiecePositionDictionary', () => {
+    const piecePositions = {
+        [WHITE]: {
+            [BIA]: [ SQUARES.f5, SQUARES.g4 ],
+            [FLIPPED_BIA]: [],
+            [MA]: [],
+            [THON]: [],
+            [MET]: [],
+            [RUA]: [],
+            [KHUN]: [ SQUARES.d1 ]
+        },
+        [BLACK]: {
+            [BIA]: [ SQUARES.e6, SQUARES.h5 ],
+            [FLIPPED_BIA]: [],
+            [MA]: [],
+            [THON]: [],
+            [MET]: [],
+            [RUA]: [],
+            [KHUN]: [ SQUARES.e8 ]
+        }
+    }
+
+    test('should move correctly', () => {
+        const moveObject = {
+            piece: BIA,
+            color: WHITE,
+            from: SQUARES.g4,
+            to: SQUARES.g5
+        }
+        const result = updatePiecePositionDictionary(piecePositions, moveObject)
+        expect(result[WHITE][BIA].slice().sort()).toEqual([ SQUARES.f5, SQUARES.g5 ].sort())
+    })
+
+    test('should capture correctly', () => {
+        const moveObject = {
+            piece: BIA,
+            color: BLACK,
+            from: SQUARES.h5,
+            to: SQUARES.g4,
+            flags: BITS.CAPTURE,
+            captured: BIA
+        }
+        const result = updatePiecePositionDictionary(piecePositions, moveObject)
+        expect(result[BLACK][BIA].slice().sort()).toEqual([ SQUARES.e6, SQUARES.g4 ].sort())
+        expect(result[WHITE][BIA].slice().sort()).toEqual([ SQUARES.f5 ].sort())
+    })
+
+    test('should promote correctly', () => {
+        const moveObject = {
+            piece: BIA,
+            color: WHITE,
+            from: SQUARES.f5,
+            to: SQUARES.f6,
+            flags: BITS.PROMOTION,
+            promotion: FLIPPED_BIA
+        }
+        const result = updatePiecePositionDictionary(piecePositions, moveObject)
+        expect(result[WHITE][BIA].slice().sort()).toEqual([ SQUARES.g4 ].sort())
+        expect(result[WHITE][FLIPPED_BIA].slice().sort()).toEqual([ SQUARES.f6 ].sort())
+    })
+
+    test('should capture and promote at the same time correctly', () => {
+        const moveObject = {
+            piece: BIA,
+            color: WHITE,
+            from: SQUARES.f5,
+            to: SQUARES.e6,
+            flags: BITS.CAPTURE | BITS.PROMOTION,
+            captured: BIA,
+            promotion: FLIPPED_BIA
+        }
+        const result = updatePiecePositionDictionary(piecePositions, moveObject)
+        expect(result[WHITE][BIA].slice().sort()).toEqual([ SQUARES.g4 ].sort())
+        expect(result[WHITE][FLIPPED_BIA].slice().sort()).toEqual([ SQUARES.e6 ].sort())
+        expect(result[BLACK][BIA].slice().sort()).toEqual([ SQUARES.h5 ].sort())
+    })
+
+    describe('should throw error if not enough input', () => {
+        test('not enough color', () => {
+            expect.assertions(3)
+            try {
+                updatePiecePositionDictionary(piecePositions, {
+                    piece: BIA,
+                    from: SQUARES.f5,
+                    to: SQUARES.e6,
+                })
+            } catch (error) {
+                expect(error.code).toBe('NOT_ENOUGH_INPUT')
+                expect(error.requireMoreInput).toBeInstanceOf(Array)
+                expect(error.requireMoreInput.slice().sort()).toEqual(['color'])
+            }
+        })
+        
+        test('not enough piece', () => {
+            expect.assertions(3)
+            try {
+                updatePiecePositionDictionary(piecePositions, {
+                    color: WHITE,
+                    from: SQUARES.f5,
+                    to: SQUARES.e6,
+                })
+            } catch (error) {
+                expect(error.code).toBe('NOT_ENOUGH_INPUT')
+                expect(error.requireMoreInput).toBeInstanceOf(Array)
+                expect(error.requireMoreInput.slice().sort()).toEqual(['piece'])
+            }
+        })
+
+        test('not enough from', () => {
+            expect.assertions(3)
+            try {
+                updatePiecePositionDictionary(piecePositions, {
+                    piece: BIA,
+                    color: WHITE,
+                    to: SQUARES.e6,
+                })
+            } catch (error) {
+                expect(error.code).toBe('NOT_ENOUGH_INPUT')
+                expect(error.requireMoreInput).toBeInstanceOf(Array)
+                expect(error.requireMoreInput.slice().sort()).toEqual(['from'])
+            }
+        })
+
+        test('not enough to', () => {
+            expect.assertions(3)
+            try {
+                updatePiecePositionDictionary(piecePositions, {
+                    piece: BIA,
+                    color: WHITE,
+                    from: SQUARES.f5,
+                })
+            } catch (error) {
+                expect(error.code).toBe('NOT_ENOUGH_INPUT')
+                expect(error.requireMoreInput).toBeInstanceOf(Array)
+                expect(error.requireMoreInput.slice().sort()).toEqual(['to'])
+            }
+        })
+
+        test('not enough everything', () => {
+            expect.assertions(3)
+            try {
+                updatePiecePositionDictionary(piecePositions, {})
+            } catch (error) {
+                expect(error.code).toBe('NOT_ENOUGH_INPUT')
+                expect(error.requireMoreInput).toBeInstanceOf(Array)
+                expect(error.requireMoreInput.slice().sort()).toEqual(['color', 'piece', 'from', 'to'].sort())
+            }
+        })
+
+        test("if there's promotion flag then throw error if no 'promotion' exists in moveObject", () => {
+            expect.assertions(3)
+            try {
+                updatePiecePositionDictionary(piecePositions, {
+                    piece: BIA,
+                    color: WHITE,
+                    from: SQUARES.f5,
+                    to: SQUARES.e6,
+                    flags: BITS.PROMOTION,
+                })
+            } catch (error) {
+                expect(error.code).toBe('NOT_ENOUGH_INPUT')
+                expect(error.requireMoreInput).toBeInstanceOf(Array)
+                expect(error.requireMoreInput.slice().sort()).toEqual(['promotion'].sort())
+            }
+        })
+
+        test("if there's capture flag then throw error if no 'captured' exists in moveObject", () => {
+            expect.assertions(3)
+            try {
+                updatePiecePositionDictionary(piecePositions, {
+                    piece: BIA,
+                    color: WHITE,
+                    from: SQUARES.f5,
+                    to: SQUARES.e6,
+                    flags: BITS.CAPTURE,
+                })
+            } catch (error) {
+                expect(error.code).toBe('NOT_ENOUGH_INPUT')
+                expect(error.requireMoreInput).toBeInstanceOf(Array)
+                expect(error.requireMoreInput.slice().sort()).toEqual(['captured'].sort())
+            }
+        })
     })
 })
