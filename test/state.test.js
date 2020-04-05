@@ -62,6 +62,7 @@ const {
     extractInfoFromFen,
     getBoardStateFromBoardString,
     forEachPieceFromBoardState,
+    getPiecePositions,
     forEachPiece,
     countPiece,
     evalulatePower,
@@ -113,7 +114,65 @@ test('extractInfoFromFen (number of inputs should be 3 or 6)', () => {
 
 
 test('getBoardStateFromBoardString', () => {
-    const boardString = 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR'
+    const boardString = 'rmtektmr/8/bbfbbbbb/8/8/BBBBFBBB/8/RMTKETMR'
+    const boardState = [
+        [WHITE, RUA],
+        [WHITE, MA],
+        [WHITE, THON],
+        [WHITE, KHUN],
+        [WHITE, MET],
+        [WHITE, THON],
+        [WHITE, MA],
+        [WHITE, RUA],
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        [WHITE, BIA],
+        [WHITE, BIA],
+        [WHITE, BIA],
+        [WHITE, BIA],
+        [WHITE, FLIPPED_BIA],
+        [WHITE, BIA],
+        [WHITE, BIA],
+        [WHITE, BIA],
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        [BLACK, BIA],
+        [BLACK, BIA],
+        [BLACK, FLIPPED_BIA],
+        [BLACK, BIA],
+        [BLACK, BIA],
+        [BLACK, BIA],
+        [BLACK, BIA],
+        [BLACK, BIA],
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+
+        [BLACK, RUA],
+        [BLACK, MA],
+        [BLACK, THON],
+        [BLACK, MET],
+        [BLACK, KHUN],
+        [BLACK, THON],
+        [BLACK, MA],
+        [BLACK, RUA],
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+    ]
+
+    expect(getBoardStateFromBoardString(boardString)).toEqual(boardState)
+})
+
+
+test('forEachPieceFromBoardState', () => {
     const boardState = [
         [WHITE, RUA],
         [WHITE, MA],
@@ -167,5 +226,74 @@ test('getBoardStateFromBoardString', () => {
         undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
     ]
 
-    expect(getBoardStateFromBoardString(boardString)).toEqual(boardState)
+    let num = 0
+    let colorNum = {
+        [WHITE]: 0,
+        [BLACK]: 0
+    }
+    let pieceNum = {
+        [BIA]: 0,
+        [FLIPPED_BIA]: 0,
+        [MA]: 0,
+        [THON]: 0,
+        [MET]: 0,
+        [RUA]: 0,
+        [KHUN]: 0
+    }
+    let colorPieceNum = {
+        [WHITE]: {
+            [BIA]: 0,
+            [FLIPPED_BIA]: 0,
+            [MA]: 0,
+            [THON]: 0,
+            [MET]: 0,
+            [RUA]: 0,
+            [KHUN]: 0
+        },
+        [BLACK]: {
+            [BIA]: 0,
+            [FLIPPED_BIA]: 0,
+            [MA]: 0,
+            [THON]: 0,
+            [MET]: 0,
+            [RUA]: 0,
+            [KHUN]: 0
+        }
+    }
+
+    forEachPieceFromBoardState(boardState, ([color, piece]) => {
+        num++
+        colorNum[color]++
+        pieceNum[piece]++
+        colorPieceNum[color][piece]++
+    })
+
+    expect(num).toBe(32)
+
+    expect(colorNum[WHITE]).toBe(16)
+    expect(colorNum[BLACK]).toBe(16)
+
+    expect(pieceNum[BIA]).toBe(16)
+    expect(pieceNum[FLIPPED_BIA]).toBe(0)
+    expect(pieceNum[MA]).toBe(4)
+    expect(pieceNum[THON]).toBe(4)
+    expect(pieceNum[MET]).toBe(2)
+    expect(pieceNum[RUA]).toBe(4)
+    expect(pieceNum[KHUN]).toBe(2)
+
+    expect(colorPieceNum[WHITE][BIA]).toBe(8)
+    expect(colorPieceNum[WHITE][FLIPPED_BIA]).toBe(0)
+    expect(colorPieceNum[WHITE][MA]).toBe(2)
+    expect(colorPieceNum[WHITE][THON]).toBe(2)
+    expect(colorPieceNum[WHITE][MET]).toBe(1)
+    expect(colorPieceNum[WHITE][RUA]).toBe(2)
+    expect(colorPieceNum[WHITE][KHUN]).toBe(1)
+
+    expect(colorPieceNum[BLACK][BIA]).toBe(8)
+    expect(colorPieceNum[BLACK][FLIPPED_BIA]).toBe(0)
+    expect(colorPieceNum[BLACK][MA]).toBe(2)
+    expect(colorPieceNum[BLACK][THON]).toBe(2)
+    expect(colorPieceNum[BLACK][MET]).toBe(1)
+    expect(colorPieceNum[BLACK][RUA]).toBe(2)
+    expect(colorPieceNum[BLACK][KHUN]).toBe(1)
 })
