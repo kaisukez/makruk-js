@@ -91,7 +91,7 @@ function throwIfWrongFen(fen) {
     }
 
     const length = fen.split(' ').length
-    if (!(length === 3 || length === 6)) {
+    if (!length === 3 && !length === 6) {
         throw {
             code: 'WRONG_NUMBER_OF_INPUTS',
             message: 'fen sholud be string with 3 or 6 fields separated by space',
@@ -110,6 +110,8 @@ function throwIfWrongFen(fen) {
         count
     } = parsed
 
+
+    /* ------------------------- boardString ------------------------- */
     if (/[^bfmterkBFMTERK1-8/]/.test(boardString)) {
         throw {
             code: 'WRONG_BOARD_STRING_CHARACTER',
@@ -152,6 +154,28 @@ function throwIfWrongFen(fen) {
             message: 'total of squares boardString represented must be 64',
             field: 'boardString',
             fieldNumber: 1,
+        }
+    }
+
+
+    /* ------------------------- activeColor ------------------------- */
+    if (activeColor !== WHITE && activeColor !== BLACK) {
+        throw {
+            code: 'WRONG_ACTIVE_COLOR',
+            message: `activeColor must be 'w' or 'b' (white or black)`,
+            field: 'activeColor',
+            fieldNumber: 2,
+        }
+    }
+
+
+    /* ------------------------- moveNumber ------------------------- */
+    if (!(/^[1-9]\d*$/).test(moveNumber)) {
+        throw {
+            code: 'WRONG_MOVE_NUMBER',
+            message: 'moveNumber must be number (positive number with no 0 in front)',
+            field: 'moveNumber',
+            fieldNumber: 3,
         }
     }
 } 
