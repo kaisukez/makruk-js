@@ -68,24 +68,6 @@ const {
 
 
 
-function throwIfWrongFenResult(result) {
-    // TODO
-    if (!result) {
-        throw { code: 'WRONG_AMOUNT_OF_INPUTS' }
-    }
-
-    console.log(result)
-
-    const {
-        boardString,
-        activeColor,
-        moveNumber,
-        countColor,
-        countType,
-        count
-    } = result
-
-} 
 
 function extractInfoFromFen(fen) {
     const regex = /^(?<boardString>\S+)\s+(?<activeColor>\S+)\s+(?<moveNumber>\S+)(\s+(?<countColor>\S+)\s+(?<countType>\S+)\s+(?<count>\S+))?$/
@@ -97,6 +79,82 @@ function extractInfoFromFen(fen) {
 
     return { ...result.groups }
 }
+
+function throwIfWrongFen(fen) {
+    if (typeof fen !== 'string') {
+        throw {
+            code: 'WRONG_INPUT_TYPE',
+            message: 'fen should be string',
+            field: 'fen',
+            fieldNumber: -1,
+        }
+    }
+
+    const length = fen.split(' ').length
+    if (!(length === 3 || length === 6)) {
+        throw {
+            code: 'WRONG_NUMBER_OF_INPUTS',
+            message: 'fen sholud be string with 3 or 6 fields separated by space',
+            field: 'fen',
+            fieldNumber: -1,
+        }
+    }
+
+    const parsed = extractInfoFromFen(fen)
+    const {
+        boardString,
+        activeColor,
+        moveNumber,
+        countColor,
+        countType,
+        count
+    } = parsed
+
+    if (/[^bfmterkBFMTERK1-8/]/.test(boardString)) {
+        throw {
+            code: 'WRONG_BOARD_STRING_CHARACTER',
+            message: `boardString can only contains 'bfmterkBFMTERK12345678/'`,
+            field: 'boardString',
+            fieldNumber: 1, // start from 1 (not 0)
+        }
+    }
+
+    if (!(/^[bfmterkBFMTERK1-8]{1,8}(\/[bfmterkBFMTERK1-8]{1,8}){7}$/.test(boardString))) {
+        throw {
+            code: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
+            message: `boardString must contain 8 ranks separated by '/'`,
+            field: 'boardString',
+            fieldNumber: 1,
+        }
+    }
+
+    if (/[1-8]{2,}g/.test(boardString)) {
+        throw {
+            code: 'WRONG_BOARD_STRING_NUMBER_NEXT_TO_EACH_OTHER',
+            message: 'boardString must not have any connected number like this /bb6/71/... (7 and 1)',
+            field: 'boardString',
+            fieldNumber: 1,
+        }
+    }
+
+    const squareCount = boardString
+        .replace(/\//g, '')
+        .split('')
+        .reduce((count, character) => {
+            if (/[1-8]/.test(character)) {
+                return count + parseInt(character, 10)
+            }
+            return count + 1
+        }, 0)
+    if (squareCount !== 64) {
+        throw {
+            code: 'WRONG_BOARD_STRING_NUMBER_OF_SQUARES',
+            message: 'total of squares boardString represented must be 64',
+            field: 'boardString',
+            fieldNumber: 1,
+        }
+    }
+} 
 
 function getBoardStateFromBoardString(boardString) {
     const boardState = Array(128)
@@ -329,8 +387,9 @@ function updatePiecePositionDictionary(piecePositions, moveObject) {
 
 
 function importFen(fen) {
+    throwIfWrongFen(fen)
     const state = extractInfoFromFen(fen)
-    throwIfWrongFenResult(state)
+    // throwIfWrongFenResult(state)
     state.moveNumber = parseInt(state.moveNumber, 10)
     
     state.boardState = getBoardStateFromBoardString(state.boardString)
