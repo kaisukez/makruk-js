@@ -162,7 +162,7 @@ function throwIfWrongFen(fen) {
     if (activeColor !== WHITE && activeColor !== BLACK) {
         throw {
             code: 'WRONG_ACTIVE_COLOR',
-            message: `activeColor must be 'w' or 'b' (white or black)`,
+            message: `activeColor can be either 'w' or 'b' (white or black)`,
             field: 'activeColor',
             fieldNumber: 2,
         }
@@ -176,6 +176,49 @@ function throwIfWrongFen(fen) {
             message: 'moveNumber must be number (positive number with no 0 in front)',
             field: 'moveNumber',
             fieldNumber: 3,
+        }
+    }
+
+
+    /* ------------------------- countdown ------------------------- */
+    if (
+        !(
+            (countColor === '-' && countType === '-' && count === '-') ||
+            (countColor !== '-' && countType !== '-' && count !== '-')
+        )
+    ) {
+        throw {
+            code: 'WRONG_COUNTDOWN',
+            message: `countColor, countType and count can be '-' at the same time or can be something else at the same time`,
+            field: 'countdown',
+            fieldNumber: -1,
+        }
+    }
+
+    if (countColor && countColor !== WHITE && countColor !== BLACK) {
+        throw {
+            code: 'WRONG_COUNT_COLOR',
+            message: `countColor can be either 'w' or 'b' (white or black)`,
+            field: 'countColor',
+            fiendNumber: 4,
+        }
+    }
+
+    if (countType && countType !== 'bp' && countType !== 'pp') {
+        throw {
+            code: 'WRONG_COUNT_TYPE',
+            message: `countType can be either 'bp' or 'pp' (board power or piece power)`,
+            field: 'countType',
+            fieldNumber: 5,
+        }
+    }
+
+    if (count && !(/^[1-9]\d*$/).test(countNumber)) {
+        throw {
+            code: 'WRONG_COUNT_NUMBER',
+            message: 'countNumber must be number (positive number with no 0 in front)',
+            field: 'counterNumbere',
+            fieldNumber: 6,
         }
     }
 } 
