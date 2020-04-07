@@ -527,7 +527,17 @@ function exportFen(state) {
         }
     }
 
-    return [fen.split('/').reverse().join('/'), activeColor, moveNumber].join(' ')
+    const result = [fen.split('/').reverse().join('/'), activeColor, moveNumber]
+
+    if (state.countdown) {
+        result.push(
+            state.countdown.countColor,
+            state.countdown.countType,
+            state.countdown.count
+        )
+    }
+
+    return result.join(' ')
 }
 
 

@@ -1309,7 +1309,28 @@ describe('import export fen', () => {
         for (const test of tests) {
             const result = importFen(test.fen)
             expect(result.countdown).toEqual(test.result)
-            console.log(result.countdown)
         }
+    })
+
+
+    test('should export state to fen with countdown correctly', () => {
+        const newState = clone(state)
+
+        newState.countdown = {
+            countColor: BLACK,
+            countType: BOARD_POWER_COUNTDOWN,
+            count: 11
+        }
+        expect(exportFen(newState).split(' ').slice(3).join(' ')).toBe('b bp 11')
+
+        newState.countdown = {
+            countColor: WHITE,
+            countType: PIECE_POWER_COUNTDOWN,
+            count: 29
+        }
+        expect(exportFen(newState).split(' ').slice(3).join(' ')).toBe('w pp 29')
+
+        newState.countdown = null
+        expect(exportFen(newState).split(' ').length).toBe(3)
     })
 })
