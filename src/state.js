@@ -91,7 +91,7 @@ function throwIfWrongFen(fen) {
     }
 
     const length = fen.split(' ').length
-    if (!length === 3 && !length === 6) {
+    if (length !== 3 && length !== 6) {
         throw {
             code: 'WRONG_NUMBER_OF_INPUTS',
             message: 'fen must be string with 3 or 6 fields separated by space',
