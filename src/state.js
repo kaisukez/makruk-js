@@ -124,7 +124,7 @@ function throwIfWrongFen(fen) {
         }
     }
 
-    if (!(/^[bfmterkBFMTERK1-8]{1,8}(\/[bfmterkBFMTERK1-8]{1,8}){7}$/.test(boardString))) {
+    if (!(/^[bfmterkBFMTERK1-8]+(\/[bfmterkBFMTERK1-8]+){7}$/.test(boardString))) {
         throw {
             code: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
             message: `boardString must contain 8 ranks separated by '/'`,
@@ -155,6 +155,49 @@ function throwIfWrongFen(fen) {
         throw {
             code: 'WRONG_BOARD_STRING_NUMBER_OF_SQUARES',
             message: 'total of squares boardString represented must be 64',
+            field: 'boardString',
+            fieldNumber: 1,
+        }
+    }
+
+
+    let squaresPerRow = 0
+    for (const row of boardString.split('/')) {
+        squaresPerRow = 0
+        for (const character of row) {
+            if (/\d/.test(character)) {
+                squaresPerRow += parseInt(character, 10)
+            } else {
+                squaresPerRow += 1
+            }
+        }
+        if (squaresPerRow !== 8) {
+            throw {
+                code: 'WRONG_BOARD_STRING_NUMBER_OF_SQUARES_PER_RANK',
+                message: 'number of squares per rank must be 8',
+                field: 'boardString',
+                fieldNumber: 1,
+            }
+        }
+    }
+
+
+    const [whiteKhunCount, blackKhunCount] = boardString
+        .replace(/\//g, '')
+        .split('')
+        .reduce((count, character) => {
+            if (character === 'K') {
+                return [count[0] + 1, count[1]]
+            }
+            if (character === 'k') {
+                return [count[0], count[1] + 1]
+            }
+            return count
+        }, [0, 0])
+    if (whiteKhunCount !== 1 || blackKhunCount !== 1) {
+        throw {
+            code: 'WRONG_BOARD_STRING_NUMBER_OF_KHUNS',
+            message: 'number of khun must be 1 for each side',
             field: 'boardString',
             fieldNumber: 1,
         }
