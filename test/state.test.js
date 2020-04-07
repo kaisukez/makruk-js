@@ -989,6 +989,7 @@ describe('import export fen', () => {
             },
 
 
+
             {
                 fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 -',
                 errorCode: 'WRONG_NUMBER_OF_INPUTS',
@@ -1021,6 +1022,141 @@ describe('import export fen', () => {
                 fen: '- - rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1',
                 errorCode: 'WRONG_NUMBER_OF_INPUTS',
             },
+
+
+
+            {
+                fen: 'ratektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_CHARACTER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BPBBBBBB/8/RMTKETMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_CHARACTER',
+            },
+            {
+                fen: 'rmtektmd/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_CHARACTER',
+            },
+            {
+                fen: 'rmtektmg/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - - -',
+                errorCode: 'WRONG_BOARD_STRING_CHARACTER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/-BBBBBBB/8/RMTKETMR w 1 - - -',
+                errorCode: 'WRONG_BOARD_STRING_CHARACTER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/+BBBBBBB/8/RMTKETMR w 1 - - -',
+                errorCode: 'WRONG_BOARD_STRING_CHARACTER',
+            },
+
+
+            
+            {
+                fen: 'rmtektmr w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
+            },
+            {
+                fen: 'rmtektmr/8 w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8 w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8 w 1 - - -',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB w 1 - - -',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8 w 1 - - -',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR/8 w 1 - - -',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
+            },
+
+
+
+            {
+                fen: 'rmtektmr/53/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - - -',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_NEXT_TO_EACH_OTHER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/71/8/BBBBBBBB/8/RMTKETMR w 1 - - -',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_NEXT_TO_EACH_OTHER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/26/BBBBBBBB/8/RMTKETMR w 1 - - -',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_NEXT_TO_EACH_OTHER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/44/RMTKETMR w 1 - - -',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_NEXT_TO_EACH_OTHER',
+            },
+
+
+
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR W 1 - - -',
+                errorCode: 'WRONG_ACTIVE_COLOR',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR B 1',
+                errorCode: 'WRONG_ACTIVE_COLOR',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR WHITE 1 - - -',
+                errorCode: 'WRONG_ACTIVE_COLOR',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR BLACK 1',
+                errorCode: 'WRONG_ACTIVE_COLOR',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR white 1 - - -',
+                errorCode: 'WRONG_ACTIVE_COLOR',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR black 1',
+                errorCode: 'WRONG_ACTIVE_COLOR',
+            },
+
+
+
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 01',
+                errorCode: 'WRONG_MOVE_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w +1',
+                errorCode: 'WRONG_MOVE_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w -1',
+                errorCode: 'WRONG_MOVE_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 0x88',
+                errorCode: 'WRONG_MOVE_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w white',
+                errorCode: 'WRONG_MOVE_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w b',
+                errorCode: 'WRONG_MOVE_NUMBER',
+            },
         ]
 
         expect.assertions(tests.length)
@@ -1031,7 +1167,7 @@ describe('import export fen', () => {
                 console.log('this input didn\'t throw error', test)
             } catch (error) {
                 expect(error.code).toBe(test.errorCode)
-                if (error.hasOwnProperty('code')) {
+                if (!error.hasOwnProperty('code')) {
                     console.log(error)
                 }
             }

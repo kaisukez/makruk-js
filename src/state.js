@@ -130,7 +130,7 @@ function throwIfWrongFen(fen) {
         }
     }
 
-    if (/[1-8]{2,}g/.test(boardString)) {
+    if (/[1-8]{2,}/.test(boardString)) {
         throw {
             code: 'WRONG_BOARD_STRING_NUMBER_NEXT_TO_EACH_OTHER',
             message: 'boardString must not have any connected number like this /bb6/71/... (7 and 1)',
