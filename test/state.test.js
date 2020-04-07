@@ -987,6 +987,40 @@ describe('import export fen', () => {
                 fen: new Set([1, 2, 3]),
                 errorCode: 'WRONG_INPUT_TYPE', 
             },
+
+
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 -',
+                errorCode: 'WRONG_NUMBER_OF_INPUTS',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - -',
+                errorCode: 'WRONG_NUMBER_OF_INPUTS',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - - - -',
+                errorCode: 'WRONG_NUMBER_OF_INPUTS',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - - - - -',
+                errorCode: 'WRONG_NUMBER_OF_INPUTS',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w',
+                errorCode: 'WRONG_NUMBER_OF_INPUTS',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR',
+                errorCode: 'WRONG_NUMBER_OF_INPUTS',
+            },
+            {
+                fen: '- rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 -',
+                errorCode: 'WRONG_NUMBER_OF_INPUTS',
+            },
+            {
+                fen: '- - rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1',
+                errorCode: 'WRONG_NUMBER_OF_INPUTS',
+            },
         ]
 
         expect.assertions(tests.length)
@@ -997,6 +1031,9 @@ describe('import export fen', () => {
                 console.log('this input didn\'t throw error', test)
             } catch (error) {
                 expect(error.code).toBe(test.errorCode)
+                if (error.hasOwnProperty('code')) {
+                    console.log(error)
+                }
             }
         }
     })
