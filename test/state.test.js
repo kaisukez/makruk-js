@@ -47,6 +47,9 @@ const {
     FILE_F,
     FILE_G,
     FILE_H,
+
+    PIECE_POWER_COUNTDOWN,
+    BOARD_POWER_COUNTDOWN
 } = require('../src/constants')
 
 const {
@@ -1138,6 +1141,10 @@ describe('import export fen', () => {
                 errorCode: 'WRONG_MOVE_NUMBER',
             },
             {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 0',
+                errorCode: 'WRONG_MOVE_NUMBER',
+            },
+            {
                 fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w +1',
                 errorCode: 'WRONG_MOVE_NUMBER',
             },
@@ -1157,6 +1164,110 @@ describe('import export fen', () => {
                 fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w b',
                 errorCode: 'WRONG_MOVE_NUMBER',
             },
+
+
+
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 b - -',
+                errorCode: 'WRONG_COUNTDOWN',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - bp -',
+                errorCode: 'WRONG_COUNTDOWN',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - - 5',
+                errorCode: 'WRONG_COUNTDOWN',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 b pp -',
+                errorCode: 'WRONG_COUNTDOWN',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 b - 6',
+                errorCode: 'WRONG_COUNTDOWN',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - bp 6',
+                errorCode: 'WRONG_COUNTDOWN',
+            },
+
+
+
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 white bp 6',
+                errorCode: 'WRONG_COUNT_COLOR',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 black bp 6',
+                errorCode: 'WRONG_COUNT_COLOR',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 W bp 6',
+                errorCode: 'WRONG_COUNT_COLOR',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 B bp 6',
+                errorCode: 'WRONG_COUNT_COLOR',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 + bp 6',
+                errorCode: 'WRONG_COUNT_COLOR',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 / bp 6',
+                errorCode: 'WRONG_COUNT_COLOR',
+            },
+
+
+
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pb 6',
+                errorCode: 'WRONG_COUNT_TYPE',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w bb 6',
+                errorCode: 'WRONG_COUNT_TYPE',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w 5 6',
+                errorCode: 'WRONG_COUNT_TYPE',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w b 6',
+                errorCode: 'WRONG_COUNT_TYPE',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w p 6',
+                errorCode: 'WRONG_COUNT_TYPE',
+            },
+
+
+
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp 06',
+                errorCode: 'WRONG_COUNT_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp 0',
+                errorCode: 'WRONG_COUNT_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp +6',
+                errorCode: 'WRONG_COUNT_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w bp -6',
+                errorCode: 'WRONG_COUNT_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w bp 0x88',
+                errorCode: 'WRONG_COUNT_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp w',
+                errorCode: 'WRONG_COUNT_NUMBER',
+            },
         ]
 
         expect.assertions(tests.length)
@@ -1171,6 +1282,34 @@ describe('import export fen', () => {
                     console.log(error)
                 }
             }
+        }
+    })
+
+
+    test('should import fen with countdown correctly', () => {
+        const tests = [
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w bp 3',
+                result: {
+                    countColor: WHITE,
+                    countType: BOARD_POWER_COUNTDOWN,
+                    count: 3,
+                }
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 b pp 33',
+                result: {
+                    countColor: BLACK,
+                    countType: PIECE_POWER_COUNTDOWN,
+                    count: 33,
+                }
+            },
+        ]
+
+        for (const test of tests) {
+            const result = importFen(test.fen)
+            expect(result.countdown).toEqual(test.result)
+            console.log(result.countdown)
         }
     })
 })

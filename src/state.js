@@ -47,6 +47,9 @@ const {
     FILE_F,
     FILE_G,
     FILE_H,
+
+    PIECE_POWER_COUNTDOWN,
+    BOARD_POWER_COUNTDOWN
 } = require('./constants')
 
 
@@ -213,11 +216,11 @@ function throwIfWrongFen(fen) {
         }
     }
 
-    if (count && !(/^[1-9]\d*$/).test(countNumber)) {
+    if (count && !(/^[1-9]\d*$/).test(count)) {
         throw {
             code: 'WRONG_COUNT_NUMBER',
             message: 'countNumber must be number (positive number with no 0 in front)',
-            field: 'counterNumbere',
+            field: 'counterNumber',
             fieldNumber: 6,
         }
     }
@@ -452,6 +455,17 @@ function updatePiecePositionDictionary(piecePositions, moveObject) {
     return newPiecePositions
 }
 
+function createCountdownObject(countColor, countType, count) {
+    if (countColor && countType && count) {
+        return {
+            countColor: countColor,
+            countType: countType,
+            count: parseInt(count, 10)
+        }
+    }
+
+    return null
+}
 
 function importFen(fen) {
     throwIfWrongFen(fen)
@@ -466,7 +480,11 @@ function importFen(fen) {
     state.future = []
     state.piecePositions = getPiecePositions(state.boardState)
 
-    state.countdown = null
+    state.countdown = createCountdownObject(
+        state.countColor,
+        state.countType,
+        state.count
+    )
     state.countdownHistory = []
 
     delete state.countColor
