@@ -1087,6 +1087,10 @@ describe('import export fen', () => {
                 fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR/8 w 1 - - -',
                 errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
             },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR/8/bbbbbbbb w 1 - - -',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
+            },
 
 
 
@@ -1105,6 +1109,83 @@ describe('import export fen', () => {
             {
                 fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/44/RMTKETMR w 1 - - -',
                 errorCode: 'WRONG_BOARD_STRING_NUMBER_NEXT_TO_EACH_OTHER',
+            },
+
+
+
+            {
+                fen: 'rmte/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_SQUARES',
+            },
+            {
+                fen: 'rmtektmr/5/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_SQUARES',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_SQUARES',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/7/8/BBBBBBBB/8/RMTKETMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_SQUARES',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/7/BBBBBBBB/8/RMTKETMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_SQUARES',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBB/8/RMTKETMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_SQUARES',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/5/RMTKETMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_SQUARES',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/MR w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_SQUARES',
+            },
+
+
+            
+            {
+                fen: 'rmtektmr/7/bbbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_SQUARES_PER_RANK',
+            },
+            {
+                fen: 'r/8mtektmr/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_SQUARES_PER_RANK',
+            },
+            {
+                fen: 'rmtektmr7bbbbbbb7BBBBBBB7RMTK7TMR/1/b/1/1/B/1/E w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_SQUARES_PER_RANK',
+            },
+
+
+
+            {
+                fen: 'rmtektmk/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_KHUNS',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/KMTKETMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_KHUNS',
+            },
+            {
+                fen: 'rmtertmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_KHUNS',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTRETMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_KHUNS',
+            },
+            {
+                fen: 'rmtertmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTRETMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_KHUNS',
+            },
+            {
+                fen: 'rmtekkmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKKTMR w 1',
+                errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_KHUNS',
             },
 
 
