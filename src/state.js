@@ -84,7 +84,7 @@ function throwIfWrongFen(fen) {
     if (typeof fen !== 'string') {
         throw {
             code: 'WRONG_INPUT_TYPE',
-            message: 'fen should be string',
+            message: 'fen must be string',
             field: 'fen',
             fieldNumber: -1,
         }
@@ -94,7 +94,7 @@ function throwIfWrongFen(fen) {
     if (!length === 3 && !length === 6) {
         throw {
             code: 'WRONG_NUMBER_OF_INPUTS',
-            message: 'fen sholud be string with 3 or 6 fields separated by space',
+            message: 'fen must be string with 3 or 6 fields separated by space',
             field: 'fen',
             fieldNumber: -1,
         }
