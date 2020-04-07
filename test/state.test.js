@@ -952,4 +952,52 @@ describe('import export fen', () => {
     })
 
     // TODO: test import/export fen with countdown
+
+    test('should throw error when import fen', () => {
+        const tests = [
+            {
+                fen: null,
+                errorCode: 'WRONG_INPUT_TYPE', 
+            },
+            {
+                fen: undefined,
+                errorCode: 'WRONG_INPUT_TYPE', 
+            },
+            {
+                fen: {},
+                errorCode: 'WRONG_INPUT_TYPE', 
+            },
+            {
+                fen: [],
+                errorCode: 'WRONG_INPUT_TYPE', 
+            },
+            {
+                fen: new String('rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1'),
+                errorCode: 'WRONG_INPUT_TYPE', 
+            },
+            {
+                fen: 123,
+                errorCode: 'WRONG_INPUT_TYPE', 
+            },
+            {
+                fen: new Number('123'),
+                errorCode: 'WRONG_INPUT_TYPE', 
+            },
+            {
+                fen: new Set([1, 2, 3]),
+                errorCode: 'WRONG_INPUT_TYPE', 
+            },
+        ]
+
+        expect.assertions(tests.length)
+    
+        for (const test of tests) {
+            try {
+                importFen(test.fen)
+                console.log('this input didn\'t throw error', test)
+            } catch (error) {
+                expect(error.code).toBe(test.errorCode)
+            }
+        }
+    })
 })
