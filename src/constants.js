@@ -243,6 +243,7 @@ module.exports = {
     KHUN,
 
     INITIAL_FEN,
+    EMPTY_FEN,
 
     BIA_MOVE_OFFSETS,
     BIA_ATTACK_OFFSETS,
