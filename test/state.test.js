@@ -75,6 +75,9 @@ const {
     countPiece,
     evalulatePower,
     updatePiecePositionDictionary,
+    removePiecePositionIfExists,
+    put,
+    remove,
     importFen,
     exportFen
 } = require('../src/state')
@@ -853,6 +856,196 @@ describe('updatePiecePositionDictionary', () => {
         })
     })
 })
+
+
+describe('removePiecePositionIfExists', () => {
+    const piecePositions = {
+        [WHITE]: {
+            [BIA]: [ SQUARES.f5, SQUARES.g4 ],
+            [FLIPPED_BIA]: [],
+            [MA]: [],
+            [THON]: [],
+            [MET]: [],
+            [RUA]: [],
+            [KHUN]: [ SQUARES.d1 ]
+        },
+        [BLACK]: {
+            [BIA]: [ SQUARES.e6, SQUARES.h5 ],
+            [FLIPPED_BIA]: [],
+            [MA]: [],
+            [THON]: [],
+            [MET]: [],
+            [RUA]: [],
+            [KHUN]: [ SQUARES.e8 ]
+        }
+    }
+
+    const boardState = Array(128)
+    boardState[SQUARES.f5] = [WHITE, BIA]
+    boardState[SQUARES.g4] = [WHITE, BIA]
+    boardState[SQUARES.d1] = [WHITE, KHUN]
+    boardState[SQUARES.e6] = [BLACK, BIA]
+    boardState[SQUARES.h5] = [BLACK, BIA]
+    boardState[SQUARES.e8] = [BLACK, KHUN]
+
+    test('remove piece f5 correctly', () => {
+        const square = SQUARES.f5
+        const result = removePiecePositionIfExists(piecePositions, boardState, square)
+        const newPiecePositions = clone(piecePositions)
+        newPiecePositions[WHITE][BIA] = newPiecePositions[WHITE][BIA].filter(p => p !== square)
+        expect(result).toEqual(newPiecePositions)
+    })
+
+    test('remove piece g4 correctly', () => {
+        const square = SQUARES.g4
+        const result = removePiecePositionIfExists(piecePositions, boardState, square)
+        const newPiecePositions = clone(piecePositions)
+        newPiecePositions[WHITE][BIA] = newPiecePositions[WHITE][BIA].filter(p => p !== square)
+        expect(result).toEqual(newPiecePositions)
+    })
+
+    test('remove piece d1 correctly', () => {
+        const square = SQUARES.d1
+        const result = removePiecePositionIfExists(piecePositions, boardState, square)
+        const newPiecePositions = clone(piecePositions)
+        newPiecePositions[WHITE][KHUN] = newPiecePositions[WHITE][KHUN].filter(p => p !== square)
+        expect(result).toEqual(newPiecePositions)
+    })
+
+    test('remove piece e6 correctly', () => {
+        const square = SQUARES.e6
+        const result = removePiecePositionIfExists(piecePositions, boardState, square)
+        const newPiecePositions = clone(piecePositions)
+        newPiecePositions[BLACK][BIA] = newPiecePositions[BLACK][BIA].filter(p => p !== square)
+        expect(result).toEqual(newPiecePositions)
+    })
+
+    test('remove piece h5 correctly', () => {
+        const square = SQUARES.h5
+        const result = removePiecePositionIfExists(piecePositions, boardState, square)
+        const newPiecePositions = clone(piecePositions)
+        newPiecePositions[BLACK][BIA] = newPiecePositions[BLACK][BIA].filter(p => p !== square)
+        expect(result).toEqual(newPiecePositions)
+    })
+
+    test('remove piece e8 correctly', () => {
+        const square = SQUARES.e8
+        const result = removePiecePositionIfExists(piecePositions, boardState, square)
+        const newPiecePositions = clone(piecePositions)
+        newPiecePositions[BLACK][KHUN] = newPiecePositions[BLACK][KHUN].filter(p => p !== square)
+        expect(result).toEqual(newPiecePositions)
+    })
+})
+
+
+describe('put', () => {
+    const piecePositions = {
+        [WHITE]: {
+            [BIA]: [ SQUARES.f5, SQUARES.g4 ],
+            [FLIPPED_BIA]: [],
+            [MA]: [],
+            [THON]: [],
+            [MET]: [],
+            [RUA]: [],
+            [KHUN]: [ SQUARES.d1 ]
+        },
+        [BLACK]: {
+            [BIA]: [ SQUARES.e6, SQUARES.h5 ],
+            [FLIPPED_BIA]: [],
+            [MA]: [],
+            [THON]: [],
+            [MET]: [],
+            [RUA]: [],
+            [KHUN]: [ SQUARES.e8 ]
+        }
+    }
+
+    const boardState = Array(128)
+    boardState[SQUARES.f5] = [WHITE, BIA]
+    boardState[SQUARES.g4] = [WHITE, BIA]
+    boardState[SQUARES.d1] = [WHITE, KHUN]
+    boardState[SQUARES.e6] = [BLACK, BIA]
+    boardState[SQUARES.h5] = [BLACK, BIA]
+    boardState[SQUARES.e8] = [BLACK, KHUN]
+
+    const state = {
+        boardState,
+        piecePositions
+    }
+
+    test('put empty square', () => {
+        const color = WHITE
+        const piece = RUA
+        const square = SQUARES.f7
+
+        const newState = put(state, color, piece, square)
+        expect(newState.boardState[square]).toEqual([color, piece])
+        expect(newState.piecePositions[color][piece]).toContain(square)
+    })
+
+    test('put non empty square', () => {
+        const color = BLACK
+        const piece = MA
+        const square = SQUARES.g4
+
+        const newState = put(state, color, piece, square)
+        expect(newState.boardState[square]).toEqual([color, piece])
+        expect(newState.piecePositions[color][piece]).toContain(square)
+        expect(newState.piecePositions[WHITE][BIA]).not.toContain(square)
+    })
+})
+
+
+describe('remove', () => {
+    const piecePositions = {
+        [WHITE]: {
+            [BIA]: [ SQUARES.f5, SQUARES.g4 ],
+            [FLIPPED_BIA]: [],
+            [MA]: [],
+            [THON]: [],
+            [MET]: [],
+            [RUA]: [],
+            [KHUN]: [ SQUARES.d1 ]
+        },
+        [BLACK]: {
+            [BIA]: [ SQUARES.e6, SQUARES.h5 ],
+            [FLIPPED_BIA]: [],
+            [MA]: [],
+            [THON]: [],
+            [MET]: [],
+            [RUA]: [],
+            [KHUN]: [ SQUARES.e8 ]
+        }
+    }
+
+    const boardState = Array(128)
+    boardState[SQUARES.f5] = [WHITE, BIA]
+    boardState[SQUARES.g4] = [WHITE, BIA]
+    boardState[SQUARES.d1] = [WHITE, KHUN]
+    boardState[SQUARES.e6] = [BLACK, BIA]
+    boardState[SQUARES.h5] = [BLACK, BIA]
+    boardState[SQUARES.e8] = [BLACK, KHUN]
+
+    const state = {
+        boardState,
+        piecePositions
+    }
+
+    test('remove empty square', () => {
+        const square = SQUARES.f7
+        const newState = remove(state, square)
+        expect(newState.boardState[square]).toBeFalsy()
+    })
+
+    test('remove non empty square', () => {
+        const square = SQUARES.h5
+        const newState = remove(state, square)
+        expect(newState.boardState[square]).toBeFalsy()
+        expect(newState.piecePositions[BLACK][BIA]).not.toContain(square)
+    })
+})
+
+
 
 
 describe('import export fen', () => {

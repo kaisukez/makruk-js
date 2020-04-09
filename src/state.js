@@ -510,6 +510,48 @@ function createCountdownObject(countColor, countType, count) {
     return null
 }
 
+function removePiecePositionIfExists(piecePositions, boardState, square) {
+    const newPiecePositions = clone(piecePositions)
+
+    if (boardState[square]) {
+        const [color, piece] = boardState[square]
+        const toDeleteIndex = newPiecePositions[color][piece].indexOf(square)
+        if (toDeleteIndex !== -1) {
+            newPiecePositions[color][piece].splice(toDeleteIndex, 1)
+        }
+    }
+
+    return newPiecePositions
+}
+
+function put(state, color, piece, square) {
+    const newState = clone(state)
+
+    newState.piecePositions = removePiecePositionIfExists(
+        state.piecePositions,
+        state.boardState,
+        square
+    )
+
+    newState.boardState[square] = [color, piece]
+    if (!newState.piecePositions[color][piece].includes(square)) {
+        newState.piecePositions[color][piece].push(square)
+    }
+    
+    return newState
+}
+
+function remove(state, square) {
+    const newState = clone(state)
+    newState.piecePositions = removePiecePositionIfExists(
+        state.piecePositions,
+        state.boardState,
+        square
+    )
+    newState.boardState[square] = null
+    return newState
+}
+
 function importFen(fen) {
     throwIfWrongFen(fen)
     const state = extractInfoFromFen(fen)
@@ -593,6 +635,9 @@ module.exports = {
     countPiece,
     evalulatePower,
     updatePiecePositionDictionary,
+    removePiecePositionIfExists,
+    put,
+    remove,
     importFen,
     exportFen,
 }
