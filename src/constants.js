@@ -29,6 +29,7 @@ const RUA = 'r'
 const KHUN = 'k'
 
 const INITIAL_FEN = 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1'
+const EMPTY_FEN = 'k7/8/8/8/8/8/8/7K w 1'
 
 const BIA_MOVE_OFFSETS = {
     [WHITE]: [16],

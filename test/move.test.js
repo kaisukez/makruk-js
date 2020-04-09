@@ -75,6 +75,9 @@ const {
     countPiece,
     evalulatePower,
     updatePiecePositionDictionary,
+    removePiecePositionIfExists,
+    put,
+    remove,
     importFen,
     exportFen
 } = require('../src/state')
