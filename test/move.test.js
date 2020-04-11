@@ -120,7 +120,7 @@ const {
  
 describe('canThisColorAttackThisSquare', () => {
     // TODO
-    const state = importFen(EMPTY_FEN)
+    const state = put(importFen(EMPTY_FEN), WHITE, BIA, c5)
 
     const tests = [
         {
@@ -153,11 +153,91 @@ describe('canThisColorAttackThisSquare', () => {
         },
 
         {
-            color: BLACK,
-            piece: THON,
+            color: WHITE,
+            piece: FLIPPED_BIA,
             square: f5,
-            canAttack: [e4, f4, g4, e6, g6],
-            cannotAttack: [e5, g5, f6],
+            canAttack: [e6, g6, e4, g4],
+            cannotAttack: [f6, e5, g5, f4],
+        },
+        {
+            color: BLACK,
+            piece: FLIPPED_BIA,
+            square: f5,
+            canAttack: [e6, g6, e4, g4],
+            cannotAttack: [f6, e5, g5, f4],
+        },
+        {
+            color: WHITE,
+            piece: MET,
+            square: f5,
+            canAttack: [e6, g6, e4, g4],
+            cannotAttack: [f6, e5, g5, f4],
+        },
+        {
+            color: BLACK,
+            piece: MET,
+            square: f5,
+            canAttack: [e6, g6, e4, g4],
+            cannotAttack: [f6, e5, g5, f4],
+        },
+
+        {
+            color: WHITE,
+            piece: MA,
+            square: f5,
+            canAttack: [e7, g7, d6, h6, d4, h4, e3, g3],
+            cannotAttack: [d7, f7, h7, e6, f6, g6, d5, e5, g5, h5, e4, f4, g4, d3, f3, h3],
+        },
+        {
+            color: BLACK,
+            piece: MA,
+            square: f5,
+            canAttack: [e7, g7, d6, h6, d4, h4, e3, g3],
+            cannotAttack: [d7, f7, h7, e6, f6, g6, d5, e5, g5, h5, e4, f4, g4, d3, f3, h3],
+        },
+
+        {
+            color: WHITE,
+            piece: KHUN,
+            square: f5,
+            canAttack: [e6, f6, g6, e5, g5, e4, f4, g4],
+            cannotAttack: [],
+        },
+        {
+            color: BLACK,
+            piece: KHUN,
+            square: f5,
+            canAttack: [e6, f6, g6, e5, g5, e4, f4, g4],
+            cannotAttack: [],
+        },
+
+        {
+            color: WHITE,
+            piece: RUA,
+            square: e4,
+            canAttack: [e5, e6, e7, e8, f4, g4, h4, e3, e2, e1, d4, c4, b4, a4],
+            cannotAttack: [],
+        },
+        {
+            color: BLACK,
+            piece: RUA,
+            square: e4,
+            canAttack: [e5, e6, e7, e8, f4, g4, h4, e3, e2, e1, d4, c4, b4, a4],
+            cannotAttack: [],
+        },
+        {
+            color: WHITE,
+            piece: RUA,
+            square: f5,
+            canAttack: [f6, f7, f8, g5, h5, f4, f3, f2, f1, e5, d5, c5],
+            cannotAttack: [b5, a5],
+        },
+        {
+            color: BLACK,
+            piece: RUA,
+            square: f5,
+            canAttack: [f6, f7, f8, g5, h5, f4, f3, f2, f1, e5, d5, c5],
+            cannotAttack: [b5, a5],
         },
     ]
 
@@ -173,7 +253,7 @@ describe('canThisColorAttackThisSquare', () => {
             } = test
 
             const newState = put(state, color, piece, square)
-            
+
             // const newState = pipe(
             //     put(state, color, piece, square),
             //     state => state
@@ -181,17 +261,17 @@ describe('canThisColorAttackThisSquare', () => {
     
             for (const square of canAttack) {
                 const result = canThisColorAttackThisSquare(newState.boardState, color, square)
-                expect(result).toBe(true)
                 if (result !== true) {
                     console.log('this test didn\'t pass', test)
                 }
+                expect(result).toBe(true)
             }
             for (const square of cannotAttack) {
-                const result = canThisColorAttackThisSquare(newState.boardState, color, squareColor)
-                expect(result).toBe(false)
+                const result = canThisColorAttackThisSquare(newState.boardState, color, square)
                 if (result !== false) {
                     console.log('this test didn\'t pass', test)
                 }
+                expect(result).toBe(false)
             }
         }
 
