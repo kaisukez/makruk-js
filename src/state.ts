@@ -666,7 +666,7 @@ export function updatePiecePositionDictionary(piecePositions: State['piecePositi
     const { color, piece, from, to, flags, promotion, captured } = moveObject
 
     if (
-        !color || !piece || !from || !to ||
+        !color || !piece || (!from && from !== 0) || (!to && to !== 0) ||
         (flags & BITS.PROMOTION && !promotion) ||
         (flags & BITS.CAPTURE && !captured)
     ) {
@@ -678,10 +678,10 @@ export function updatePiecePositionDictionary(piecePositions: State['piecePositi
         if (!piece) {
             requireMoreInput.push('piece')
         }
-        if (!from) {
+        if (!from && from !== 0) {
             requireMoreInput.push('from')
         }
-        if (!to) {
+        if (!to && to !== 0) {
             requireMoreInput.push('to')
         }
 
