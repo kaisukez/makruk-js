@@ -80,7 +80,7 @@ function getRandomInt(max: number) {
     return Math.floor(Math.random() * Math.floor(max))
 }
 
-function performanceTest(state: State) {
+function performanceTest(state?: State) {
     state = state || importFen(INITIAL_FEN)
     let i = 0
     while(!gameOver(state)) {
@@ -101,7 +101,7 @@ function performanceTest(state: State) {
 // console.log(boardState)
 
 // const state = importFen(INITIAL_FEN)
-const state = importFen('T6T/8/5K2/8/2k5/8/8/t6t w 25')
+// const state = importFen('T6T/8/5K2/8/2k5/8/8/t6t w 25')
 // console.log(state)
 // const allMoves = generateAllMoves(state)
 // console.log(allMoves)
@@ -109,12 +109,14 @@ const state = importFen('T6T/8/5K2/8/2k5/8/8/t6t w 25')
 // console.log(generateMovesForOneSquare(state.boardState, SQUARES.e3))
 // console.log(generateMoves(state.boardState))
 
-console.log(ascii(state.boardState))
+// console.log(ascii(state.boardState))
 // console.log(evalulatePower(countPiece(state.piecePositions)))
 // console.log(calculateCountdown(state))
 // console.log(generateMoves(state))
 
 // console.log('state.activeColor', state.activeColor)
+
+performanceTest()
 
 function testCount() {
     const state = importFen('T6T/8/5K2/8/2k5/8/8/t6t w 25')
@@ -183,9 +185,11 @@ function testCount() {
     console.log('gameover', gameOver(state5))
     console.log('gameover', gameOver(state6))
     console.log('gameover', gameOver(state7))
+
+
 }
 
-testCount()
+// testCount()
 
 // const state5 = move(state4, 'Kc3')
 // console.log(ascii(state5.boardState))
