@@ -1,14 +1,13 @@
-const {
-    WHITE,
-    BLACK,
-
-    BIA,
-    FLIPPED_BIA,
-    MA,
-    THON,
-    MET,
-    RUA,
-    KHUN,
+import {
+    Color,
+    Piece,
+    // BIA,
+    // FLIPPED_BIA,
+    // MA,
+    // THON,
+    // MET,
+    // RUA,
+    // KHUN,
 
     INITIAL_FEN,
 
@@ -21,9 +20,7 @@ const {
 
     IS_SLIDING_PIECE,
 
-    SQUARES,
-    FIRST_SQUARE,
-    LAST_SQUARE,
+    SquareIndex,
 
     RANK_1,
     RANK_2,
@@ -42,21 +39,22 @@ const {
     FILE_F,
     FILE_G,
     FILE_H,
-} = require('./constants')
+} from './constants'
+import { State } from './types'
 
 
-function swapColor(color) {
-    return color === WHITE ? BLACK : WHITE
+export function swapColor(color: Color) {
+    return color === Color.WHITE ? Color.BLACK : Color.WHITE
 }
 
-function getAttackOffsets(color, piece) {
-    piece = piece.toLowerCase()
+export function getAttackOffsets(color: Color, piece: Piece) {
+    // piece = piece.toLowerCase()
 
-    if (piece === BIA) {
+    if (piece === Piece.BIA) {
         return BIA_ATTACK_OFFSETS[color]
     }
     
-    if (piece === THON) {
+    if (piece === Piece.THON) {
         return THON_ATTACK_OFFSETS[color]
     }
 
@@ -64,14 +62,14 @@ function getAttackOffsets(color, piece) {
 }
 
 
-function getMoveOffsets(color, piece) {
-    piece = piece.toLowerCase()
+export function getMoveOffsets(color: Color, piece: Piece) {
+    // piece = piece.toLowerCase()
 
-    if (piece === BIA) {
+    if (piece === Piece.BIA) {
         return BIA_MOVE_OFFSETS[color]
     }
     
-    if (piece === THON) {
+    if (piece === Piece.THON) {
         return THON_MOVE_OFFSETS[color]
     }
 
@@ -79,28 +77,31 @@ function getMoveOffsets(color, piece) {
 }
 
 
-function rank(index) {
-    return index >> 4
+export function rank(square: SquareIndex) {
+    return square >> 4
 }
 
-function file(index) {
-    return index & 15
+export function file(square: SquareIndex) {
+    return square & 15
 }
 
-function squareColor(index) {
-    const _file = index & 1
-    const _rank = (index & 16) >> 4
+export function squareColor(square: SquareIndex) {
+    const _file = square & 1
+    const _rank = (square & 16) >> 4
 
     const isWhite = _file ^ _rank
     
-    return isWhite ? WHITE : BLACK
+    return isWhite ? Color.WHITE : Color.BLACK
 }
 
-function algebraic(squareIndex, optional={}) {
+export type AlgebraicOptions = {
+    thai?: boolean
+}
+export function algebraic(square: SquareIndex, optional: AlgebraicOptions={}) {
     const { thai } = optional
     
-    const _file = file(squareIndex)
-    const _rank = rank(squareIndex)
+    const _file = file(square)
+    const _rank = rank(square)
 
     let fileSymbols = 'abcdefgh'
     let rankSymbols = '12345678'
@@ -111,11 +112,11 @@ function algebraic(squareIndex, optional={}) {
     return fileSymbols[_file] + rankSymbols[_rank]
 }
 
-function ascii(boardState) {
-    const end = iterator => iterator === SQUARES.h1
+export function ascii(boardState: State['boardState']) {
+    const end = (iterator: number) => iterator === SquareIndex.h1
 
     let s = '     +------------------------+\n'
-    let i = SQUARES.a8
+    let i = SquareIndex.a8
 
     if (!boardState) {
         throw { code: 'NO_BOARD_STATE' }
@@ -124,18 +125,20 @@ function ascii(boardState) {
     while(true) {
         /* display the rank */
         if (file(i) === FILE_A) {
-            s += ' ' + (parseInt(rank(i), 10) + 1) + ' |'
+            // s += ' ' + (parseInt(rank(i), 10) + 1) + ' |'
+            s += ' ' + (rank(i) + 1) + ' |'
         }
         
         /* empty piece */
         // if (boardState[i] == null || !(boardState[i].piece && boardState[i].color)) {
-        if (!boardState[i]) {
+        const squareData = boardState[i]
+        if (!squareData) {
             s += ' . '
         } else {
-            // const piece = boardState[i].piece
-            // const color = boardState[i].color
-            const [color, piece] = boardState[i]
-            const symbol = color === WHITE ? piece.toUpperCase() : piece.toLowerCase()
+            // const piece = squareData.piece
+            // const color = squareData.color
+            const [color, piece] = squareData
+            const symbol = color === Color.WHITE ? piece.toUpperCase() : piece.toLowerCase()
             s += ' ' + symbol + ' '
         }
 
@@ -144,7 +147,7 @@ function ascii(boardState) {
             if (end(i)) {
                 break
             }
-            i -= (SQUARES.h8 - SQUARES.a7)
+            i -= (SquareIndex.h8 - SquareIndex.a7)
         } else {
             i++
         }
@@ -155,7 +158,7 @@ function ascii(boardState) {
     return s
 }
 
-// function clone(obj) {
+// export function clone(obj) {
 //     // if (!obj) {
 //     //     return obj
 //     // }
@@ -180,13 +183,22 @@ function ascii(boardState) {
 //     return JSON.parse(JSON.stringify(obj))
 // }
 
+// export function cloneArray<T>(array: T[]): T[] {
+//     const copied: T[] = []
+//     for (let i = 0, len = array.length; i < len; i++) {
+//         copied[i] = clone(array[i])
+//     }
+//     return copied
+// }
 
 // https://stackoverflow.com/a/728694/10154216
-function clone(obj) {
-    let copy
+export function clone<T extends Object>(obj: T): T {
+    let copy: any
 
     // Handle the 3 simple types, and null or undefined
-    if (null == obj || "object" != typeof obj) return obj
+    if (null == obj || "object" != typeof obj) {
+        return obj
+    }
 
     // Handle Array
     if (obj instanceof Array) {
@@ -195,13 +207,16 @@ function clone(obj) {
             copy[i] = clone(obj[i])
         }
         return copy
+        // return <T> <unknown> cloneArray(obj)
     }
 
     // Handle Object
     if (obj instanceof Object) {
         copy = {}
         for (const attr in obj) {
-            if (obj.hasOwnProperty(attr)) copy[attr] = clone(obj[attr])
+            if (obj.hasOwnProperty(attr)) {
+                copy[attr] = clone(obj[attr])
+            }
         }
         return copy
     }
@@ -211,29 +226,29 @@ function clone(obj) {
 }
 
 // https://gist.github.com/JamieMason/172460a36a0eaef24233e6edb2706f83
-const compose = (...fns) =>
-    (...args) => fns.reduceRight(
+export const compose = (...fns: Function[]) =>
+    (...args: any) => fns.reduceRight(
         (params, f) => Array.isArray(params) ? f(...params) : f(params),
         args
     )
 
-const pipe = (...fns) =>
-    (...args) => fns.reduce(
+export const pipe = (...fns: Function[]) =>
+    (...args: any) => fns.reduce(
         (params, f) => Array.isArray(params) ? f(...params) : f(params),
         args
     )
 
 
-module.exports = {
-    swapColor,
-    getAttackOffsets,
-    getMoveOffsets,
-    rank,
-    file,
-    squareColor,
-    algebraic,
-    ascii,
-    clone,
-    compose,
-    pipe
-}
+// module.exports = {
+//     swapColor,
+//     getAttackOffsets,
+//     getMoveOffsets,
+//     rank,
+//     file,
+//     squareColor,
+//     algebraic,
+//     ascii,
+//     clone,
+//     compose,
+//     pipe
+// }
