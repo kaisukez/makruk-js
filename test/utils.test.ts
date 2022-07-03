@@ -1,14 +1,6 @@
-const {
-    WHITE,
-    BLACK,
-
-    BIA,
-    FLIPPED_BIA,
-    MA,
-    THON,
-    MET,
-    RUA,
-    KHUN,
+import {
+    Color,
+    Piece,
 
     INITIAL_FEN,
 
@@ -21,9 +13,7 @@ const {
 
     IS_SLIDING_PIECE,
 
-    SQUARES,
-    FIRST_SQUARE,
-    LAST_SQUARE,
+    SquareIndex,
 
     RANK_1,
     RANK_2,
@@ -42,9 +32,9 @@ const {
     FILE_F,
     FILE_G,
     FILE_H,
-} = require('../src/constants')
+} from '../src/constants'
 
-const {
+import {
     swapColor,
     getAttackOffsets,
     getMoveOffsets,
@@ -56,9 +46,19 @@ const {
     clone,
     compose,
     pipe
-} = require('../src/utils')
+} from '../src/utils'
 
 
+const { WHITE, BLACK } = Color
+const {
+    BIA,
+    FLIPPED_BIA,
+    MA,
+    THON,
+    MET,
+    RUA,
+    KHUN,
+} = Piece
 
 
 describe('swapColor', () => {

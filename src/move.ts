@@ -1,14 +1,6 @@
-const {
-    WHITE,
-    BLACK,
-
-    BIA,
-    FLIPPED_BIA,
-    MA,
-    THON,
-    MET,
-    RUA,
-    KHUN,
+import {
+    Color,
+    Piece,
 
     INITIAL_FEN,
 
@@ -27,9 +19,7 @@ const {
     RAYS,
     ATTACKS,
 
-    SQUARES,
-    FIRST_SQUARE,
-    LAST_SQUARE,
+    SquareIndex,
 
     FLAGS,
     BITS,
@@ -52,12 +42,13 @@ const {
     FILE_G,
     FILE_H,
 
-    PIECE_POWER_COUNTDOWN,
-    BOARD_POWER_COUNTDOWN,
-} = require('./constants')
+    CountType,
+    // PIECE_POWER_COUNTDOWN,
+    // BOARD_POWER_COUNTDOWN,
+} from './constants'
 
 
-const {
+import {
     swapColor,
     getAttackOffsets,
     getMoveOffsets,
@@ -66,10 +57,10 @@ const {
     squareColor,
     algebraic,
     clone,
-} = require('./utils')
+} from './utils'
 
 
-const {
+import {
     forEachPieceFromBoardState,
     updatePiecePositionDictionary,
     forEachPiece,
@@ -77,7 +68,14 @@ const {
     evalulatePower,
     importFen,
     exportFen,
-} = require('./state')
+} from './state'
+
+import {
+    Countdown,
+    Move,
+    MoveObject,
+    State,
+} from './types'
 
 
 /**
@@ -87,8 +85,8 @@ const {
  * canThisColorAttackThisSquare(BLACK, SQUARES.e7)
  * 
  */
-function canThisColorAttackThisSquare(boardState, color, targetSquareIndex) {
-    for (let fromIndex = SQUARES.a1; fromIndex <= SQUARES.h8; fromIndex++) {
+export function canThisColorAttackThisSquare(boardState: State['boardState'], color: Color, targetSquare: SquareIndex) {
+    for (let fromIndex = SquareIndex.a1; fromIndex <= SquareIndex.h8; fromIndex++) {
         /* did we run off the end of the board */
         if (fromIndex & 0x88) {
             fromIndex += 7
@@ -96,12 +94,13 @@ function canThisColorAttackThisSquare(boardState, color, targetSquareIndex) {
         }
         
         /* if empty square or wrong color */
-        if (!boardState[fromIndex] || boardState[fromIndex][0] !== color) {
+        const squareData = boardState[fromIndex]
+        if (!squareData || squareData[0] !== color) {
             continue
         }
         
-        const fromSquare = boardState[fromIndex]
-        const lookUpIndex = fromIndex - targetSquareIndex + 119
+        const fromSquare = squareData
+        const lookUpIndex = fromIndex - targetSquare + 119
 
         if (ATTACKS[lookUpIndex] & (1 << SHIFTS[fromSquare[0]][fromSquare[1]])) {
             // if not sliding piece then return true
@@ -115,7 +114,7 @@ function canThisColorAttackThisSquare(boardState, color, targetSquareIndex) {
             let j = fromIndex + offset
 
             let blocked = false
-            while (j !== targetSquareIndex) {
+            while (j !== targetSquare) {
                 if (boardState[j]) {
                     blocked = true
                     break
@@ -133,27 +132,27 @@ function canThisColorAttackThisSquare(boardState, color, targetSquareIndex) {
 }
 
 // isKhunAttacked(state, WHITE) = is white khun attacked
-function isKhunAttacked(state, color) {
+export function isKhunAttacked(state: State, color: Color) {
     return canThisColorAttackThisSquare(
         state.boardState,
         swapColor(color),
-        state.piecePositions[color][KHUN][0]
+        state.piecePositions[color][Piece.KHUN][0]
     )
 }
 
-function inCheck (state) {
+export function inCheck (state: State) {
     return isKhunAttacked(state, state.activeColor)
 }
 
-function inCheckmate(state) {
+export function inCheckmate(state: State) {
     return inCheck(state) && generateLegalMoves(state).length === 0
 }
 
-function inStalemate(state) {
+export function inStalemate(state: State) {
     return !inCheck(state) && generateLegalMoves(state).length === 0
 }
 
-function inDraw(state) {
+export function inDraw(state: State) {
     return (
         inStalemate(state)
         || isFinishedCounting(state)
@@ -162,15 +161,15 @@ function inDraw(state) {
     )
 }
 
-function gameOver(state) {
+export function gameOver(state: State) {
     return (
         inDraw(state)
         || inCheckmate(state)
     )
 }
 
-function inThreefoldRepetition(state) {
-    const positions = {}
+export function inThreefoldRepetition(state: State) {
+    const positions: Record<string, number> = {}
     let currentState = state
 
     while(currentState && currentState.history && currentState.history.length) {
@@ -186,67 +185,74 @@ function inThreefoldRepetition(state) {
     return false
 }
 
-function insufficientMaterial(state) {
+export function insufficientMaterial(state: State): boolean {
     // TODO: find out more conditions
 
     const pieceCount = countPiece(state.piecePositions)
 
-    if (pieceCount.all === 2) {
-        return true
-    } else if (
-        pieceCount.all === 3 &&
-        (
-            pieceCount[BIA] === 1 ||
-            pieceCount[FLIPPED_BIA] === 1 ||
-            pieceCount[MET] === 1 ||
-            pieceCount[MA] === 1
-        )
-    ) {
-        return true
-    }
+    // if (pieceCount.all === 2) {
+    //     return true
+    // } else if (
+    //     pieceCount.all === 3 &&
+    //     (
+    //         pieceCount.piece[Piece.BIA] === 1 ||
+    //         pieceCount.piece[Piece.FLIPPED_BIA] === 1 ||
+    //         pieceCount.piece[Piece.MET] === 1 ||
+    //         pieceCount.piece[Piece.MA] === 1
+    //     )
+    // ) {
+    //     return true
+    // }
 
-    return false
+    // return false
+
+    return pieceCount.all === 2 ||pieceCount.all === 3 && (
+        pieceCount.piece[Piece.BIA] === 1 ||
+        pieceCount.piece[Piece.FLIPPED_BIA] === 1 ||
+        pieceCount.piece[Piece.MET] === 1 ||
+        pieceCount.piece[Piece.MA] === 1
+    )
 }
 
-function isFinishedCounting(state) {
+export function isFinishedCounting(state: State) {
     const { countdown, activeColor } = state
 
     return (
         countdown &&
-        countdown.color === activeColor &&
+        countdown.countColor === activeColor &&
         countdown.count >= countdown.countTo
     )
 }
 
 
-function calculatePiecePowerCountdown(state) {
+export function calculatePiecePowerCountdown(state: State) {
     const pieceCount = countPiece(state.piecePositions)
     
     // to activate piece power countdown
     // one must only have Khun left and there must be no Bia left on the board
-    if (pieceCount.color[state.activeColor] !== 1 || pieceCount.piece[BIA] !== 0) {
+    if (pieceCount.color[state.activeColor] !== 1 || pieceCount.piece[Piece.BIA] !== 0) {
         return null
     }
     
     const opponentPieceCount = pieceCount[swapColor(state.activeColor)]
-    if (opponentPieceCount[RUA] in [1, 2]) {
+    if (opponentPieceCount[Piece.RUA] in [1, 2]) {
         return {
             countFrom: 1,
-            countTo: 16 / opponentPieceCount[RUA]
+            countTo: 16 / opponentPieceCount[Piece.RUA]
         }
     }
 
-    if (opponentPieceCount[THON] in [1, 2]) {
+    if (opponentPieceCount[Piece.THON] in [1, 2]) {
         return {
             countFrom: 1,
-            countTo: 44 / opponentPieceCount[THON]
+            countTo: 44 / opponentPieceCount[Piece.THON]
         }
     }
 
-    if (opponentPieceCount[MA] in [1, 2]) {
+    if (opponentPieceCount[Piece.MA] in [1, 2]) {
         return {
             countFrom: 1,
-            countTo: 64 / opponentPieceCount[MA]
+            countTo: 64 / opponentPieceCount[Piece.MA]
         }
     }
 
@@ -256,13 +262,13 @@ function calculatePiecePowerCountdown(state) {
     }
 }
 
-function calculateBoardPowerCountdown(state) {
+export function calculateBoardPowerCountdown(state: State) {
     const pieceCount = countPiece(state.piecePositions)
 
     // to activate board power countdown
     // one must have more than 1 piece (including Khun)
     // and there must be no Bia left on the board
-    if (pieceCount.color[state.activeColor] === 1 || pieceCount.piece[BIA] !== 0) {
+    if (pieceCount.color[state.activeColor] === 1 || pieceCount.piece[Piece.BIA] !== 0) {
         return null
     }
 
@@ -272,15 +278,15 @@ function calculateBoardPowerCountdown(state) {
     }
 }
 
-function calculateCountdown(state) {
+export function calculateCountdown(state: State): Countdown|null {
     const piecePowerCountdown = calculatePiecePowerCountdown(state)
     const boardPowerCountdown = calculateBoardPowerCountdown(state)
 
     if (piecePowerCountdown) {
         return {
-            fromMove: state.moveNumber,
-            color: state.activeColor, // which side want to count
-            type: PIECE_POWER_COUNTDOWN, // count type
+            // fromMove: state.moveNumber,
+            countColor: state.activeColor, // which side want to count
+            countType: CountType.PIECE_POWER_COUNTDOWN, // count type
             count: piecePowerCountdown.countFrom, // current count
             ...piecePowerCountdown
         }
@@ -288,9 +294,9 @@ function calculateCountdown(state) {
 
     if (boardPowerCountdown) {
         return {
-            fromMove: state.moveNumber,
-            color: state.activeColor,
-            type: BOARD_POWER_COUNTDOWN,
+            // fromMove: state.moveNumber,
+            countColor: state.activeColor,
+            countType: CountType.BOARD_POWER_COUNTDOWN,
             count: boardPowerCountdown.countFrom,
             ...boardPowerCountdown
         }
@@ -306,7 +312,7 @@ function calculateCountdown(state) {
  * @param {Number} to 0x88 square
  * 
  */
-function changePiecePosition(boardState, from, to) {
+export function changePiecePosition(boardState: State['boardState'], from: SquareIndex, to: SquareIndex) {
     if (!from && !to) {
         return boardState
     }
@@ -325,10 +331,10 @@ function changePiecePosition(boardState, from, to) {
  * @param {Object} state 
  * 
  */
-function step(state) {
+export function step(state: State) {
     const newState = clone(state)
 
-    if (state.activeColor === BLACK) {
+    if (state.activeColor === Color.BLACK) {
         newState.moveNumber++
     }
 
@@ -337,10 +343,10 @@ function step(state) {
     return newState
 }
 
-function stepBack(state) {
+export function stepBack(state: State) {
     const newState = clone(state)
 
-    if (state.activeColor === WHITE) {
+    if (state.activeColor === Color.WHITE) {
         newState.moveNumber--
     }
 
@@ -349,39 +355,44 @@ function stepBack(state) {
     return newState
 }
 
-function anyStartCountdownFlag(flags={}) {
-    const {
-        startPiecePowerCountdown,
-        startBoardPowerCountdown,
-        startCountdown,
-    } = flags
-
+export type CountdownFlag = {
+    startPiecePowerCountdown?: boolean
+    startBoardPowerCountdown?: boolean
+    startCountdown?: boolean
+    stopPiecePowerCountdown?: boolean
+    stopBoardPowerCountdown?: boolean
+    stopCountdown?: boolean
+}
+export function hasStartCountdownFlag(flags: CountdownFlag={}) {
     return (
-        startPiecePowerCountdown ||
-        startBoardPowerCountdown ||
-        startCountdown
+        flags.startPiecePowerCountdown ||
+        flags.startBoardPowerCountdown ||
+        flags.startCountdown
     )
 }
 
-function anyStopCountdownFlag(flags={}) {
-    const {
-        stopPiecePowerCountdown,
-        stopBoardPowerCountdown,
-        stopCountdown
-    } = flags
-
+export function hasStopCountdownFlag(flags: CountdownFlag={}) {
     return (
-        stopPiecePowerCountdown ||
-        stopBoardPowerCountdown ||
-        stopCountdown
+        flags.stopPiecePowerCountdown ||
+        flags.stopBoardPowerCountdown ||
+        flags.stopCountdown
     )
 }
 
-function anyCountdownFlag(flags={}) {
-    return anyStartCountdownFlag(flags) || anyStopCountdownFlag(flags)
+export function hasCountdownFlag(flags: CountdownFlag={}) {
+    return hasStartCountdownFlag(flags) || hasStopCountdownFlag(flags)
 }
 
-function stepCountdown(state, flags={}) {
+export type StepCountdownFlags = {
+    startPiecePowerCountdown?: boolean
+    startBoardPowerCountdown?: boolean
+    startCountdown?: boolean
+
+    stopPiecePowerCountdown?: boolean
+    stopBoardPowerCountdown?: boolean
+    stopCountdown?: boolean
+}
+export function stepCountdown(state: State, flags: StepCountdownFlags={}) {
     const {
         startPiecePowerCountdown,
         startBoardPowerCountdown,
@@ -399,32 +410,37 @@ function stepCountdown(state, flags={}) {
 
 
     // if we didn't count yet but you give coundown flag then throw error
-    if (!state.countdown && anyStopCountdownFlag(flags)) {
+    if (!state.countdown && hasStopCountdownFlag(flags)) {
         throw { code: 'CANNOT_STOP_UNCOUNTED_STATE' }
     }
 
     
     // if we already count but you give coundown flag again then throw error
-    if (state.countdown && anyStartCountdownFlag(flags)) {
+    if (state.countdown && hasStartCountdownFlag(flags)) {
         throw { code: 'CANNOT_START_ALREADY_COUNTED_STATE' }
     }
 
 
     const newState = clone(state)
     const countdown = calculateCountdown(state)
+
+    // if there's no countdown then return the same state (TODO: check if this statement is valid)
+    if (!countdown) {
+        return state
+    }
     
     
     // if we didn't count yet and we give countdown flag
     // then start counting if countdown flag is valid
     if (!newState.countdown) {
         if (
-            startPiecePowerCountdown && countdown.type === PIECE_POWER_COUNTDOWN ||
-            startBoardPowerCountdown && countdown.type === BOARD_POWER_COUNTDOWN ||
+            startPiecePowerCountdown && countdown.countType === CountType.PIECE_POWER_COUNTDOWN ||
+            startBoardPowerCountdown && countdown.countType === CountType.BOARD_POWER_COUNTDOWN ||
             startCountdown
         ) {
             newState.countdown = countdown
-        } else if (anyStartCountdownFlag(flags)) {
-            console.log(flags, newState.countdown)
+        } else if (hasStartCountdownFlag(flags)) {
+            // console.log(flags, newState.countdown)
             throw { code: 'WRONG_COUNTDOWN_TYPE' }
         }
     }
@@ -432,15 +448,15 @@ function stepCountdown(state, flags={}) {
     // if we alrealdy count
     else {
         // if we give stop countdown flag
-        if (anyStopCountdownFlag(flags)) {
+        if (hasStopCountdownFlag(flags)) {
             if (
                 (
                     stopPiecePowerCountdown &&
-                    newState.countdown.type === PIECE_POWER_COUNTDOWN
+                    newState.countdown.countType === CountType.PIECE_POWER_COUNTDOWN
                 )
                 || (
                     stopBoardPowerCountdown &&
-                    newState.countdown.type === BOARD_POWER_COUNTDOWN
+                    newState.countdown.countType === CountType.BOARD_POWER_COUNTDOWN
                 )
                 || stopCountdown
             ){
@@ -453,8 +469,8 @@ function stepCountdown(state, flags={}) {
 
         // continue counting the same type
         else if (
-            newState.countdown.type === countdown.type &&
-            newState.activeColor === newState.countdown.color
+            newState.countdown.countType === countdown.countType &&
+            newState.activeColor === newState.countdown.countColor
         ) {
             newState.countdown.count++
         }
@@ -462,8 +478,8 @@ function stepCountdown(state, flags={}) {
         // continue counting different type only if we change from
         // board power countdown to piece power countdown
         else if (
-            newState.countdown.type === BOARD_POWER_COUNTDOWN &&
-            countdown.type === PIECE_POWER_COUNTDOWN
+            newState.countdown.countType === CountType.BOARD_POWER_COUNTDOWN &&
+            countdown.countType === CountType.PIECE_POWER_COUNTDOWN
         ) {
             newState.countdown = countdown
         }
@@ -472,12 +488,12 @@ function stepCountdown(state, flags={}) {
     return newState
 }
 
-function stepBackCountdown(state) {
+export function stepBackCountdown(state: State) {
     const newState = clone(state)
 
     const { countdown, activeColor } = newState
 
-    if (countdown && countdown.color === activeColor) {
+    if (countdown && countdown.countColor === activeColor) {
         const { count, countFrom } = countdown
         if (count > countFrom) {
             countdown.count--
@@ -489,7 +505,7 @@ function stepBackCountdown(state) {
     return newState
 }
 
-function makeMove(state, moveObject, optional={}, keepFuture=false) {
+export function makeMove(state: State, moveObject: MoveObject, optional={}, keepFuture=false) {
     let newState = clone(state)
     newState.boardState = changePiecePosition(
         state.boardState,
@@ -499,8 +515,8 @@ function makeMove(state, moveObject, optional={}, keepFuture=false) {
 
     newState = stepCountdown(newState, optional)
 
-    if (moveObject.flags & BITS.PROMOTION) {
-        newState.boardState[moveObject.to][1] = moveObject.promotion
+    if (moveObject.flags & BITS.PROMOTION && moveObject.promotion) {
+        newState.boardState[moveObject.to]![1] = moveObject.promotion
     }
 
     newState = step(newState)
@@ -520,18 +536,18 @@ function makeMove(state, moveObject, optional={}, keepFuture=false) {
     return newState
 }
 
-function nextMove(state) {
+export function nextMove(state: State) {
     if (!state.future || state.future && state.future.length === 0) {
         throw { code: 'NO_FUTURE_MOVE' }
     }
 
     let newState = clone(state)
-    const nextMove = newState.future.shift()
+    const nextMove = newState.future.shift()!// it's not undefined because we've check length of the future earlier
     newState = makeMove(newState, nextMove, nextMove.optional, true)
     return newState
 }
 
-function undoMove(state) {
+export function undoMove(state: State) {
     if (!state.history || state.history && state.history.length === 0) {
         throw { code: 'NO_MOVE_HISTORY' }
     }
@@ -539,17 +555,17 @@ function undoMove(state) {
     let newState = clone(state)
     newState = stepBack(newState)
     newState = stepBackCountdown(newState)
-    const lastMove = newState.history.pop()
+    const lastMove = newState.history.pop()! // it's not undefined because we've check length of the history earlier
     newState.future.unshift(lastMove)
 
     const { piece, from, to, flags, captured } = lastMove
     const { boardState, activeColor } = newState
     boardState[from] = boardState[to]
     // boardState[from].type = piece // undo promotion
-    boardState[from][1] = piece // undo promotion
+    boardState[from]![1] = piece // undo promotion
     boardState[to] = null
 
-    if (flags & BITS.CAPTURE) {
+    if (flags & BITS.CAPTURE && captured) {
         // boardState[to] = { piece: captured, color: swapColor(activeColor) }
         boardState[to] = [ swapColor(activeColor), captured ]
     }
@@ -557,25 +573,30 @@ function undoMove(state) {
     return newState
 }
 
-
-function generateMovesForOneSquare(state, square, options={}) {
+export type GenerateMovesForOneSquareOptions = {
+    forColor?: Color
+    legal?: boolean
+}
+export function generateMovesForOneSquare(state: State, squareIndex: SquareIndex, options: GenerateMovesForOneSquareOptions={}): MoveObject[] {
     const { boardState } = state
-    const moves = []
+    const moves: MoveObject[] = []
 
     // if the square is off the board
-    if (square & 0x88) {
+    if (squareIndex & 0x88) {
         return moves
     }
 
+    const squareData = boardState[squareIndex]
+
     // if the square is empty
-    if (!boardState[square]) {
+    if (!squareData) {
         return moves
     }
 
     const { forColor, legal } = options
-    const [color, piece] = boardState[square]
+    const [color, piece] = squareData
 
-    let squarePointer = square
+    let squarePointer = squareIndex
 
     if (forColor && forColor !== color) {
         return moves
@@ -583,10 +604,10 @@ function generateMovesForOneSquare(state, square, options={}) {
 
     const attackOffsets = getAttackOffsets(color, piece)
     for (const offset of attackOffsets) {
-        squarePointer = square
+        squarePointer = squareIndex
         while (true) {
             squarePointer += offset
-            targetSquare = boardState[squarePointer]
+            const targetSquare = boardState[squarePointer]
 
             // if the square is off the board
             if (squarePointer & 0x88) {
@@ -596,19 +617,19 @@ function generateMovesForOneSquare(state, square, options={}) {
             // if it's a opponent piece
             if (targetSquare) {
                 if (targetSquare[0] !== color) {
-                    const move = {
+                    const move: MoveObject = {
                         color,
                         piece,
-                        from: square,
+                        from: squareIndex,
                         to: squarePointer,
                         flags: BITS.CAPTURE,
                         captured: targetSquare[1]
                     }
                     if (
-                        piece === BIA &&
+                        piece === Piece.BIA &&
                         (rank(squarePointer) === RANK_3 || rank(squarePointer) === RANK_6)
                     ) {
-                        move.promotion = FLIPPED_BIA
+                        move.promotion = Piece.FLIPPED_BIA
                         move.flags |= BITS.PROMOTION
                     }
                     moves.push(move)
@@ -624,10 +645,10 @@ function generateMovesForOneSquare(state, square, options={}) {
 
     const moveOffsets = getMoveOffsets(color, piece)
     for (const offset of moveOffsets) {
-        squarePointer = square
+        squarePointer = squareIndex
         while (true) {
             squarePointer += offset
-            targetSquare = boardState[squarePointer]
+            const targetSquare = boardState[squarePointer]
 
             // if the square is off the board
             if (squarePointer & 0x88) {
@@ -636,18 +657,18 @@ function generateMovesForOneSquare(state, square, options={}) {
 
             // if it's a empty square
             if (!targetSquare) {
-                const move = {
+                const move: MoveObject = {
                     color,
                     piece,
-                    from: square,
+                    from: squareIndex,
                     to: squarePointer,
                     flags: BITS.NORMAL
                 }
                 if (
-                    piece === BIA &&
+                    piece === Piece.BIA &&
                     (rank(squarePointer) === RANK_3 || rank(squarePointer) === RANK_6)
                 ) {
-                    move.promotion = FLIPPED_BIA
+                    move.promotion = Piece.FLIPPED_BIA
                     move.flags |= BITS.PROMOTION
                 }
                 moves.push(move)
@@ -681,15 +702,15 @@ function generateMovesForOneSquare(state, square, options={}) {
     return legalMoves
 }
 
-function generateMoves(state, options) {
-    const moves = []
+export function generateMoves(state: State, options: GenerateMovesForOneSquareOptions): MoveObject[] {
+    const moves: MoveObject[] = []
     state.boardState.forEach((_, index) => {
         moves.push(...generateMovesForOneSquare(state, index, options))
     })
     return moves
 }
 
-function generateLegalMoves(state) {
+export function generateLegalMoves(state: State) {
     return generateMoves(
         state,
         {
@@ -703,8 +724,8 @@ function generateLegalMoves(state) {
 const sanRegex = /^(?<piece>[FEMTRK])?(?<fromFlie>[a-h]|[\u0E01\u0E02\u0E04\u0E07\u0E08\u0E09\u0E0A\u0E0D])?(?<fromRank>[1-8])?(?<capture>[x:])?(?<to>[a-h]|[\u0E01\u0E02\u0E04\u0E07\u0E08\u0E09\u0E0A\u0E0D][1-8])(?<promotion>=(?<promoteTo>[F]))?(?<check>(?<normalCheck>[+†])|(?<doubleCheck>\+{2}|‡))?(?<checkmate>[#≠])?$/
 
 
-/* this function is used to uniquely identify ambiguous moves */
-function getDisambiguator(possibleMoves, move) {
+/* this export function is used to uniquely identify ambiguous moves */
+export function getDisambiguator(possibleMoves: MoveObject[], move: MoveObject) {
     const { from, to, piece } = move
 
     const samePieceAndDestinationMoves = possibleMoves.filter(
@@ -751,18 +772,18 @@ function getDisambiguator(possibleMoves, move) {
 * 4. ... Nge7 is overly disambiguated because the knight on c6 is pinned
 * 4. ... Ne7 is technically the valid SAN
 */
-function moveToSan(state, move) {
+export function moveToSan(state: State, move: MoveObject) {
     const possibleMoves = generateLegalMoves(state)
     const disambiguator = getDisambiguator(possibleMoves, move)
 
     let output = ''
 
-    if (move.piece !== BIA) {
+    if (move.piece !== Piece.BIA) {
         output += move.piece.toUpperCase() + disambiguator
     }
 
     if (move.flags & BITS.CAPTURE) {
-        if (move.piece === BIA) {
+        if (move.piece === Piece.BIA) {
             output += algebraic(move.from)[0]
         }
         output += 'x'
@@ -770,7 +791,7 @@ function moveToSan(state, move) {
 
     output += algebraic(move.to)
 
-    if (move.flags & BITS.PROMOTION) {
+    if (move.flags & BITS.PROMOTION && move.promotion) {
         output += '=' + move.promotion.toUpperCase()
     }
 
@@ -786,11 +807,11 @@ function moveToSan(state, move) {
     return output
 }
 
-function strippedSan(san) {
+export function strippedSan(san: string) {
     return san.replace(/[^FEMTRKa-h\u0E01\u0E02\u0E04\u0E07\u0E08\u0E09\u0E0A\u0E0D1-8]/g, '')
 }
 
-function moveFromSan(state, san) {
+export function moveFromSan(state: State, san: string) {
     const possibleMoves = generateLegalMoves(state)
     // console.log(possibleMoves)
 
@@ -807,7 +828,7 @@ function moveFromSan(state, san) {
     return result
 }
 
-function moveFromMoveObject(state, moveObject={}) {
+export function moveFromMoveObject(state: State, moveObject: MoveObject) {
     const possibleMoves = generateLegalMoves(state)
     // console.log(possibleMoves)
 
@@ -845,7 +866,7 @@ function moveFromMoveObject(state, moveObject={}) {
  * }
  * 
  */
-function move(state, move, optional) {
+export function move(state: State, move: Move, optional={}): State {
     let moveObject
     if (typeof move === 'string') {
         moveObject = moveFromSan(state, move)
@@ -863,25 +884,25 @@ function move(state, move, optional) {
 }
 
 
-module.exports = {
-    canThisColorAttackThisSquare,
-    isKhunAttacked,
-    inCheck,
-    inCheckmate,
-    inStalemate,
-    inDraw,
-    gameOver,
-    calculateCountdown,
+// module.exports = {
+//     canThisColorAttackThisSquare,
+//     isKhunAttacked,
+//     inCheck,
+//     inCheckmate,
+//     inStalemate,
+//     inDraw,
+//     gameOver,
+//     calculateCountdown,
 
-    changePiecePosition,
-    step,
-    stepCountdown,
-    stepBackCountdown,
-    makeMove,
-    undoMove,
-    nextMove,
+//     changePiecePosition,
+//     step,
+//     stepCountdown,
+//     stepBackCountdown,
+//     makeMove,
+//     undoMove,
+//     nextMove,
 
-    generateMoves,
-    generateLegalMoves,
-    move,
-}
+//     generateMoves,
+//     generateLegalMoves,
+//     move,
+// }

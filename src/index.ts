@@ -1,14 +1,6 @@
-const {
-    WHITE,
-    BLACK,
-
-    BIA,
-    FLIPPED_BIA,
-    MA,
-    THON,
-    MET,
-    RUA,
-    KHUN,
+import {
+    Color,
+    Piece,
 
     INITIAL_FEN,
 
@@ -21,9 +13,7 @@ const {
 
     IS_SLIDING_PIECE,
 
-    SQUARES,
-    FIRST_SQUARE,
-    LAST_SQUARE,
+    SquareIndex,
 
     FLAGS,
     BITS,
@@ -45,10 +35,11 @@ const {
     FILE_F,
     FILE_G,
     FILE_H,
-} = require('./constants')
+    CountType,
+} from './constants'
 
 
-const {
+import {
     swapColor,
     getAttackOffsets,
     getMoveOffsets,
@@ -57,9 +48,9 @@ const {
     algebraic,
     ascii,
     pipe,
-} = require('./utils')
+} from './utils'
 
-const {
+import {
     canThisColorAttackThisSquare,
     generateMoves,
     generateLegalMoves,
@@ -71,23 +62,25 @@ const {
     stepBack,
     stepCountdown,
     stepBackCountdown,
-} = require('./move')
+} from './move'
 
-const {
+import {
     forEachPiece,
     countPiece,
     evalulatePower,
     importFen,
     exportFen,
-} = require('./state')
+} from './state'
+
+import { State } from './types'
 
 
 
-function getRandomInt(max) {
+function getRandomInt(max: number) {
     return Math.floor(Math.random() * Math.floor(max))
 }
 
-function performanceTest(state) {
+function performanceTest(state: State) {
     state = state || importFen(INITIAL_FEN)
     let i = 0
     while(!gameOver(state)) {
@@ -165,6 +158,15 @@ function testCount() {
     console.log('2 next', state4next.countdown)
 
 
+    if (!state4next.countdown) {
+        state4next.countdown = {
+            countColor: state4next.activeColor,
+            countType: CountType.BOARD_POWER_COUNTDOWN,
+            count: 1,
+            countFrom: 1,
+            countTo: 8,
+        }
+    }
     state4next.countdown.countTo = 8
     const state5 = move(state4next, 'Ke4')
     console.log(ascii(state5.boardState))

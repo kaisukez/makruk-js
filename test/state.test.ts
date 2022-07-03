@@ -1,16 +1,9 @@
-const {
-    WHITE,
-    BLACK,
-
-    BIA,
-    FLIPPED_BIA,
-    MA,
-    THON,
-    MET,
-    RUA,
-    KHUN,
+import {
+    Color,
+    Piece,
 
     INITIAL_FEN,
+    EMPTY_FEN,
 
     BIA_MOVE_OFFSETS,
     BIA_ATTACK_OFFSETS,
@@ -23,9 +16,7 @@ const {
 
     PIECE_POWER,
 
-    SQUARES,
-    FIRST_SQUARE,
-    LAST_SQUARE,
+    SquareIndex,
 
     FLAGS,
     BITS,
@@ -48,11 +39,12 @@ const {
     FILE_G,
     FILE_H,
 
-    PIECE_POWER_COUNTDOWN,
-    BOARD_POWER_COUNTDOWN
-} = require('../src/constants')
+    CountType,
+    // PIECE_POWER_COUNTDOWN,
+    // BOARD_POWER_COUNTDOWN,
+} from '../src/constants'
 
-const {
+import {
     swapColor,
     getAttackOffsets,
     getMoveOffsets,
@@ -64,9 +56,9 @@ const {
     clone,
     compose,
     pipe
-} = require('../src/utils')
+} from '../src/utils'
 
-const {
+import {
     extractInfoFromFen,
     getBoardStateFromBoardString,
     forEachPieceFromBoardState,
@@ -80,20 +72,44 @@ const {
     remove,
     importFen,
     exportFen
-} = require('../src/state')
+} from '../src/state'
+import { Move, MoveObject, State } from '../src/types'
 
 
-
+const { WHITE, BLACK } = Color
+const {
+    BIA,
+    FLIPPED_BIA,
+    MA,
+    THON,
+    MET,
+    RUA,
+    KHUN,
+} = Piece
+const {
+    a8, b8, c8, d8, e8, f8, g8, h8,
+    a7, b7, c7, d7, e7, f7, g7, h7,
+    a6, b6, c6, d6, e6, f6, g6, h6,
+    a5, b5, c5, d5, e5, f5, g5, h5,
+    a4, b4, c4, d4, e4, f4, g4, h4,
+    a3, b3, c3, d3, e3, f3, g3, h3,
+    a2, b2, c2, d2, e2, f2, g2, h2,
+    a1, b1, c1, d1, e1, f1, g1, h1
+} = SquareIndex
+const {
+    PIECE_POWER_COUNTDOWN,
+    BOARD_POWER_COUNTDOWN,
+} = CountType
 
 describe('extractInfoFromFen', () => {
-    test('number of inputs should be 3 or 6 only', () => {
+    test('number of inputs should be 3 or 8 only', () => {
         const validInputs = [
-            'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 5 - - -',
+            'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 5 w bp 3 2 16',
             'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 5',
-            '1 2 3 4 5 6',
-            '1 2 3',
-            '                    1    2      3 ',
-            '   1 2      3        4      5   6        ',
+            // '1 2 3 4 5 6 7 8',
+            // '1 2 3',
+            // '                    1    2      3 ',
+            // '   1 2      3        4      5   6        7  8',
         ]
     
         const invalidInputs = [
@@ -103,14 +119,16 @@ describe('extractInfoFromFen', () => {
             '1 2',
             '1 2 3 4',
             '1 2 3 4 5',
+            '1 2 3 4 5 6',
             '1 2 3 4 5 6 7',
-            '1 2 3 4 5 6 7 8',
+            '1 2 3 4 5 6 7 8 9',
             '1      ',
             '       1 2',
+            '1                     2     3   ',
             '1    2     3   4',
             '     1     2    3             4     5     ',
             '1         2  3 4        5 6 7                                 ',
-            '               1  2 3         4 5     6 7 8',
+            '               1  2 3         4 5     6 7 8   9',
         ]
     
         for (const validInput of validInputs) {
@@ -120,7 +138,12 @@ describe('extractInfoFromFen', () => {
         }
     
         for (const invalidInput of invalidInputs) {
-            expect(extractInfoFromFen(invalidInput)).toBeNull()
+            // expect(extractInfoFromFen(invalidInput)).toBeNull()
+            try {
+                extractInfoFromFen(invalidInput)
+            } catch (error) {
+                expect(error.code).toBe('WRONG_NUMBER_OF_INPUTS')
+            }
         }
     })
 })
@@ -138,10 +161,10 @@ describe('getBoardStateFromBoardString', () => {
             [WHITE, THON],
             [WHITE, MA],
             [WHITE, RUA],
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
     
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null,
     
             [WHITE, BIA],
             [WHITE, BIA],
@@ -151,12 +174,12 @@ describe('getBoardStateFromBoardString', () => {
             [WHITE, BIA],
             [WHITE, BIA],
             [WHITE, BIA],
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
     
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null,
     
             [BLACK, BIA],
             [BLACK, BIA],
@@ -166,10 +189,10 @@ describe('getBoardStateFromBoardString', () => {
             [BLACK, BIA],
             [BLACK, BIA],
             [BLACK, BIA],
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
     
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null,
     
             [BLACK, RUA],
             [BLACK, MA],
@@ -179,7 +202,7 @@ describe('getBoardStateFromBoardString', () => {
             [BLACK, THON],
             [BLACK, MA],
             [BLACK, RUA],
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
         ]
     
         expect(getBoardStateFromBoardString(boardString)).toEqual(boardState)
@@ -188,7 +211,7 @@ describe('getBoardStateFromBoardString', () => {
 
 
 describe('forEachPieceFromBoardState', () => {
-    const boardState = [
+    const boardState: State['boardState'] = [
         [WHITE, RUA],
         [WHITE, MA],
         [WHITE, THON],
@@ -197,10 +220,10 @@ describe('forEachPieceFromBoardState', () => {
         [WHITE, THON],
         [WHITE, MA],
         [WHITE, RUA],
-        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        null, null, null, null, null, null, null, null,
 
-        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
 
         [WHITE, BIA],
         [WHITE, BIA],
@@ -210,12 +233,12 @@ describe('forEachPieceFromBoardState', () => {
         [WHITE, BIA],
         [WHITE, BIA],
         [WHITE, BIA],
-        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        null, null, null, null, null, null, null, null,
 
-        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
 
         [BLACK, BIA],
         [BLACK, BIA],
@@ -225,10 +248,10 @@ describe('forEachPieceFromBoardState', () => {
         [BLACK, BIA],
         [BLACK, BIA],
         [BLACK, BIA],
-        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        null, null, null, null, null, null, null, null,
 
-        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
 
         [BLACK, RUA],
         [BLACK, MA],
@@ -238,7 +261,7 @@ describe('forEachPieceFromBoardState', () => {
         [BLACK, THON],
         [BLACK, MA],
         [BLACK, RUA],
-        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        null, null, null, null, null, null, null, null,
     ]
 
     test('number of iteration should equal to number of piece', () => {
@@ -324,7 +347,7 @@ describe('forEachPieceFromBoardState', () => {
 
 describe('getPiecePositions', () => {
     test('piecePositions should be correct', () => {
-        const boardState = [
+        const boardState: State['boardState'] = [
             [WHITE, RUA],
             [WHITE, MA],
             [WHITE, THON],
@@ -333,10 +356,10 @@ describe('getPiecePositions', () => {
             [WHITE, THON],
             [WHITE, MA],
             [WHITE, RUA],
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
     
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null,
     
             [WHITE, BIA],
             [WHITE, BIA],
@@ -346,12 +369,12 @@ describe('getPiecePositions', () => {
             [WHITE, BIA],
             [WHITE, BIA],
             [WHITE, BIA],
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
     
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null,
     
             [BLACK, BIA],
             [BLACK, BIA],
@@ -361,10 +384,10 @@ describe('getPiecePositions', () => {
             [BLACK, BIA],
             [BLACK, BIA],
             [BLACK, BIA],
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
     
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null,
     
             [BLACK, RUA],
             [BLACK, MA],
@@ -374,33 +397,33 @@ describe('getPiecePositions', () => {
             [BLACK, THON],
             [BLACK, MA],
             [BLACK, RUA],
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
         ]
     
         const piecePositions = {
             [WHITE]: {
                 [BIA]: [
-                    SQUARES.a3, SQUARES.b3, SQUARES.c3, SQUARES.d3,
-                    SQUARES.e3, SQUARES.f3, SQUARES.g3, SQUARES.h3
+                    a3, b3, c3, d3,
+                    e3, f3, g3, h3
                 ],
                 [FLIPPED_BIA]: [],
-                [MA]: [ SQUARES.b1, SQUARES.g1 ],
-                [THON]: [ SQUARES.c1, SQUARES.f1 ],
-                [MET]: [ SQUARES.e1 ],
-                [RUA]: [ SQUARES.a1, SQUARES.h1 ],
-                [KHUN]: [ SQUARES.d1 ]
+                [MA]: [ b1, g1 ],
+                [THON]: [ c1, f1 ],
+                [MET]: [ e1 ],
+                [RUA]: [ a1, h1 ],
+                [KHUN]: [ d1 ]
             },
             [BLACK]: {
                 [BIA]: [
-                    SQUARES.a6, SQUARES.b6, SQUARES.c6, SQUARES.d6,
-                    SQUARES.e6, SQUARES.f6, SQUARES.g6, SQUARES.h6
+                    a6, b6, c6, d6,
+                    e6, f6, g6, h6
                 ],
                 [FLIPPED_BIA]: [],
-                [MA]: [ SQUARES.b8, SQUARES.g8 ],
-                [THON]: [ SQUARES.c8, SQUARES.f8 ],
-                [MET]: [ SQUARES.d8 ],
-                [RUA]: [ SQUARES.a8, SQUARES.h8 ],
-                [KHUN]: [ SQUARES.e8 ]
+                [MA]: [ b8, g8 ],
+                [THON]: [ c8, f8 ],
+                [MET]: [ d8 ],
+                [RUA]: [ a8, h8 ],
+                [KHUN]: [ e8 ]
             }
         }
     
@@ -413,27 +436,27 @@ describe('forEachPiece', () => {
     const piecePositions = {
         [WHITE]: {
             [BIA]: [
-                SQUARES.a3, SQUARES.b3, SQUARES.c3, SQUARES.d3,
-                SQUARES.e3, SQUARES.f3, SQUARES.g3, SQUARES.h3
+                a3, b3, c3, d3,
+                e3, f3, g3, h3
             ],
             [FLIPPED_BIA]: [],
-            [MA]: [ SQUARES.b1, SQUARES.g1 ],
-            [THON]: [ SQUARES.c1, SQUARES.f1 ],
-            [MET]: [ SQUARES.e1 ],
-            [RUA]: [ SQUARES.a1, SQUARES.h1 ],
-            [KHUN]: [ SQUARES.d1 ]
+            [MA]: [ b1, g1 ],
+            [THON]: [ c1, f1 ],
+            [MET]: [ e1 ],
+            [RUA]: [ a1, h1 ],
+            [KHUN]: [ d1 ]
         },
         [BLACK]: {
             [BIA]: [
-                SQUARES.a6, SQUARES.b6, SQUARES.c6, SQUARES.d6,
-                SQUARES.e6, SQUARES.f6, SQUARES.g6, SQUARES.h6
+                a6, b6, c6, d6,
+                e6, f6, g6, h6
             ],
             [FLIPPED_BIA]: [],
-            [MA]: [ SQUARES.b8, SQUARES.g8 ],
-            [THON]: [ SQUARES.c8, SQUARES.f8 ],
-            [MET]: [ SQUARES.d8 ],
-            [RUA]: [ SQUARES.a8, SQUARES.h8 ],
-            [KHUN]: [ SQUARES.e8 ]
+            [MA]: [ b8, g8 ],
+            [THON]: [ c8, f8 ],
+            [MET]: [ d8 ],
+            [RUA]: [ a8, h8 ],
+            [KHUN]: [ e8 ]
         }
     }
 
@@ -513,7 +536,7 @@ describe('forEachPiece', () => {
 
 
     test('piece position must be the same', () => {
-        const newPiecePositions = {
+        const newPiecePositions: State['piecePositions'] = {
             [WHITE]: {
                 [BIA]: [],
                 [FLIPPED_BIA]: [],
@@ -547,27 +570,27 @@ describe('countPiece', () => {
     const piecePositions = {
         [WHITE]: {
             [BIA]: [
-                SQUARES.a3, SQUARES.b3, SQUARES.c3, SQUARES.d3,
-                SQUARES.e3, SQUARES.f3, SQUARES.g3, SQUARES.h3
+                a3, b3, c3, d3,
+                e3, f3, g3, h3
             ],
             [FLIPPED_BIA]: [],
-            [MA]: [ SQUARES.b1, SQUARES.g1 ],
-            [THON]: [ SQUARES.c1, SQUARES.f1 ],
-            [MET]: [ SQUARES.e1 ],
-            [RUA]: [ SQUARES.a1, SQUARES.h1 ],
-            [KHUN]: [ SQUARES.d1 ]
+            [MA]: [ b1, g1 ],
+            [THON]: [ c1, f1 ],
+            [MET]: [ e1 ],
+            [RUA]: [ a1, h1 ],
+            [KHUN]: [ d1 ]
         },
         [BLACK]: {
             [BIA]: [
-                SQUARES.a6, SQUARES.b6, SQUARES.c6, SQUARES.d6,
-                SQUARES.e6, SQUARES.f6, SQUARES.g6, SQUARES.h6
+                a6, b6, c6, d6,
+                e6, f6, g6, h6
             ],
             [FLIPPED_BIA]: [],
-            [MA]: [ SQUARES.b8, SQUARES.g8 ],
-            [THON]: [ SQUARES.c8, SQUARES.f8 ],
-            [MET]: [ SQUARES.d8 ],
-            [RUA]: [ SQUARES.a8, SQUARES.h8 ],
-            [KHUN]: [ SQUARES.e8 ]
+            [MA]: [ b8, g8 ],
+            [THON]: [ c8, f8 ],
+            [MET]: [ d8 ],
+            [RUA]: [ a8, h8 ],
+            [KHUN]: [ e8 ]
         }
     }
 
@@ -675,88 +698,89 @@ describe('evalulatePower', () => {
 describe('updatePiecePositionDictionary', () => {
     const piecePositions = {
         [WHITE]: {
-            [BIA]: [ SQUARES.f5, SQUARES.g4 ],
+            [BIA]: [ f5, g4 ],
             [FLIPPED_BIA]: [],
             [MA]: [],
             [THON]: [],
             [MET]: [],
             [RUA]: [],
-            [KHUN]: [ SQUARES.d1 ]
+            [KHUN]: [ d1 ]
         },
         [BLACK]: {
-            [BIA]: [ SQUARES.e6, SQUARES.h5 ],
+            [BIA]: [ e6, h5 ],
             [FLIPPED_BIA]: [],
             [MA]: [],
             [THON]: [],
             [MET]: [],
             [RUA]: [],
-            [KHUN]: [ SQUARES.e8 ]
+            [KHUN]: [ e8 ]
         }
     }
 
     test('should move correctly', () => {
-        const moveObject = {
+        const moveObject: MoveObject = {
             piece: BIA,
             color: WHITE,
-            from: SQUARES.g4,
-            to: SQUARES.g5
+            from: g4,
+            to: g5,
+            flags: 0,
         }
         const result = updatePiecePositionDictionary(piecePositions, moveObject)
-        expect(result[WHITE][BIA].slice().sort()).toEqual([ SQUARES.f5, SQUARES.g5 ].sort())
+        expect(result[WHITE][BIA].slice().sort()).toEqual([ f5, g5 ].sort())
     })
 
     test('should capture correctly', () => {
         const moveObject = {
             piece: BIA,
             color: BLACK,
-            from: SQUARES.h5,
-            to: SQUARES.g4,
+            from: h5,
+            to: g4,
             flags: BITS.CAPTURE,
             captured: BIA
         }
         const result = updatePiecePositionDictionary(piecePositions, moveObject)
-        expect(result[BLACK][BIA].slice().sort()).toEqual([ SQUARES.e6, SQUARES.g4 ].sort())
-        expect(result[WHITE][BIA].slice().sort()).toEqual([ SQUARES.f5 ].sort())
+        expect(result[BLACK][BIA].slice().sort()).toEqual([ e6, g4 ].sort())
+        expect(result[WHITE][BIA].slice().sort()).toEqual([ f5 ].sort())
     })
 
     test('should promote correctly', () => {
         const moveObject = {
             piece: BIA,
             color: WHITE,
-            from: SQUARES.f5,
-            to: SQUARES.f6,
+            from: f5,
+            to: f6,
             flags: BITS.PROMOTION,
             promotion: FLIPPED_BIA
         }
         const result = updatePiecePositionDictionary(piecePositions, moveObject)
-        expect(result[WHITE][BIA].slice().sort()).toEqual([ SQUARES.g4 ].sort())
-        expect(result[WHITE][FLIPPED_BIA].slice().sort()).toEqual([ SQUARES.f6 ].sort())
+        expect(result[WHITE][BIA].slice().sort()).toEqual([ g4 ].sort())
+        expect(result[WHITE][FLIPPED_BIA].slice().sort()).toEqual([ f6 ].sort())
     })
 
     test('should capture and promote at the same time correctly', () => {
         const moveObject = {
             piece: BIA,
             color: WHITE,
-            from: SQUARES.f5,
-            to: SQUARES.e6,
+            from: f5,
+            to: e6,
             flags: BITS.CAPTURE | BITS.PROMOTION,
             captured: BIA,
             promotion: FLIPPED_BIA
         }
         const result = updatePiecePositionDictionary(piecePositions, moveObject)
-        expect(result[WHITE][BIA].slice().sort()).toEqual([ SQUARES.g4 ].sort())
-        expect(result[WHITE][FLIPPED_BIA].slice().sort()).toEqual([ SQUARES.e6 ].sort())
-        expect(result[BLACK][BIA].slice().sort()).toEqual([ SQUARES.h5 ].sort())
+        expect(result[WHITE][BIA].slice().sort()).toEqual([ g4 ].sort())
+        expect(result[WHITE][FLIPPED_BIA].slice().sort()).toEqual([ e6 ].sort())
+        expect(result[BLACK][BIA].slice().sort()).toEqual([ h5 ].sort())
     })
 
     describe('should throw error if not enough input', () => {
         test('not enough color', () => {
             expect.assertions(3)
             try {
-                updatePiecePositionDictionary(piecePositions, {
+                updatePiecePositionDictionary(piecePositions, <MoveObject> {
                     piece: BIA,
-                    from: SQUARES.f5,
-                    to: SQUARES.e6,
+                    from: f5,
+                    to: e6,
                 })
             } catch (error) {
                 expect(error.code).toBe('NOT_ENOUGH_INPUT')
@@ -768,10 +792,10 @@ describe('updatePiecePositionDictionary', () => {
         test('not enough piece', () => {
             expect.assertions(3)
             try {
-                updatePiecePositionDictionary(piecePositions, {
+                updatePiecePositionDictionary(piecePositions, <MoveObject> {
                     color: WHITE,
-                    from: SQUARES.f5,
-                    to: SQUARES.e6,
+                    from: f5,
+                    to: e6,
                 })
             } catch (error) {
                 expect(error.code).toBe('NOT_ENOUGH_INPUT')
@@ -783,10 +807,10 @@ describe('updatePiecePositionDictionary', () => {
         test('not enough from', () => {
             expect.assertions(3)
             try {
-                updatePiecePositionDictionary(piecePositions, {
+                updatePiecePositionDictionary(piecePositions, <MoveObject> {
                     piece: BIA,
                     color: WHITE,
-                    to: SQUARES.e6,
+                    to: e6,
                 })
             } catch (error) {
                 expect(error.code).toBe('NOT_ENOUGH_INPUT')
@@ -798,10 +822,10 @@ describe('updatePiecePositionDictionary', () => {
         test('not enough to', () => {
             expect.assertions(3)
             try {
-                updatePiecePositionDictionary(piecePositions, {
+                updatePiecePositionDictionary(piecePositions, <MoveObject> {
                     piece: BIA,
                     color: WHITE,
-                    from: SQUARES.f5,
+                    from: f5,
                 })
             } catch (error) {
                 expect(error.code).toBe('NOT_ENOUGH_INPUT')
@@ -813,7 +837,7 @@ describe('updatePiecePositionDictionary', () => {
         test('not enough everything', () => {
             expect.assertions(3)
             try {
-                updatePiecePositionDictionary(piecePositions, {})
+                updatePiecePositionDictionary(piecePositions, <MoveObject> {})
             } catch (error) {
                 expect(error.code).toBe('NOT_ENOUGH_INPUT')
                 expect(error.requireMoreInput).toBeInstanceOf(Array)
@@ -827,8 +851,8 @@ describe('updatePiecePositionDictionary', () => {
                 updatePiecePositionDictionary(piecePositions, {
                     piece: BIA,
                     color: WHITE,
-                    from: SQUARES.f5,
-                    to: SQUARES.e6,
+                    from: f5,
+                    to: e6,
                     flags: BITS.PROMOTION,
                 })
             } catch (error) {
@@ -844,8 +868,8 @@ describe('updatePiecePositionDictionary', () => {
                 updatePiecePositionDictionary(piecePositions, {
                     piece: BIA,
                     color: WHITE,
-                    from: SQUARES.f5,
-                    to: SQUARES.e6,
+                    from: f5,
+                    to: e6,
                     flags: BITS.CAPTURE,
                 })
             } catch (error) {
@@ -861,35 +885,35 @@ describe('updatePiecePositionDictionary', () => {
 describe('removePiecePositionIfExists', () => {
     const piecePositions = {
         [WHITE]: {
-            [BIA]: [ SQUARES.f5, SQUARES.g4 ],
+            [BIA]: [ f5, g4 ],
             [FLIPPED_BIA]: [],
             [MA]: [],
             [THON]: [],
             [MET]: [],
             [RUA]: [],
-            [KHUN]: [ SQUARES.d1 ]
+            [KHUN]: [ d1 ]
         },
         [BLACK]: {
-            [BIA]: [ SQUARES.e6, SQUARES.h5 ],
+            [BIA]: [ e6, h5 ],
             [FLIPPED_BIA]: [],
             [MA]: [],
             [THON]: [],
             [MET]: [],
             [RUA]: [],
-            [KHUN]: [ SQUARES.e8 ]
+            [KHUN]: [ e8 ]
         }
     }
 
-    const boardState = Array(128)
-    boardState[SQUARES.f5] = [WHITE, BIA]
-    boardState[SQUARES.g4] = [WHITE, BIA]
-    boardState[SQUARES.d1] = [WHITE, KHUN]
-    boardState[SQUARES.e6] = [BLACK, BIA]
-    boardState[SQUARES.h5] = [BLACK, BIA]
-    boardState[SQUARES.e8] = [BLACK, KHUN]
+    const boardState = Array(128).fill(null)
+    boardState[f5] = [WHITE, BIA]
+    boardState[g4] = [WHITE, BIA]
+    boardState[d1] = [WHITE, KHUN]
+    boardState[e6] = [BLACK, BIA]
+    boardState[h5] = [BLACK, BIA]
+    boardState[e8] = [BLACK, KHUN]
 
     test('remove piece f5 correctly', () => {
-        const square = SQUARES.f5
+        const square = f5
         const result = removePiecePositionIfExists(piecePositions, boardState, square)
         const newPiecePositions = clone(piecePositions)
         newPiecePositions[WHITE][BIA] = newPiecePositions[WHITE][BIA].filter(p => p !== square)
@@ -897,7 +921,7 @@ describe('removePiecePositionIfExists', () => {
     })
 
     test('remove piece g4 correctly', () => {
-        const square = SQUARES.g4
+        const square = g4
         const result = removePiecePositionIfExists(piecePositions, boardState, square)
         const newPiecePositions = clone(piecePositions)
         newPiecePositions[WHITE][BIA] = newPiecePositions[WHITE][BIA].filter(p => p !== square)
@@ -905,7 +929,7 @@ describe('removePiecePositionIfExists', () => {
     })
 
     test('remove piece d1 correctly', () => {
-        const square = SQUARES.d1
+        const square = d1
         const result = removePiecePositionIfExists(piecePositions, boardState, square)
         const newPiecePositions = clone(piecePositions)
         newPiecePositions[WHITE][KHUN] = newPiecePositions[WHITE][KHUN].filter(p => p !== square)
@@ -913,7 +937,7 @@ describe('removePiecePositionIfExists', () => {
     })
 
     test('remove piece e6 correctly', () => {
-        const square = SQUARES.e6
+        const square = e6
         const result = removePiecePositionIfExists(piecePositions, boardState, square)
         const newPiecePositions = clone(piecePositions)
         newPiecePositions[BLACK][BIA] = newPiecePositions[BLACK][BIA].filter(p => p !== square)
@@ -921,7 +945,7 @@ describe('removePiecePositionIfExists', () => {
     })
 
     test('remove piece h5 correctly', () => {
-        const square = SQUARES.h5
+        const square = h5
         const result = removePiecePositionIfExists(piecePositions, boardState, square)
         const newPiecePositions = clone(piecePositions)
         newPiecePositions[BLACK][BIA] = newPiecePositions[BLACK][BIA].filter(p => p !== square)
@@ -929,7 +953,7 @@ describe('removePiecePositionIfExists', () => {
     })
 
     test('remove piece e8 correctly', () => {
-        const square = SQUARES.e8
+        const square = e8
         const result = removePiecePositionIfExists(piecePositions, boardState, square)
         const newPiecePositions = clone(piecePositions)
         newPiecePositions[BLACK][KHUN] = newPiecePositions[BLACK][KHUN].filter(p => p !== square)
@@ -941,42 +965,48 @@ describe('removePiecePositionIfExists', () => {
 describe('put', () => {
     const piecePositions = {
         [WHITE]: {
-            [BIA]: [ SQUARES.f5, SQUARES.g4 ],
+            [BIA]: [ f5, g4 ],
             [FLIPPED_BIA]: [],
             [MA]: [],
             [THON]: [],
             [MET]: [],
             [RUA]: [],
-            [KHUN]: [ SQUARES.d1 ]
+            [KHUN]: [ d1 ]
         },
         [BLACK]: {
-            [BIA]: [ SQUARES.e6, SQUARES.h5 ],
+            [BIA]: [ e6, h5 ],
             [FLIPPED_BIA]: [],
             [MA]: [],
             [THON]: [],
             [MET]: [],
             [RUA]: [],
-            [KHUN]: [ SQUARES.e8 ]
+            [KHUN]: [ e8 ]
         }
     }
 
-    const boardState = Array(128)
-    boardState[SQUARES.f5] = [WHITE, BIA]
-    boardState[SQUARES.g4] = [WHITE, BIA]
-    boardState[SQUARES.d1] = [WHITE, KHUN]
-    boardState[SQUARES.e6] = [BLACK, BIA]
-    boardState[SQUARES.h5] = [BLACK, BIA]
-    boardState[SQUARES.e8] = [BLACK, KHUN]
+    const boardState = Array(128).fill(null)
+    boardState[f5] = [WHITE, BIA]
+    boardState[g4] = [WHITE, BIA]
+    boardState[d1] = [WHITE, KHUN]
+    boardState[e6] = [BLACK, BIA]
+    boardState[h5] = [BLACK, BIA]
+    boardState[e8] = [BLACK, KHUN]
 
-    const state = {
+    const state: State = {
+        activeColor: WHITE,
+        moveNumber: 1,
+        history: [],
+        future: [],
         boardState,
-        piecePositions
+        piecePositions,
+        countdown: null,
+        countdownHistory: [],
     }
 
     test('put empty square', () => {
         const color = WHITE
         const piece = RUA
-        const square = SQUARES.f7
+        const square = f7
 
         const newState = put(state, color, piece, square)
         expect(newState.boardState[square]).toEqual([color, piece])
@@ -986,7 +1016,7 @@ describe('put', () => {
     test('put non empty square', () => {
         const color = BLACK
         const piece = MA
-        const square = SQUARES.g4
+        const square = g4
 
         const newState = put(state, color, piece, square)
         expect(newState.boardState[square]).toEqual([color, piece])
@@ -999,46 +1029,52 @@ describe('put', () => {
 describe('remove', () => {
     const piecePositions = {
         [WHITE]: {
-            [BIA]: [ SQUARES.f5, SQUARES.g4 ],
+            [BIA]: [ f5, g4 ],
             [FLIPPED_BIA]: [],
             [MA]: [],
             [THON]: [],
             [MET]: [],
             [RUA]: [],
-            [KHUN]: [ SQUARES.d1 ]
+            [KHUN]: [ d1 ]
         },
         [BLACK]: {
-            [BIA]: [ SQUARES.e6, SQUARES.h5 ],
+            [BIA]: [ e6, h5 ],
             [FLIPPED_BIA]: [],
             [MA]: [],
             [THON]: [],
             [MET]: [],
             [RUA]: [],
-            [KHUN]: [ SQUARES.e8 ]
+            [KHUN]: [ e8 ]
         }
     }
 
-    const boardState = Array(128)
-    boardState[SQUARES.f5] = [WHITE, BIA]
-    boardState[SQUARES.g4] = [WHITE, BIA]
-    boardState[SQUARES.d1] = [WHITE, KHUN]
-    boardState[SQUARES.e6] = [BLACK, BIA]
-    boardState[SQUARES.h5] = [BLACK, BIA]
-    boardState[SQUARES.e8] = [BLACK, KHUN]
+    const boardState = Array(128).fill(null)
+    boardState[f5] = [WHITE, BIA]
+    boardState[g4] = [WHITE, BIA]
+    boardState[d1] = [WHITE, KHUN]
+    boardState[e6] = [BLACK, BIA]
+    boardState[h5] = [BLACK, BIA]
+    boardState[e8] = [BLACK, KHUN]
 
-    const state = {
+    const state: State = {
+        activeColor: WHITE,
+        moveNumber: 1,
+        history: [],
+        future: [],
         boardState,
-        piecePositions
+        piecePositions,
+        countdown: null,
+        countdownHistory: [],
     }
 
     test('remove empty square', () => {
-        const square = SQUARES.f7
+        const square = f7
         const newState = remove(state, square)
         expect(newState.boardState[square]).toBeFalsy()
     })
 
     test('remove non empty square', () => {
-        const square = SQUARES.h5
+        const square = h5
         const newState = remove(state, square)
         expect(newState.boardState[square]).toBeFalsy()
         expect(newState.piecePositions[BLACK][BIA]).not.toContain(square)
@@ -1050,7 +1086,7 @@ describe('remove', () => {
 
 describe('import export fen', () => {
     const fen = 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1'
-    const state = {
+    const state: State = {
         boardState: [
             [WHITE, RUA],
             [WHITE, MA],
@@ -1060,10 +1096,10 @@ describe('import export fen', () => {
             [WHITE, THON],
             [WHITE, MA],
             [WHITE, RUA],
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
 
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null,
 
             [WHITE, BIA],
             [WHITE, BIA],
@@ -1073,12 +1109,12 @@ describe('import export fen', () => {
             [WHITE, BIA],
             [WHITE, BIA],
             [WHITE, BIA],
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
 
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null,
 
             [BLACK, BIA],
             [BLACK, BIA],
@@ -1088,10 +1124,10 @@ describe('import export fen', () => {
             [BLACK, BIA],
             [BLACK, BIA],
             [BLACK, BIA],
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
 
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null,
 
             [BLACK, RUA],
             [BLACK, MA],
@@ -1101,7 +1137,7 @@ describe('import export fen', () => {
             [BLACK, THON],
             [BLACK, MA],
             [BLACK, RUA],
-            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+            null, null, null, null, null, null, null, null,
         ],
         activeColor: WHITE,
         moveNumber: 1,
@@ -1112,27 +1148,27 @@ describe('import export fen', () => {
         piecePositions: {
             [WHITE]: {
                 [BIA]: [
-                    SQUARES.a3, SQUARES.b3, SQUARES.c3, SQUARES.d3,
-                    SQUARES.e3, SQUARES.f3, SQUARES.g3, SQUARES.h3
+                    a3, b3, c3, d3,
+                    e3, f3, g3, h3
                 ],
                 [FLIPPED_BIA]: [],
-                [MA]: [ SQUARES.b1, SQUARES.g1 ],
-                [THON]: [ SQUARES.c1, SQUARES.f1 ],
-                [MET]: [ SQUARES.e1 ],
-                [RUA]: [ SQUARES.a1, SQUARES.h1 ],
-                [KHUN]: [ SQUARES.d1 ]
+                [MA]: [ b1, g1 ],
+                [THON]: [ c1, f1 ],
+                [MET]: [ e1 ],
+                [RUA]: [ a1, h1 ],
+                [KHUN]: [ d1 ]
             },
             [BLACK]: {
                 [BIA]: [
-                    SQUARES.a6, SQUARES.b6, SQUARES.c6, SQUARES.d6,
-                    SQUARES.e6, SQUARES.f6, SQUARES.g6, SQUARES.h6
+                    a6, b6, c6, d6,
+                    e6, f6, g6, h6
                 ],
                 [FLIPPED_BIA]: [],
-                [MA]: [ SQUARES.b8, SQUARES.g8 ],
-                [THON]: [ SQUARES.c8, SQUARES.f8 ],
-                [MET]: [ SQUARES.d8 ],
-                [RUA]: [ SQUARES.a8, SQUARES.h8 ],
-                [KHUN]: [ SQUARES.e8 ]
+                [MA]: [ b8, g8 ],
+                [THON]: [ c8, f8 ],
+                [MET]: [ d8 ],
+                [RUA]: [ a8, h8 ],
+                [KHUN]: [ e8 ]
             }
         }
     }
@@ -1195,11 +1231,15 @@ describe('import export fen', () => {
                 errorCode: 'WRONG_NUMBER_OF_INPUTS',
             },
             {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - - -',
+                errorCode: 'WRONG_NUMBER_OF_INPUTS',
+            },
+            {
                 fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - - - -',
                 errorCode: 'WRONG_NUMBER_OF_INPUTS',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - - - - -',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - - - - - -',
                 errorCode: 'WRONG_NUMBER_OF_INPUTS',
             },
             {
@@ -1234,15 +1274,15 @@ describe('import export fen', () => {
                 errorCode: 'WRONG_BOARD_STRING_CHARACTER',
             },
             {
-                fen: 'rmtektmg/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - - -',
+                fen: 'rmtektmg/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - - - - -',
                 errorCode: 'WRONG_BOARD_STRING_CHARACTER',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/-BBBBBBB/8/RMTKETMR w 1 - - -',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/-BBBBBBB/8/RMTKETMR w 1 - - - - -',
                 errorCode: 'WRONG_BOARD_STRING_CHARACTER',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/+BBBBBBB/8/RMTKETMR w 1 - - -',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/+BBBBBBB/8/RMTKETMR w 1 - - - - -',
                 errorCode: 'WRONG_BOARD_STRING_CHARACTER',
             },
 
@@ -1265,42 +1305,42 @@ describe('import export fen', () => {
                 errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8 w 1 - - -',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8 w 1 - - - - -',
                 errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB w 1 - - -',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB w 1 - - - - -',
                 errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8 w 1 - - -',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8 w 1 - - - - -',
                 errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR/8 w 1 - - -',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR/8 w 1 - - - - -',
                 errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR/8/bbbbbbbb w 1 - - -',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR/8/bbbbbbbb w 1 - - - - -',
                 errorCode: 'WRONG_BOARD_STRING_NUMBER_OF_RANKS',
             },
 
 
 
             {
-                fen: 'rmtektmr/53/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - - -',
+                fen: 'rmtektmr/53/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - - - - -',
                 errorCode: 'WRONG_BOARD_STRING_NUMBER_NEXT_TO_EACH_OTHER',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/71/8/BBBBBBBB/8/RMTKETMR w 1 - - -',
+                fen: 'rmtektmr/8/bbbbbbbb/71/8/BBBBBBBB/8/RMTKETMR w 1 - - - - -',
                 errorCode: 'WRONG_BOARD_STRING_NUMBER_NEXT_TO_EACH_OTHER',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/26/BBBBBBBB/8/RMTKETMR w 1 - - -',
+                fen: 'rmtektmr/8/bbbbbbbb/8/26/BBBBBBBB/8/RMTKETMR w 1 - - - - -',
                 errorCode: 'WRONG_BOARD_STRING_NUMBER_NEXT_TO_EACH_OTHER',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/44/RMTKETMR w 1 - - -',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/44/RMTKETMR w 1 - - - - -',
                 errorCode: 'WRONG_BOARD_STRING_NUMBER_NEXT_TO_EACH_OTHER',
             },
 
@@ -1384,7 +1424,7 @@ describe('import export fen', () => {
 
 
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR W 1 - - -',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR W 1 - - - - -',
                 errorCode: 'WRONG_ACTIVE_COLOR',
             },
             {
@@ -1392,7 +1432,7 @@ describe('import export fen', () => {
                 errorCode: 'WRONG_ACTIVE_COLOR',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR WHITE 1 - - -',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR WHITE 1 - - - - -',
                 errorCode: 'WRONG_ACTIVE_COLOR',
             },
             {
@@ -1400,7 +1440,7 @@ describe('import export fen', () => {
                 errorCode: 'WRONG_ACTIVE_COLOR',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR white 1 - - -',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR white 1 - - - - -',
                 errorCode: 'WRONG_ACTIVE_COLOR',
             },
             {
@@ -1442,105 +1482,167 @@ describe('import export fen', () => {
 
 
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 b - -',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 b - - - -',
                 errorCode: 'WRONG_COUNTDOWN',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - bp -',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - bp - - -',
                 errorCode: 'WRONG_COUNTDOWN',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - - 5',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - - 5 - -',
                 errorCode: 'WRONG_COUNTDOWN',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 b pp -',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 b pp - - -',
                 errorCode: 'WRONG_COUNTDOWN',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 b - 6',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 b - 6 - -',
                 errorCode: 'WRONG_COUNTDOWN',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - bp 6',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 - bp 6 - -',
+                errorCode: 'WRONG_COUNTDOWN',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 b bp 6 1 -',
+                errorCode: 'WRONG_COUNTDOWN',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 b bp 6 - 16',
                 errorCode: 'WRONG_COUNTDOWN',
             },
 
 
 
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 white bp 6',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 white bp 6 1 16',
                 errorCode: 'WRONG_COUNT_COLOR',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 black bp 6',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 black bp 6 1 16',
                 errorCode: 'WRONG_COUNT_COLOR',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 W bp 6',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 W bp 6 1 16',
                 errorCode: 'WRONG_COUNT_COLOR',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 B bp 6',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 B bp 6 1 16',
                 errorCode: 'WRONG_COUNT_COLOR',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 + bp 6',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 + bp 6 1 16',
                 errorCode: 'WRONG_COUNT_COLOR',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 / bp 6',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 / bp 6 1 16',
                 errorCode: 'WRONG_COUNT_COLOR',
             },
 
 
 
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pb 6',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pb 6 1 16',
                 errorCode: 'WRONG_COUNT_TYPE',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w bb 6',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w bb 6 1 16',
                 errorCode: 'WRONG_COUNT_TYPE',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w 5 6',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w 5 6 1 16',
                 errorCode: 'WRONG_COUNT_TYPE',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w b 6',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w b 6 1 16',
                 errorCode: 'WRONG_COUNT_TYPE',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w p 6',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w p 6 1 16',
                 errorCode: 'WRONG_COUNT_TYPE',
             },
 
 
 
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp 06',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp 06 1 16',
                 errorCode: 'WRONG_COUNT_NUMBER',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp 0',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp 0 1 16',
                 errorCode: 'WRONG_COUNT_NUMBER',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp +6',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp +6 1 16',
                 errorCode: 'WRONG_COUNT_NUMBER',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w bp -6',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w bp -6 1 16',
                 errorCode: 'WRONG_COUNT_NUMBER',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w bp 0x88',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w bp 0x88 1 16',
                 errorCode: 'WRONG_COUNT_NUMBER',
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp w',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp w 1 16',
                 errorCode: 'WRONG_COUNT_NUMBER',
+            },
+
+
+
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp 1 06 16',
+                errorCode: 'WRONG_COUNT_FROM_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp 1 0 16',
+                errorCode: 'WRONG_COUNT_FROM_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp 1 +6 16',
+                errorCode: 'WRONG_COUNT_FROM_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w bp 1 -6 16',
+                errorCode: 'WRONG_COUNT_FROM_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w bp 1 0x88 16',
+                errorCode: 'WRONG_COUNT_FROM_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp 1 w 16',
+                errorCode: 'WRONG_COUNT_FROM_NUMBER',
+            },
+
+
+
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp 1 16 06',
+                errorCode: 'WRONG_COUNT_TO_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp 1 16 0',
+                errorCode: 'WRONG_COUNT_TO_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp 1 16 +6',
+                errorCode: 'WRONG_COUNT_TO_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w bp 1 16 -6',
+                errorCode: 'WRONG_COUNT_TO_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w bp 1 16 0x88',
+                errorCode: 'WRONG_COUNT_TO_NUMBER',
+            },
+            {
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w pp 1 16 w',
+                errorCode: 'WRONG_COUNT_TO_NUMBER',
             },
         ]
 
@@ -1548,7 +1650,7 @@ describe('import export fen', () => {
     
         for (const test of tests) {
             try {
-                importFen(test.fen)
+                importFen(<string> test.fen)
                 console.log('this input didn\'t throw error', test)
             } catch (error) {
                 expect(error.code).toBe(test.errorCode)
@@ -1563,19 +1665,23 @@ describe('import export fen', () => {
     test('should import fen with countdown correctly', () => {
         const tests = [
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w bp 3',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 w bp 3 2 16',
                 result: {
                     countColor: WHITE,
                     countType: BOARD_POWER_COUNTDOWN,
                     count: 3,
+                    countFrom: 2,
+                    countTo: 16,
                 }
             },
             {
-                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 b pp 33',
+                fen: 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1 b pp 33 10 30',
                 result: {
                     countColor: BLACK,
                     countType: PIECE_POWER_COUNTDOWN,
                     count: 33,
+                    countFrom: 10,
+                    countTo: 30,
                 }
             },
         ]
@@ -1593,16 +1699,20 @@ describe('import export fen', () => {
         newState.countdown = {
             countColor: BLACK,
             countType: BOARD_POWER_COUNTDOWN,
-            count: 11
+            count: 11,
+            countFrom: 1,
+            countTo: 16,
         }
-        expect(exportFen(newState).split(' ').slice(3).join(' ')).toBe('b bp 11')
+        expect(exportFen(newState).split(' ').slice(3).join(' ')).toBe('b bp 11 1 16')
 
         newState.countdown = {
             countColor: WHITE,
             countType: PIECE_POWER_COUNTDOWN,
-            count: 29
+            count: 29,
+            countFrom: 1,
+            countTo: 16,
         }
-        expect(exportFen(newState).split(' ').slice(3).join(' ')).toBe('w pp 29')
+        expect(exportFen(newState).split(' ').slice(3).join(' ')).toBe('w pp 29 1 16')
 
         newState.countdown = null
         expect(exportFen(newState).split(' ').length).toBe(3)

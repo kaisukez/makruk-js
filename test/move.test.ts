@@ -1,14 +1,6 @@
-const {
-    WHITE,
-    BLACK,
-
-    BIA,
-    FLIPPED_BIA,
-    MA,
-    THON,
-    MET,
-    RUA,
-    KHUN,
+import {
+    Color,
+    Piece,
 
     INITIAL_FEN,
     EMPTY_FEN,
@@ -24,9 +16,7 @@ const {
 
     PIECE_POWER,
 
-    SQUARES,
-    FIRST_SQUARE,
-    LAST_SQUARE,
+    SquareIndex,
 
     FLAGS,
     BITS,
@@ -49,11 +39,12 @@ const {
     FILE_G,
     FILE_H,
 
-    PIECE_POWER_COUNTDOWN,
-    BOARD_POWER_COUNTDOWN
-} = require('../src/constants')
+    CountType,
+    // PIECE_POWER_COUNTDOWN,
+    // BOARD_POWER_COUNTDOWN
+} from '../src/constants'
 
-const {
+import {
     swapColor,
     getAttackOffsets,
     getMoveOffsets,
@@ -65,9 +56,9 @@ const {
     clone,
     compose,
     pipe
-} = require('../src/utils')
+} from '../src/utils'
 
-const {
+import {
     extractInfoFromFen,
     getBoardStateFromBoardString,
     forEachPieceFromBoardState,
@@ -81,9 +72,9 @@ const {
     remove,
     importFen,
     exportFen
-} = require('../src/state')
+} from '../src/state'
 
-const {
+import {
     canThisColorAttackThisSquare,
     isKhunAttacked,
     inCheck,
@@ -104,9 +95,18 @@ const {
     generateMoves,
     generateLegalMoves,
     move,
-} = require('../src/move')
+} from '../src/move'
 
-
+const { WHITE, BLACK } = Color
+const {
+    BIA,
+    FLIPPED_BIA,
+    MA,
+    THON,
+    MET,
+    RUA,
+    KHUN,
+} = Piece
 const {
     a8, b8, c8, d8, e8, f8, g8, h8,
     a7, b7, c7, d7, e7, f7, g7, h7,
@@ -116,7 +116,11 @@ const {
     a3, b3, c3, d3, e3, f3, g3, h3,
     a2, b2, c2, d2, e2, f2, g2, h2,
     a1, b1, c1, d1, e1, f1, g1, h1
-} = SQUARES
+} = SquareIndex
+const {
+    PIECE_POWER_COUNTDOWN,
+    BOARD_POWER_COUNTDOWN,
+} = CountType
  
 describe('canThisColorAttackThisSquare', () => {
     // TODO
@@ -247,7 +251,6 @@ describe('canThisColorAttackThisSquare', () => {
                 color,
                 piece,
                 square,
-                func,
                 canAttack,
                 cannotAttack,
             } = test
