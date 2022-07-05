@@ -29,8 +29,8 @@ export type State = {
     activeColor: Color
     moveNumber: number
     boardState: Array<SquareData|null>
-    history: MoveObject[]
-    future: MoveObject[]
+    history?: MoveObject[]
+    future?: MoveObject[]
     piecePositions: Record<Color, Record<Piece, number[]>>
     countdown: Countdown | null
     countdownHistory: Countdown[]

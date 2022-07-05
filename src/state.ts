@@ -660,9 +660,7 @@ export function evalulatePower(pieceCount: PieceCount) {
  * updatePiecePositionDictionary(piecePositions, moveObject)
  * newPiecePosition = [5, 22, 49]
  */
-export function updatePiecePositionDictionary(piecePositions: State['piecePositions'], moveObject: MoveObject) {
-    const newPiecePositions = clone(piecePositions)
-
+export function updatePiecePositionDictionaryInplace(piecePositions: State['piecePositions'], moveObject: MoveObject) {
     const { color, piece, from, to, flags, promotion, captured } = moveObject
 
     if (
@@ -699,30 +697,34 @@ export function updatePiecePositionDictionary(piecePositions: State['piecePositi
         }
     }
 
-    if (Array.isArray(newPiecePositions[color][piece])) {
-        const index = newPiecePositions[color][piece].indexOf(from)
+    if (Array.isArray(piecePositions[color][piece])) {
+        const index = piecePositions[color][piece].indexOf(from)
         if (index !== -1) {
-            newPiecePositions[color][piece][index] = to
+            piecePositions[color][piece][index] = to
         }
 
         if (flags & BITS.PROMOTION && promotion) {
-            const toDeleteIndex = newPiecePositions[color][piece].indexOf(to)
+            const toDeleteIndex = piecePositions[color][piece].indexOf(to)
             if (toDeleteIndex !== -1) {
-                newPiecePositions[color][piece].splice(toDeleteIndex, 1)
+                piecePositions[color][piece].splice(toDeleteIndex, 1)
             }
-            newPiecePositions[color][promotion].push(to)
+            piecePositions[color][promotion].push(to)
         }
     
         if (flags & BITS.CAPTURE && captured) {
-            const toDeleteIndex = newPiecePositions[swapColor(color)][captured].indexOf(to)
+            const toDeleteIndex = piecePositions[swapColor(color)][captured].indexOf(to)
             if (toDeleteIndex !== -1) {
-                newPiecePositions[swapColor(color)][captured].splice(toDeleteIndex, 1)
+                piecePositions[swapColor(color)][captured].splice(toDeleteIndex, 1)
             }
         }
     }
 
 
-    return newPiecePositions
+    return piecePositions
+}
+export function updatePiecePositionDictionary(piecePositions: State['piecePositions'], moveObject: MoveObject) {
+    const newPiecePositions = clone(piecePositions)
+    return updatePiecePositionDictionaryInplace(newPiecePositions, moveObject)
 }
 
 export function createCountdownObject(countColor?: string, countType?: string, count?: string, countFrom?: string, countTo?: string): Countdown|null {
@@ -791,8 +793,8 @@ export function importFen(fen: string): State {
         activeColor: toEnum(Color, fenInfo.activeColor),
         moveNumber: parseInt(fenInfo.moveNumber, 10),
         boardState,
-        history: [],
-        future: [],
+        // history: [],
+        // future: [],
         piecePositions,
         countdown: createCountdownObject(
             fenInfo.countColor,

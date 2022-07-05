@@ -225,6 +225,11 @@ export function clone<T extends Object>(obj: T): T {
     throw { code: 'OBJECT_TYPE_IS_NOT_SUPPORTED' }
 }
 
+// https://developer.mozilla.org/en-US/docs/Web/API/structuredClone
+// export function clone<T extends Object>(obj: T): T {
+//     return structuredClone(obj)
+// }
+
 // https://gist.github.com/JamieMason/172460a36a0eaef24233e6edb2706f83
 export const compose = (...fns: Function[]) =>
     (...args: any) => fns.reduceRight(
