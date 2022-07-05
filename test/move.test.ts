@@ -65,7 +65,6 @@ import {
     getPiecePositions,
     forEachPiece,
     countPiece,
-    evalulatePower,
     updatePiecePositionDictionary,
     removePiecePositionIfExists,
     put,

@@ -9,7 +9,7 @@ const S0 = 0
 const S1 = 0
 const S2 = 0.16
 const S3 = 0.32
-const S4 = 0.5
+const S4 = 0.48
 
 // export const CenterScore = {
 //     [SquareIndex.a8]: 112 ^ S1, [SquareIndex.b8]: 113 ^ S1, [SquareIndex.c8]: 114 ^ S1, [SquareIndex.d8]: 115 ^ S1, [SquareIndex.e8]: 116 ^ S1, [SquareIndex.f8]: 117 ^ S1, [SquareIndex.g8]: 118 ^ S1, [SquareIndex.h8]: 119 ^ S1,
