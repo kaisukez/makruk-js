@@ -635,23 +635,6 @@ export function countPiece(piecePositions: State['piecePositions']): PieceCount 
     return pieceCount
 }
 
-export function evalulatePower(pieceCount: PieceCount) {
-    const power = {
-        [Color.WHITE]: 0,
-        [Color.BLACK]: 0
-    }
-
-    for (const piece in pieceCount[Color.WHITE]) {
-        power[Color.WHITE] += pieceCount[Color.WHITE][<Piece> piece] * PIECE_POWER[<Piece> piece]
-    }
-
-    for (const piece in pieceCount[Color.BLACK]) {
-        power[Color.BLACK] += pieceCount[Color.BLACK][<Piece> piece] * PIECE_POWER[<Piece> piece]
-    }
-
-    return power
-}
-
 
 /**
  * moveObject = { from: 21, to: 22 }

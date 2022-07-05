@@ -65,7 +65,6 @@ import {
     getPiecePositions,
     forEachPiece,
     countPiece,
-    evalulatePower,
     updatePiecePositionDictionary,
     removePiecePositionIfExists,
     put,
@@ -634,63 +633,6 @@ describe('countPiece', () => {
     test('should count piece correctly', () => {
         const pieceCountResult = countPiece(piecePositions)        
         expect(pieceCountResult).toEqual(pieceCount)
-    })
-})
-
-
-describe('evalulatePower', () => {
-    const pieceCount = {
-        all: 32,
-
-        color: {
-            [WHITE]: 16,
-            [BLACK]: 16
-        },
-        piece: {
-            [BIA]: 16,
-            [FLIPPED_BIA]: 0,
-            [MA]: 4,
-            [THON]: 4,
-            [MET]: 2,
-            [RUA]: 4,
-            [KHUN]: 2,
-        },
-        
-        [WHITE]: {
-            [BIA]: 8,
-            [FLIPPED_BIA]: 0,
-            [MA]: 2,
-            [THON]: 2,
-            [MET]: 1,
-            [RUA]: 2,
-            [KHUN]: 1,
-        },
-        [BLACK]: {
-            [BIA]: 8,
-            [FLIPPED_BIA]: 0,
-            [MA]: 2,
-            [THON]: 2,
-            [MET]: 1,
-            [RUA]: 2,
-            [KHUN]: 1,
-        }
-    }
-
-    const expectedResult = {
-        [WHITE]: 0,
-        [BLACK]: 0
-    }
-
-    for (const piece in pieceCount[WHITE]) {
-        expectedResult[WHITE] += pieceCount[WHITE][piece] * PIECE_POWER[piece]
-    }
-
-    for (const piece in pieceCount[BLACK]) {
-        expectedResult[BLACK] += pieceCount[BLACK][piece] * PIECE_POWER[piece]
-    }
-
-    test('should evaluate power correctly', () => {
-        expect(evalulatePower(pieceCount)).toEqual(expectedResult)
     })
 })
 

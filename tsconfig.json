@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "module": "CommonJS",
-        "target": "es2017",
+        "target": "es2015",
         "declaration": true,
         "outDir": "./dist",
         "strict": true,
@@ -9,7 +9,7 @@
         "lib": ["ES2018", "DOM"]
     },
     "include": [
-        "src/**/*"
+        "src/**/*.ts"
     ],
     "exclude": [
         "**/*.test.ts"

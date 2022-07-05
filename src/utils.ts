@@ -1,13 +1,6 @@
 import {
     Color,
     Piece,
-    // BIA,
-    // FLIPPED_BIA,
-    // MA,
-    // THON,
-    // MET,
-    // RUA,
-    // KHUN,
 
     INITIAL_FEN,
 
@@ -242,18 +235,3 @@ export const pipe = (...fns: Function[]) =>
         (params, f) => Array.isArray(params) ? f(...params) : f(params),
         args
     )
-
-
-// module.exports = {
-//     swapColor,
-//     getAttackOffsets,
-//     getMoveOffsets,
-//     rank,
-//     file,
-//     squareColor,
-//     algebraic,
-//     ascii,
-//     clone,
-//     compose,
-//     pipe
-// }

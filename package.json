@@ -1,21 +1,42 @@
 {
     "name": "makruk-js",
     "version": "0.0.1",
-    "description": "",
-    "main": "index.js",
-    "scripts": {
-        "test": "jest -c jest.config.js --coverage"
-    },
+    "description": "Makruk (thai chess)",
+    "author": "Nattapon Chantasiriworawat <k@isukez.dev>",
+    "license": "MIT",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/kaisukez/makruk-js.git"
     },
-    "author": "kaisukez",
-    "license": "MIT",
     "bugs": {
         "url": "https://github.com/kaisukez/makruk-js/issues"
     },
     "homepage": "https://github.com/kaisukez/makruk-js#readme",
+    "keywords": [
+        "makruk",
+        "makruk-thai",
+        "chess",
+        "thai-chess",
+        "chess-variant"
+      ],
+    "files": [
+        "dist"
+    ],
+    "main": "./dist/index.js",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "require": "./dist/index.js",
+        "import": "./dist/index.mjs",
+        "types": "./dist/index.d.ts"
+      },
+      "./package.json": "./package.json"
+    },
+    "scripts": {
+        "build": "rm -rf dist && tsup src/index.ts --format cjs,esm --dts --minify",
+        "test": "jest -c jest.config.js --coverage"
+    },
     "devDependencies": {
         "@babel/preset-env": "^7.18.6",
         "@babel/preset-typescript": "^7.18.6",
@@ -23,6 +44,7 @@
         "jest": "^28.1.2",
         "ts-jest": "^28.0.5",
         "ts-node": "^10.8.2",
+        "tsup": "^6.1.3",
         "typescript": "^4.7.4"
     }
 }

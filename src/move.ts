@@ -65,7 +65,6 @@ import {
     updatePiecePositionDictionary,
     forEachPiece,
     countPiece,
-    evalulatePower,
     importFen,
     exportFen,
     updatePiecePositionDictionaryInplace,
@@ -908,27 +907,3 @@ export function move(state: State, move: Move, optional={}): State {
 
     return newState
 }
-
-
-// module.exports = {
-//     canThisColorAttackThisSquare,
-//     isKhunAttacked,
-//     inCheck,
-//     inCheckmate,
-//     inStalemate,
-//     inDraw,
-//     gameOver,
-//     calculateCountdown,
-
-//     changePiecePosition,
-//     step,
-//     stepCountdown,
-//     stepBackCountdown,
-//     makeMove,
-//     undoMove,
-//     nextMove,
-
-//     generateMoves,
-//     generateLegalMoves,
-//     move,
-// }
