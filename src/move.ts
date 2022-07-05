@@ -460,7 +460,7 @@ export function stepCountdown(state: State, flags: StepCountdownFlags={}) {
                 )
                 || stopCountdown
             ){
-                newState.countdownHistory.push(newState.countdown)
+                // newState.countdownHistory.push(newState.countdown)
                 newState.countdown = null
             } else {
                 throw { code: 'WRONG_STOP_COUNTDOWN_FLAG' }
@@ -527,7 +527,7 @@ export function makeMove(state: State, moveObject: MoveObject, optional={}, keep
         moveObject
     )
 
-    newState.history.push({ ...moveObject, optional })
+    // newState.history.push({ ...moveObject, optional })
     if (!keepFuture) {
         newState.future = []
     }

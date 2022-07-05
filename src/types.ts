@@ -21,6 +21,7 @@ export type MoveObject = {
     promotion?: Piece
     captured?: Piece
     optional?: CountdownFlag
+    score?: number
 }
 export type Move = string | MoveObject
 
