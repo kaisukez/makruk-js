@@ -62,6 +62,7 @@ import {
     stepBack,
     stepCountdown,
     stepBackCountdown,
+    moveToSan,
 } from './move'
 
 import {
@@ -73,6 +74,7 @@ import {
 } from './state'
 
 import { State } from './types'
+import { evaluate, findBestMove, minimax } from './evaluation'
 
 
 
@@ -80,14 +82,21 @@ function getRandomInt(max: number) {
     return Math.floor(Math.random() * Math.floor(max))
 }
 
-function performanceTest(state?: State) {
+function runUntilGameFinished(state?: State) {
     state = state || importFen(INITIAL_FEN)
     let i = 0
     while(!gameOver(state)) {
+        if (i === 100) {
+            break
+        }
         console.log('round', i)
-        const moves = generateLegalMoves(state)
-        const choosenMove = moves[getRandomInt(moves.length)]
-        state = move(state, choosenMove)
+        console.log('score', evaluate(state))
+        const bestMove = findBestMove(state, 3)
+        console.log('bestMove', moveToSan(state, bestMove), bestMove.score)
+        // const moves = generateLegalMoves(state)
+        // const choosenMove = moves[getRandomInt(moves.length)]
+        // state = move(state, choosenMove)
+        state = move(state, bestMove)
         i++
 
         console.log(ascii(state.boardState))
@@ -116,7 +125,7 @@ function performanceTest(state?: State) {
 
 // console.log('state.activeColor', state.activeColor)
 
-performanceTest()
+runUntilGameFinished()
 
 function testCount() {
     const state = importFen('T6T/8/5K2/8/2k5/8/8/t6t w 25')
