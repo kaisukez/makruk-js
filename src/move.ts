@@ -68,6 +68,7 @@ import {
     evalulatePower,
     importFen,
     exportFen,
+    updatePiecePositionDictionaryInplace,
 } from './state'
 
 import {
@@ -312,18 +313,24 @@ export function calculateCountdown(state: State): Countdown|null {
  * @param {Number} to 0x88 square
  * 
  */
-export function changePiecePosition(boardState: State['boardState'], from: SquareIndex, to: SquareIndex) {
+ export function changePiecePositionInplace(boardState: State['boardState'], from: SquareIndex, to: SquareIndex) {
     if (!from && !to) {
         return boardState
     }
 
-    const newBoardState = clone(boardState)
+    boardState[to] = boardState[from]
+    boardState[from] = null
 
-    newBoardState[to] = newBoardState[from]
-    newBoardState[from] = null
-
-    return newBoardState
+    return boardState
 }
+export function changePiecePosition(boardState: State['boardState'], from: SquareIndex, to: SquareIndex) {
+    if (!from && !to) {
+        return boardState
+    }
+    const newBoardState = clone(boardState)
+    return changePiecePositionInplace(newBoardState, from, to)
+}
+
 
 /**
  * Increase move counter (if black have made a move) and swap color
@@ -331,28 +338,32 @@ export function changePiecePosition(boardState: State['boardState'], from: Squar
  * @param {Object} state 
  * 
  */
+export function stepInplace(state: State) {
+    if (state.activeColor === Color.BLACK) {
+        state.moveNumber++
+    }
+
+    state.activeColor = swapColor(state.activeColor)
+
+    return state
+}
 export function step(state: State) {
     const newState = clone(state)
-
-    if (state.activeColor === Color.BLACK) {
-        newState.moveNumber++
-    }
-
-    newState.activeColor = swapColor(newState.activeColor)
-
-    return newState
+    return stepInplace(newState)
 }
 
-export function stepBack(state: State) {
-    const newState = clone(state)
-
+export function stepBackInplace(state: State) {
     if (state.activeColor === Color.WHITE) {
-        newState.moveNumber--
+        state.moveNumber--
     }
 
-    newState.activeColor = swapColor(newState.activeColor)
+    state.activeColor = swapColor(state.activeColor)
 
-    return newState
+    return state
+}
+export function stepBack(state: State) {
+    const newState = clone(state)
+    return stepBackInplace(newState)
 }
 
 export type CountdownFlag = {
@@ -420,15 +431,14 @@ export function stepCountdown(state: State, flags: StepCountdownFlags={}) {
         throw { code: 'CANNOT_START_ALREADY_COUNTED_STATE' }
     }
 
-
-    const newState = clone(state)
     const countdown = calculateCountdown(state)
-
+    
     // if there's no countdown then return the same state (TODO: check if this statement is valid)
     if (!countdown) {
         return state
     }
     
+    const newState = clone(state)
     
     // if we didn't count yet and we give countdown flag
     // then start counting if countdown flag is valid
@@ -507,8 +517,13 @@ export function stepBackCountdown(state: State) {
 
 export function makeMove(state: State, moveObject: MoveObject, optional={}, keepFuture=false) {
     let newState = clone(state)
-    newState.boardState = changePiecePosition(
-        state.boardState,
+    // newState.boardState = changePiecePosition(
+    //     state.boardState,
+    //     moveObject.from,
+    //     moveObject.to
+    // )
+    newState.boardState = changePiecePositionInplace(
+        newState.boardState,
         moveObject.from,
         moveObject.to
     )
@@ -519,18 +534,23 @@ export function makeMove(state: State, moveObject: MoveObject, optional={}, keep
         newState.boardState[moveObject.to]![1] = moveObject.promotion
     }
 
-    newState = step(newState)
+    // newState = step(newState)
+    newState = stepInplace(newState)
 
     // update position lookup table
-    newState.piecePositions = updatePiecePositionDictionary(
+    // newState.piecePositions = updatePiecePositionDictionary(
+    //     newState.piecePositions,
+    //     moveObject
+    // )
+    newState.piecePositions = updatePiecePositionDictionaryInplace(
         newState.piecePositions,
         moveObject
     )
 
     // newState.history.push({ ...moveObject, optional })
-    if (!keepFuture) {
-        newState.future = []
-    }
+    // if (!keepFuture) {
+    //     newState.future = []
+    // }
 
 
     return newState
@@ -542,6 +562,9 @@ export function nextMove(state: State) {
     }
 
     let newState = clone(state)
+    if (!newState.future) {
+        throw { code: 'NO_FUTURE_MOVE' }
+    }
     const nextMove = newState.future.shift()!// it's not undefined because we've check length of the future earlier
     newState = makeMove(newState, nextMove, nextMove.optional, true)
     return newState
@@ -555,6 +578,9 @@ export function undoMove(state: State) {
     let newState = clone(state)
     newState = stepBack(newState)
     newState = stepBackCountdown(newState)
+    if (!newState.history || !newState.future) {
+        throw { code: 'NO_MOVE_HISTORY' }
+    }
     const lastMove = newState.history.pop()! // it's not undefined because we've check length of the history earlier
     newState.future.unshift(lastMove)
 

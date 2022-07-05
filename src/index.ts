@@ -63,6 +63,8 @@ import {
     stepCountdown,
     stepBackCountdown,
     moveToSan,
+    inCheckmate,
+    inCheck,
 } from './move'
 
 import {
@@ -73,7 +75,7 @@ import {
     exportFen,
 } from './state'
 
-import { State } from './types'
+import { State, toEnum } from './types'
 import { evaluate, findBestMove, minimax } from './evaluation'
 
 
@@ -91,12 +93,23 @@ function runUntilGameFinished(state?: State) {
         }
         console.log('round', i)
         console.log('score', evaluate(state))
-        const bestMove = findBestMove(state, 3)
-        console.log('bestMove', moveToSan(state, bestMove), bestMove.score)
+        // console.log('gameOver(state)', gameOver(state))
+        // console.log('inCheckmate(state)', inCheckmate(state))
+        // console.log('state.activeColor', state.activeColor)
+        // console.log('inCheck(state)', inCheck(state))
+        const m = generateLegalMoves(state)
+        // console.log('m', m.map(mm => moveToSan(state!, mm)))
+        const { bestMove, bestScore } = findBestMove(state, 3)
+        if (!bestMove) {
+            console.log(state.activeColor === 'w' ? 'white' : 'black', 'resign')
+            break
+        }
+        console.log('best', bestMove)
+        console.log('bestMove', moveToSan(state, bestMove), bestScore)
         // const moves = generateLegalMoves(state)
         // const choosenMove = moves[getRandomInt(moves.length)]
         // state = move(state, choosenMove)
-        state = move(state, bestMove)
+        state = move(state, bestMove!)
         i++
 
         console.log(ascii(state.boardState))
