@@ -136,7 +136,7 @@ describe('ascii', () => {
 
 describe('clone', () => {
     test('should deep clone nested array correctly', () => {
-        const a = [11, 22, 33, [44, 55, [66, 77]]]
+        const a: any = [11, 22, 33, [44, 55, [66, 77]]]
         const aCopy = clone(a)
     
         expect(aCopy).toEqual(a)
@@ -185,8 +185,8 @@ describe('clone', () => {
 
 
 describe('compose / pipe', () => {
-    const plusOneThenDouble = num => (num + 1) * 2
-    const minusTwoThenTriple = num => (num - 2) * 3
+    const plusOneThenDouble = (num: number) => (num + 1) * 2
+    const minusTwoThenTriple = (num: number) => (num - 2) * 3
 
     test('compose execution order should go from bottom to top', () => {
         const result = compose(
