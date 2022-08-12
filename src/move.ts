@@ -186,26 +186,9 @@ export function inThreefoldRepetition(state: State) {
 }
 
 export function insufficientMaterial(state: State): boolean {
-    // TODO: find out more conditions
-
     const pieceCount = countPiece(state.piecePositions)
 
-    // if (pieceCount.all === 2) {
-    //     return true
-    // } else if (
-    //     pieceCount.all === 3 &&
-    //     (
-    //         pieceCount.piece[Piece.BIA] === 1 ||
-    //         pieceCount.piece[Piece.FLIPPED_BIA] === 1 ||
-    //         pieceCount.piece[Piece.MET] === 1 ||
-    //         pieceCount.piece[Piece.MA] === 1
-    //     )
-    // ) {
-    //     return true
-    // }
-
-    // return false
-
+    // came from answer in facebook group from the question I asked
     return pieceCount.all === 2 ||pieceCount.all === 3 && (
         pieceCount.piece[Piece.BIA] === 1 ||
         pieceCount.piece[Piece.FLIPPED_BIA] === 1 ||
