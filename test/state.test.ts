@@ -140,7 +140,7 @@ describe('extractInfoFromFen', () => {
             // expect(extractInfoFromFen(invalidInput)).toBeNull()
             try {
                 extractInfoFromFen(invalidInput)
-            } catch (error) {
+            } catch (error: any) {
                 expect(error.code).toBe('WRONG_NUMBER_OF_INPUTS')
             }
         }
@@ -724,7 +724,7 @@ describe('updatePiecePositionDictionary', () => {
                     from: f5,
                     to: e6,
                 })
-            } catch (error) {
+            } catch (error: any) {
                 expect(error.code).toBe('NOT_ENOUGH_INPUT')
                 expect(error.requireMoreInput).toBeInstanceOf(Array)
                 expect(error.requireMoreInput.slice().sort()).toEqual(['color'])
@@ -739,7 +739,7 @@ describe('updatePiecePositionDictionary', () => {
                     from: f5,
                     to: e6,
                 })
-            } catch (error) {
+            } catch (error: any) {
                 expect(error.code).toBe('NOT_ENOUGH_INPUT')
                 expect(error.requireMoreInput).toBeInstanceOf(Array)
                 expect(error.requireMoreInput.slice().sort()).toEqual(['piece'])
@@ -754,7 +754,7 @@ describe('updatePiecePositionDictionary', () => {
                     color: WHITE,
                     to: e6,
                 })
-            } catch (error) {
+            } catch (error: any) {
                 expect(error.code).toBe('NOT_ENOUGH_INPUT')
                 expect(error.requireMoreInput).toBeInstanceOf(Array)
                 expect(error.requireMoreInput.slice().sort()).toEqual(['from'])
@@ -769,7 +769,7 @@ describe('updatePiecePositionDictionary', () => {
                     color: WHITE,
                     from: f5,
                 })
-            } catch (error) {
+            } catch (error: any) {
                 expect(error.code).toBe('NOT_ENOUGH_INPUT')
                 expect(error.requireMoreInput).toBeInstanceOf(Array)
                 expect(error.requireMoreInput.slice().sort()).toEqual(['to'])
@@ -780,7 +780,7 @@ describe('updatePiecePositionDictionary', () => {
             expect.assertions(3)
             try {
                 updatePiecePositionDictionary(piecePositions, <MoveObject> {})
-            } catch (error) {
+            } catch (error: any) {
                 expect(error.code).toBe('NOT_ENOUGH_INPUT')
                 expect(error.requireMoreInput).toBeInstanceOf(Array)
                 expect(error.requireMoreInput.slice().sort()).toEqual(['color', 'piece', 'from', 'to'].sort())
@@ -797,7 +797,7 @@ describe('updatePiecePositionDictionary', () => {
                     to: e6,
                     flags: BITS.PROMOTION,
                 })
-            } catch (error) {
+            } catch (error: any) {
                 expect(error.code).toBe('NOT_ENOUGH_INPUT')
                 expect(error.requireMoreInput).toBeInstanceOf(Array)
                 expect(error.requireMoreInput.slice().sort()).toEqual(['promotion'].sort())
@@ -814,7 +814,7 @@ describe('updatePiecePositionDictionary', () => {
                     to: e6,
                     flags: BITS.CAPTURE,
                 })
-            } catch (error) {
+            } catch (error: any) {
                 expect(error.code).toBe('NOT_ENOUGH_INPUT')
                 expect(error.requireMoreInput).toBeInstanceOf(Array)
                 expect(error.requireMoreInput.slice().sort()).toEqual(['captured'].sort())
@@ -1083,8 +1083,6 @@ describe('import export fen', () => {
         ],
         activeColor: WHITE,
         moveNumber: 1,
-        history: [],
-        future: [],
         countdownHistory: [],
         countdown: null,
         piecePositions: {
@@ -1594,7 +1592,7 @@ describe('import export fen', () => {
             try {
                 importFen(<string> test.fen)
                 console.log('this input didn\'t throw error', test)
-            } catch (error) {
+            } catch (error: any) {
                 expect(error.code).toBe(test.errorCode)
                 if (!error.hasOwnProperty('code')) {
                     console.log(error)
