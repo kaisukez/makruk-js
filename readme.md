@@ -1,13 +1,13 @@
 # Makruk JS
-This is (going to be) makruk opensource library.
+Makruk (Thai chess) library written in Typescript
 
-### Initialize state
+## Initialize state
 ```ts
 import { State, importFen, INITIAL_FEN } from '@kaisukez/makruk-js'
 const state: State = importFen(INITIAL_FEN)
 ```
 
-### Move
+## Move
 There're 2 different ways to move
 ```ts
 import { move, generateLegalMoves } from '@kaisukez/makruk-js'
@@ -20,13 +20,13 @@ const moves: MoveObject[] = generateLegalMoves(state)
 const newState: State = move(state, moves[0])
 ```
 
-### Check if game over
+## Check if game over
 ```ts
 import { move, generateLegalMoves } from '@kaisukez/makruk-js'
 const end: boolean = gameOver(state)
 ```
 
-### Simple AI (Minimax with Alpha-beta pruning technique)
+## Simple AI (Minimax with Alpha-beta pruning technique)
 ```ts
 import {
 	State,
