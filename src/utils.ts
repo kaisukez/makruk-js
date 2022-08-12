@@ -151,39 +151,6 @@ export function ascii(boardState: State['boardState']) {
     return s
 }
 
-// export function clone(obj) {
-//     // if (!obj) {
-//     //     return obj
-//     // }
-
-//     // let duplicate
-//     // if (Array.isArray(obj)) {
-//     //     duplicate = []
-//     // } else {
-//     //     duplicate = {}
-//     // }
-
-//     // for (const property in obj) {
-//     //     if (typeof obj[property] === 'object') {
-//     //         duplicate[property] = clone(obj[property])
-//     //     } else {
-//     //         duplicate[property] = obj[property]
-//     //     }
-//     // }
-
-//     // return duplicate
-
-//     return JSON.parse(JSON.stringify(obj))
-// }
-
-// export function cloneArray<T>(array: T[]): T[] {
-//     const copied: T[] = []
-//     for (let i = 0, len = array.length; i < len; i++) {
-//         copied[i] = clone(array[i])
-//     }
-//     return copied
-// }
-
 // https://stackoverflow.com/a/728694/10154216
 export function clone<T extends Object>(obj: T): T {
     let copy: any
