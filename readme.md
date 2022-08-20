@@ -80,7 +80,7 @@ runUntilGameFinished()
      +------------------------+
  8 | r  m  t  e  k  t  m  r |
  7 | .  .  .  .  .  .  .  . |
- 6 | b  b  .  b  b  b  b  b |
+ 6 | b  b  .  b  b  b  b  b 
  5 | .  .  b  .  .  .  .  . |
  4 | .  .  .  .  .  M  .  . |
  3 | B  B  B  B  B  B  B  B |
@@ -113,6 +113,20 @@ runUntilGameFinished()
      +------------------------+
      a  b  c  d  e  f  g  h
 ```
+
+## Standard Algebraic Notation (SAN)
+- Capital letter = White piece (move first)
+- Lowercase letter = black piece
+
+| SAN   | Piece (English) | Piece (Thai) |
+|-------|-----------------|--------------|
+| B / b | Bia             | เบี้ยคว่ำ       |
+| F / f | Flipped Bia     | เบี้ยหงาย      |
+| R / r | Rua             | เรือ          |
+| M / m | Ma              | ม้า           |
+| T / t | Thon            | โคน          |
+| K / k | Khun            | ขุน           |
+| E / e | Met             | เม็ด          |
 
 ## Todos
 - [x] attacked (its name was changed to canThisColorAttackThisSquare) function
