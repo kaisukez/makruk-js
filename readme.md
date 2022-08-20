@@ -34,23 +34,84 @@ import {
 	INITIAL_FEN,
 	gameOver,
 	findBestMove,
+	ascii,
 } from '@kaisukez/makruk-js'
 
-function  runUntilGameFinished(state?: State) {
-	state || importFen(INITIAL_FEN)
-	let  i = 0
+function runUntilGameFinished(state?: State) {
+	state = state || importFen(INITIAL_FEN)
 	while(!gameOver(state)) {
-		const { bestMove, bestScore } = findBestMove(state, 3)
-		if (!bestMove) {
+		const { bestMove } = findBestMove(state, 3)
+		if (!bestMove) { // there's no best move, it means you're already lost
 			break
 		}
 		state = move(state, bestMove!)
-		i++
+		console.log(ascii(state.boardState))
 	}
 	console.log('game over!')
 }
 
 runUntilGameFinished()
+```
+```
+     +------------------------+
+ 8 | r  m  t  e  k  t  m  r |
+ 7 | .  .  .  .  .  .  .  . |
+ 6 | b  b  b  b  b  b  b  b |
+ 5 | .  .  .  .  .  .  .  . |
+ 4 | .  .  .  .  .  .  .  . |
+ 3 | B  B  B  B  B  B  B  B |
+ 2 | .  .  .  .  M  .  .  . |
+ 1 | R  M  T  K  E  T  .  R |
+     +------------------------+
+     a  b  c  d  e  f  g  h
+
+     +------------------------+
+ 8 | r  m  t  e  k  t  m  r |
+ 7 | .  .  .  .  .  .  .  . |
+ 6 | b  b  .  b  b  b  b  b |
+ 5 | .  .  b  .  .  .  .  . |
+ 4 | .  .  .  .  .  .  .  . |
+ 3 | B  B  B  B  B  B  B  B |
+ 2 | .  .  .  .  M  .  .  . |
+ 1 | R  M  T  K  E  T  .  R |
+     +------------------------+
+     a  b  c  d  e  f  g  h
+
+     +------------------------+
+ 8 | r  m  t  e  k  t  m  r |
+ 7 | .  .  .  .  .  .  .  . |
+ 6 | b  b  .  b  b  b  b  b |
+ 5 | .  .  b  .  .  .  .  . |
+ 4 | .  .  .  .  .  M  .  . |
+ 3 | B  B  B  B  B  B  B  B |
+ 2 | .  .  .  .  .  .  .  . |
+ 1 | R  M  T  K  E  T  .  R |
+     +------------------------+
+     a  b  c  d  e  f  g  h
+
+     +------------------------+
+ 8 | r  m  t  e  .  t  m  r |
+ 7 | .  .  .  .  .  k  .  . |
+ 6 | b  b  .  b  b  b  b  b |
+ 5 | .  .  b  .  .  .  .  . |
+ 4 | .  .  .  .  .  M  .  . |
+ 3 | B  B  B  B  B  B  B  B |
+ 2 | .  .  .  .  .  .  .  . |
+ 1 | R  M  T  K  E  T  .  R |
+     +------------------------+
+     a  b  c  d  e  f  g  h
+
+     +------------------------+
+ 8 | r  m  t  e  .  t  m  r |
+ 7 | .  .  .  .  .  k  .  . |
+ 6 | b  b  .  b  b  b  b  b |
+ 5 | .  .  b  .  .  .  .  . |
+ 4 | .  .  .  .  .  M  .  . |
+ 3 | B  B  B  B  B  B  B  B |
+ 2 | .  .  .  M  .  .  .  . |
+ 1 | R  .  T  K  E  T  .  R |
+     +------------------------+
+     a  b  c  d  e  f  g  h
 ```
 
 ## Todos
