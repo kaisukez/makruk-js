@@ -114,19 +114,19 @@ runUntilGameFinished()
      a  b  c  d  e  f  g  h
 ```
 
-## Standard Algebraic Notation (SAN)
-- Capital letter = White piece (move first)
-- Lowercase letter = black piece
+## Symbol
+- Capital letter = White pieces (move first)
+- Lowercase letter = black pieces
 
-| SAN   | Piece (English) | Piece (Thai) |
-|-------|-----------------|--------------|
-| B / b | Bia             | เบี้ยคว่ำ       |
-| F / f | Flipped Bia     | เบี้ยหงาย      |
-| R / r | Rua             | เรือ          |
-| M / m | Ma              | ม้า           |
-| T / t | Thon            | โคน          |
-| K / k | Khun            | ขุน           |
-| E / e | Met             | เม็ด          |
+| Symbol | Piece (English) | Piece (Thai) |
+|--------|-----------------|--------------|
+| B / b  | Bia             | เบี้ยคว่ำ       |
+| F / f  | Flipped Bia     | เบี้ยหงาย      |
+| R / r  | Rua             | เรือ          |
+| M / m  | Ma              | ม้า           |
+| T / t  | Thon            | โคน          |
+| K / k  | Khun            | ขุน           |
+| E / e  | Met             | เม็ด          |
 
 ## Todos
 - [x] attacked (its name was changed to canThisColorAttackThisSquare) function
