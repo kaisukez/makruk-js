@@ -10,7 +10,12 @@ const state: State = importFen(INITIAL_FEN)
 ## Move
 There're 2 different ways to move
 ```ts
-import { move, generateLegalMoves } from '@kaisukez/makruk-js'
+import {
+	State,
+	MoveObject,
+	move,
+	generateLegalMoves,
+} from '@kaisukez/makruk-js'
 
 // 1. Use Standard Algebraic Notation (SAN)
 const newState: State = move(state, 'Me2')
@@ -22,7 +27,7 @@ const newState: State = move(state, moves[0])
 
 ## Check if game over
 ```ts
-import { move, generateLegalMoves } from '@kaisukez/makruk-js'
+import { gameOver } from '@kaisukez/makruk-js'
 const end: boolean = gameOver(state)
 ```
 
@@ -32,6 +37,7 @@ import {
 	State,
 	importFen,
 	INITIAL_FEN,
+	move,
 	gameOver,
 	findBestMove,
 	ascii,
