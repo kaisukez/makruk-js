@@ -6,12 +6,15 @@
         "outDir": "./dist",
         "strict": true,
         "baseUrl": ".",
-        "lib": ["ES2018", "DOM"]
+        "lib": [
+            "ES2018",
+            "DOM"
+        ]
     },
     "include": [
         "src/**/*.ts"
     ],
     "exclude": [
-        "**/*.test.ts"
+        "node_modules"
     ]
 }
