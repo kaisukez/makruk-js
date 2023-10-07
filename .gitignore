@@ -2,6 +2,7 @@ node_modules
 
 dist
 coverage
+.vscode
 
 experiment
 *.ignore.ts

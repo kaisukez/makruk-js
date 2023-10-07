@@ -3,5 +3,10 @@
 module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
-    testRegex: '\\.test\\.ts$'
-  }
+    roots: [
+        '<rootDir>/src/'
+    ],
+    transform: {
+        '^.+\\.(ts|tsx)$': 'ts-jest'
+    },
+}

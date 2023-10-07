@@ -23,7 +23,7 @@ import {
     RANK_6,
     RANK_7,
     RANK_8,
-    
+
     FILE_A,
     FILE_B,
     FILE_C,
@@ -46,7 +46,7 @@ export function getAttackOffsets(color: Color, piece: Piece) {
     if (piece === Piece.BIA) {
         return BIA_ATTACK_OFFSETS[color]
     }
-    
+
     if (piece === Piece.THON) {
         return THON_ATTACK_OFFSETS[color]
     }
@@ -61,7 +61,7 @@ export function getMoveOffsets(color: Color, piece: Piece) {
     if (piece === Piece.BIA) {
         return BIA_MOVE_OFFSETS[color]
     }
-    
+
     if (piece === Piece.THON) {
         return THON_MOVE_OFFSETS[color]
     }
@@ -83,16 +83,16 @@ export function squareColor(square: SquareIndex) {
     const _rank = (square & 16) >> 4
 
     const isWhite = _file ^ _rank
-    
+
     return isWhite ? Color.WHITE : Color.BLACK
 }
 
 export type AlgebraicOptions = {
     thai?: boolean
 }
-export function algebraic(square: SquareIndex, optional: AlgebraicOptions={}) {
+export function algebraic(square: SquareIndex, optional: AlgebraicOptions = {}) {
     const { thai } = optional
-    
+
     const _file = file(square)
     const _rank = rank(square)
 
@@ -115,13 +115,13 @@ export function ascii(boardState: State['boardState']) {
         throw { code: 'NO_BOARD_STATE' }
     }
 
-    while(true) {
+    while (true) {
         /* display the rank */
         if (file(i) === FILE_A) {
             // s += ' ' + (parseInt(rank(i), 10) + 1) + ' |'
             s += ' ' + (rank(i) + 1) + ' |'
         }
-        
+
         /* empty piece */
         // if (boardState[i] == null || !(boardState[i].piece && boardState[i].color)) {
         const squareData = boardState[i]
@@ -152,37 +152,30 @@ export function ascii(boardState: State['boardState']) {
 }
 
 // https://stackoverflow.com/a/728694/10154216
-export function clone<T extends Object>(obj: T): T {
-    let copy: any
-
-    // Handle the 3 simple types, and null or undefined
-    if (null == obj || "object" != typeof obj) {
-        return obj
+export function clone<T>(obj: T): T {
+    if (obj === null || typeof obj !== "object") {
+        return obj;
     }
 
-    // Handle Array
-    if (obj instanceof Array) {
-        copy = []
-        for (let i = 0, len = obj.length; i < len; i++) {
-            copy[i] = clone(obj[i])
+    if (Array.isArray(obj)) {
+        const copyArray: any[] = [];
+        for (let i = 0, len = (obj as any[]).length; i < len; i++) {
+            copyArray[i] = clone((obj as any[])[i]);
         }
-        return copy
-        // return <T> <unknown> cloneArray(obj)
+        return copyArray as unknown as T;
     }
 
-    // Handle Object
     if (obj instanceof Object) {
-        copy = {}
+        const copyObj: { [key: string]: any } = {};
         for (const attr in obj) {
-            if (obj.hasOwnProperty(attr)) {
-                copy[attr] = clone(obj[attr])
+            if (Object.prototype.hasOwnProperty.call(obj, attr)) {
+                copyObj[attr] = clone((obj as { [key: string]: any })[attr]);
             }
         }
-        return copy
+        return copyObj as T;
     }
 
-    // throw new Error("Unable to copy obj! Its type isn't supported.")
-    throw { code: 'OBJECT_TYPE_IS_NOT_SUPPORTED' }
+    throw { code: 'OBJECT_TYPE_IS_NOT_SUPPORTED' };
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/API/structuredClone
