@@ -1,83 +1,13 @@
-import {
-    Color,
-    Piece,
+import { CountType, INITIAL_FEN } from "./constants"
 
-    INITIAL_FEN,
+import { ascii } from "./utils"
 
-    BIA_MOVE_OFFSETS,
-    BIA_ATTACK_OFFSETS,
-    THON_MOVE_OFFSETS,
-    THON_ATTACK_OFFSETS,
-    PIECE_MOVE_OFFSETS,
-    PIECE_ATTACK_OFFSETS,
+import { gameOver, generateLegalMoves, move, moveToSan, nextMove, undoMove } from "./move"
 
-    IS_SLIDING_PIECE,
+import { importFen } from "./state"
 
-    SquareIndex,
-
-    FLAGS,
-    BITS,
-
-    RANK_1,
-    RANK_2,
-    RANK_3,
-    RANK_4,
-    RANK_5,
-    RANK_6,
-    RANK_7,
-    RANK_8,
-    
-    FILE_A,
-    FILE_B,
-    FILE_C,
-    FILE_D,
-    FILE_E,
-    FILE_F,
-    FILE_G,
-    FILE_H,
-    CountType,
-} from './constants'
-
-
-import {
-    swapColor,
-    getAttackOffsets,
-    getMoveOffsets,
-    rank,
-    file,
-    algebraic,
-    ascii,
-    pipe,
-} from './utils'
-
-import {
-    canThisColorAttackThisSquare,
-    generateMoves,
-    generateLegalMoves,
-    move,
-    gameOver,
-    calculateCountdown,
-    undoMove,
-    nextMove,
-    stepBack,
-    stepCountdown,
-    stepBackCountdown,
-    moveToSan,
-    inCheckmate,
-    inCheck,
-} from './move'
-
-import {
-    forEachPiece,
-    countPiece,
-    importFen,
-    exportFen,
-} from './state'
-
-import { State, toEnum } from './types'
-import { evaluate, findBestMove, minimax } from './evaluation'
-
-
+import { State } from "./types"
+import { evaluate, findBestMove } from "./evaluation"
 
 function getRandomInt(max: number) {
     return Math.floor(Math.random() * Math.floor(max))
@@ -86,12 +16,12 @@ function getRandomInt(max: number) {
 function runUntilGameFinished(state?: State) {
     state = state || importFen(INITIAL_FEN)
     let i = 0
-    while(!gameOver(state)) {
+    while (!gameOver(state)) {
         if (i === 100) {
             break
         }
-        console.log('round', i)
-        console.log('score', evaluate(state))
+        console.log("round", i)
+        console.log("score", evaluate(state))
         // console.log('gameOver(state)', gameOver(state))
         // console.log('inCheckmate(state)', inCheckmate(state))
         // console.log('state.activeColor', state.activeColor)
@@ -100,11 +30,11 @@ function runUntilGameFinished(state?: State) {
         // console.log('m', m.map(mm => moveToSan(state!, mm)))
         const { bestMove, bestScore } = findBestMove(state, 3)
         if (!bestMove) {
-            console.log(state.activeColor === 'w' ? 'white' : 'black', 'resign')
+            console.log(state.activeColor === "w" ? "white" : "black", "resign")
             break
         }
-        console.log('best', bestMove)
-        console.log('bestMove', moveToSan(state, bestMove), bestScore)
+        console.log("best", bestMove)
+        console.log("bestMove", moveToSan(state, bestMove), bestScore)
         // const moves = generateLegalMoves(state)
         // const choosenMove = moves[getRandomInt(moves.length)]
         // state = move(state, choosenMove)
@@ -113,7 +43,7 @@ function runUntilGameFinished(state?: State) {
 
         console.log(ascii(state.boardState))
     }
-    console.log('game over!')
+    console.log("game over!")
 }
 
 
@@ -139,45 +69,45 @@ function runUntilGameFinished(state?: State) {
 runUntilGameFinished()
 
 function testCount() {
-    const state = importFen('T6T/8/5K2/8/2k5/8/8/t6t w 25')
+    const state = importFen("T6T/8/5K2/8/2k5/8/8/t6t w 25")
     console.log(ascii(state.boardState))
 
-    const state2 = move(state, 'Ke6', { startBoardPowerCountdown: true })
+    const state2 = move(state, "Ke6", { startBoardPowerCountdown: true })
     console.log(ascii(state2.boardState))
-    console.log('2', state2.countdown)
-    
-    const state3 = move(state2, 'Kd4')
+    console.log("2", state2.countdown)
+
+    const state3 = move(state2, "Kd4")
     console.log(ascii(state3.boardState))
-    console.log('3', state3.countdown)
-    
-    const state4 = move(state3, 'Kf7')
+    console.log("3", state3.countdown)
+
+    const state4 = move(state3, "Kf7")
     console.log(ascii(state4.boardState))
-    console.log('4', state4.countdown)
-    
-    
+    console.log("4", state4.countdown)
+
+
     const state3undo = undoMove(state4)
     console.log(ascii(state3undo.boardState))
-    console.log('3 undo', state3undo.countdown)
-    
+    console.log("3 undo", state3undo.countdown)
+
     const state2undo = undoMove(state3undo)
     console.log(ascii(state2undo.boardState))
-    console.log('2 undo', state2undo.countdown)
-    
+    console.log("2 undo", state2undo.countdown)
+
     const stateundo = undoMove(state2undo)
     console.log(ascii(stateundo.boardState))
-    console.log('1 undo', stateundo.countdown)
-    
+    console.log("1 undo", stateundo.countdown)
+
     const state2next = nextMove(stateundo)
     console.log(ascii(state2next.boardState))
-    console.log('2 next', state2next.countdown)
-    
+    console.log("2 next", state2next.countdown)
+
     const state3next = nextMove(state2next)
     console.log(ascii(state3next.boardState))
-    console.log('2 next', state3next)
-    
+    console.log("2 next", state3next)
+
     const state4next = nextMove(state3next)
     console.log(ascii(state4next.boardState))
-    console.log('2 next', state4next.countdown)
+    console.log("2 next", state4next.countdown)
 
 
     if (!state4next.countdown) {
@@ -190,21 +120,21 @@ function testCount() {
         }
     }
     state4next.countdown.countTo = 8
-    const state5 = move(state4next, 'Ke4')
+    const state5 = move(state4next, "Ke4")
     console.log(ascii(state5.boardState))
     console.log(state5.countdown)
 
-    const state6 = move(state5, 'Kg6')
+    const state6 = move(state5, "Kg6")
     console.log(ascii(state6.boardState))
     console.log(state6.countdown)
 
-    const state7 = move(state6, 'Kf4')
+    const state7 = move(state6, "Kf4")
     console.log(ascii(state7.boardState))
     console.log(state7.countdown)
 
-    console.log('gameover', gameOver(state5))
-    console.log('gameover', gameOver(state6))
-    console.log('gameover', gameOver(state7))
+    console.log("gameover", gameOver(state5))
+    console.log("gameover", gameOver(state6))
+    console.log("gameover", gameOver(state7))
 
 
 }

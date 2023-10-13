@@ -1,14 +1,11 @@
-// export const Color = {
-//     WHITE: 'w',
-//     BLACK: 'b',
-// } as const
 export enum Color {
-    WHITE = 'w',
-    BLACK = 'b',
+    WHITE = "w",
+    BLACK = "b",
 }
 
 
 // https://www.chessprogramming.org/0x88
+// @formatter:off
 export enum SquareIndex {
     a8 = 112, b8 = 113, c8 = 114, d8 = 115, e8 = 116, f8 = 117, g8 = 118, h8 = 119,
     a7 =  96, b7 =  97, c7 =  98, d7 =  99, e7 = 100, f7 = 101, g7 = 102, h7 = 103,
@@ -19,35 +16,34 @@ export enum SquareIndex {
     a2 =  16, b2 =  17, c2 =  18, d2 =  19, e2 =  20, f2 =  21, g2 =  22, h2 =  23,
     a1 =   0, b1 =   1, c1 =   2, d1 =   3, e1 =   4, f1 =   5, g1 =   6, h1 =   7,
 }
-
-
+// @formatter:on
 
 // https://www.chessvariants.com/oriental.dir/thai.html
 export enum Piece {
-    BIA = 'b',
-    FLIPPED_BIA = 'f',
-    MA = 'm',
-    THON = 't', // using THON instead of KHON to distinguish between 't' and 'k'
-    MET = 'e', // using e because 'm' is already used for 'MA'
-    RUA = 'r',
-    KHUN = 'k',
+    BIA = "b",
+    FLIPPED_BIA = "f",
+    MA = "m",
+    THON = "t", // using THON instead of KHON to distinguish between 't' and 'k'
+    MET = "e", // using e because 'm' is already used for 'MA'
+    RUA = "r",
+    KHUN = "k",
 }
 
-export const INITIAL_FEN = 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1'
-export const EMPTY_FEN = 'k7/8/8/8/8/8/8/7K w 1'
+export const INITIAL_FEN = "rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1"
+export const EMPTY_FEN = "k7/8/8/8/8/8/8/7K w 1"
 
 export const BIA_MOVE_OFFSETS = {
     [Color.WHITE]: [16],
-    [Color.BLACK]: [-16]
+    [Color.BLACK]: [-16],
 } as const
 export const BIA_ATTACK_OFFSETS = {
     [Color.WHITE]: [15, 17],
-    [Color.BLACK]: [-15, -17]
+    [Color.BLACK]: [-15, -17],
 } as const
 
 export const THON_ATTACK_OFFSETS = {
     [Color.WHITE]: [15, 16, 17, -15, -17],
-    [Color.BLACK]: [-15, -16, -17, 15, 17]
+    [Color.BLACK]: [-15, -16, -17, 15, 17],
 } as const
 export const THON_MOVE_OFFSETS = THON_ATTACK_OFFSETS
 
@@ -56,7 +52,7 @@ export const PIECE_ATTACK_OFFSETS = {
     [Piece.MA]: [-18, -33, -31, -14, 18, 33, 31, 14],
     [Piece.MET]: [15, 17, -15, -17],
     [Piece.RUA]: [16, 1, -16, -1],
-    [Piece.KHUN]: [17, 16, 15, -1, 1, -17, -16, -15]
+    [Piece.KHUN]: [17, 16, 15, -1, 1, -17, -16, -15],
 } as const
 export const PIECE_MOVE_OFFSETS = PIECE_ATTACK_OFFSETS
 
@@ -112,7 +108,7 @@ export const SHIFTS = {
         [Piece.MET]: MET_SHIFT,
         [Piece.RUA]: RUA_SHIFT,
         [Piece.KHUN]: KHUN_SHIFT,
-    }
+    },
 } as const
 
 export const upLeft = // 373
@@ -155,7 +151,7 @@ export const onlyMaDirection = 1 << MA_SHIFT // 8
 export const onlyRuaDirection = 1 << RUA_SHIFT // 128
 
 
-
+// @formatter:off
 export const RAYS = [
     17,    0,    0,    0,    0,    0,    0,   16,    0,    0,    0,    0,    0,    0,   15,    0,
      0,   17,    0,    0,    0,    0,    0,   16,    0,    0,    0,    0,    0,   15,    0,    0,
@@ -173,7 +169,9 @@ export const RAYS = [
      0,  -15,    0,    0,    0,    0,    0,  -16,    0,    0,    0,    0,    0,  -17,    0,    0,
    -15,    0,    0,    0,    0,    0,    0,  -16,    0,    0,    0,    0,    0,    0,  -17
 ]
+// @formatter:on
 
+// @formatter:off
 export const ATTACKS = [
       0,    0,    0,    0,    0,    0,    0,  128,    0,    0,    0,    0,    0,    0,    0,    0,
       0,    0,    0,    0,    0,    0,    0,  128,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -191,25 +189,24 @@ export const ATTACKS = [
       0,    0,    0,    0,    0,    0,    0,  128,    0,    0,    0,    0,    0,    0,    0,    0,
       0,    0,    0,    0,    0,    0,    0,  128,    0,    0,    0,    0,    0,    0,    0   
 ]
-
+// @formatter:on
 
 
 export const FLAGS = {
-    NORMAL: 'n',
-    CAPTURE: 'c',
-    BIG_PAWN: 'b',
-    EP_CAPTURE: 'e',
-    PROMOTION: 'p',
-    KSIDE_CASTLE: 'k',
-    QSIDE_CASTLE: 'q'
+    NORMAL: "n",
+    CAPTURE: "c",
+    BIG_PAWN: "b",
+    EP_CAPTURE: "e",
+    PROMOTION: "p",
+    KSIDE_CASTLE: "k",
+    QSIDE_CASTLE: "q",
 } as const
 
 export const BITS = {
     NORMAL: 1, // 1 << 0,
     CAPTURE: 2, // 1 << 1,
-    PROMOTION: 4 // 1 << 2,
+    PROMOTION: 4, // 1 << 2,
 } as const
-
 
 
 export const RANK_1 = 0
@@ -232,6 +229,6 @@ export const FILE_H = 7
 
 
 export enum CountType {
-    PIECE_POWER_COUNTDOWN = 'pp',
-    BOARD_POWER_COUNTDOWN = 'bp',
+    PIECE_POWER_COUNTDOWN = "pp",
+    BOARD_POWER_COUNTDOWN = "bp",
 }

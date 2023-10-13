@@ -1,52 +1,6 @@
-import {
-    Color,
-    Piece,
+import { BIA_ATTACK_OFFSETS, Color, Piece, PIECE_ATTACK_OFFSETS, THON_ATTACK_OFFSETS } from "./constants"
 
-    INITIAL_FEN,
-
-    BIA_MOVE_OFFSETS,
-    BIA_ATTACK_OFFSETS,
-    THON_MOVE_OFFSETS,
-    THON_ATTACK_OFFSETS,
-    PIECE_MOVE_OFFSETS,
-    PIECE_ATTACK_OFFSETS,
-
-    IS_SLIDING_PIECE,
-
-    SquareIndex,
-
-    RANK_1,
-    RANK_2,
-    RANK_3,
-    RANK_4,
-    RANK_5,
-    RANK_6,
-    RANK_7,
-    RANK_8,
-
-    FILE_A,
-    FILE_B,
-    FILE_C,
-    FILE_D,
-    FILE_E,
-    FILE_F,
-    FILE_G,
-    FILE_H,
-} from '../src/constants'
-
-import {
-    swapColor,
-    getAttackOffsets,
-    getMoveOffsets,
-    rank,
-    file,
-    squareColor,
-    algebraic,
-    ascii,
-    clone,
-    compose,
-    pipe
-} from '../src/utils'
+import { algebraic, ascii, clone, compose, file, getAttackOffsets, pipe, rank, swapColor } from "./utils"
 
 
 const { WHITE, BLACK } = Color
@@ -60,18 +14,18 @@ const {
     KHUN,
 } = Piece
 
-describe('utils', () => {
-    describe('swapColor', () => {
-        it('should swap color form WHITE to BLACK', () => {
+describe("utils", () => {
+    describe("swapColor", () => {
+        it("should swap color form WHITE to BLACK", () => {
             expect(swapColor(WHITE)).toBe(BLACK)
         })
-        it('should swap color form BLACK to WHITE', () => {
+        it("should swap color form BLACK to WHITE", () => {
             expect(swapColor(BLACK)).toBe(WHITE)
         })
     })
 
 
-    describe('getAttackOffsets', () => {
+    describe("getAttackOffsets", () => {
         it.each`
             color    | piece          | expected
             ${WHITE} | ${BIA}         | ${BIA_ATTACK_OFFSETS[WHITE]}
@@ -89,14 +43,14 @@ describe('utils', () => {
             ${BLACK} | ${MET}         | ${PIECE_ATTACK_OFFSETS[MET]}
             ${BLACK} | ${RUA}         | ${PIECE_ATTACK_OFFSETS[RUA]}
             ${BLACK} | ${KHUN}        | ${PIECE_ATTACK_OFFSETS[KHUN]}
-        `('should get attack offset correctly when color = $color and piece = $piece', ({ color, piece, expected }) => {
+        `("should get attack offset correctly when color = $color and piece = $piece", ({ color, piece, expected }) => {
             expect(getAttackOffsets(color, piece)).toEqual(expected)
         })
     })
 
 
-    describe('rank', () => {
-        it('should get rank number from square index', () => {
+    describe("rank", () => {
+        it("should get rank number from square index", () => {
             for (let i = 0; i < 128; i++) {
                 if (!(i & 0x88)) {
                     expect(rank(i)).toBe(Math.floor(i / 16))
@@ -106,8 +60,8 @@ describe('utils', () => {
     })
 
 
-    describe('file', () => {
-        it('should get file number from square index', () => {
+    describe("file", () => {
+        it("should get file number from square index", () => {
             for (let i = 0; i < 128; i++) {
                 if (!(i & 0x88)) {
                     expect(file(i)).toBe(i % 16)
@@ -117,30 +71,30 @@ describe('utils', () => {
     })
 
 
-    describe('algebraic', () => {
-        it('should represent square index with algebraic notation correctly', () => {
+    describe("algebraic", () => {
+        it("should represent square index with algebraic notation correctly", () => {
             for (let i = 0; i < 128; i++) {
                 if (!(i & 0x88)) {
                     const _rank = Math.floor(i / 16)
                     const _file = i % 16
 
-                    expect(algebraic(i)).toBe('abcdefgh'[_file] + '12345678'[_rank])
-                    expect(algebraic(i, { thai: true })).toBe('กขคงจฉชญ'[_file] + '12345678'[_rank])
+                    expect(algebraic(i)).toBe("abcdefgh"[_file] + "12345678"[_rank])
+                    expect(algebraic(i, { thai: true })).toBe("กขคงจฉชญ"[_file] + "12345678"[_rank])
                 }
             }
         })
     })
 
 
-    describe('ascii', () => {
-        it('should print board state correctly', () => {
+    describe("ascii", () => {
+        it("should print board state correctly", () => {
             // TODO
         })
     })
 
 
-    describe('clone', () => {
-        it('should deep clone nested array correctly', () => {
+    describe("clone", () => {
+        it("should deep clone nested array correctly", () => {
             const a: any = [11, 22, 33, [44, 55, [66, 77]]]
             const aCopy = clone(a)
 
@@ -154,20 +108,20 @@ describe('utils', () => {
             expect(aCopy[3][2]).not.toBe(a[3][2])
         })
 
-        it('should deep clone nested object correctly', () => {
+        it("should deep clone nested object correctly", () => {
             const b = {
-                firstName: 'ffff',
-                lastName: 'llll',
+                firstName: "ffff",
+                lastName: "llll",
                 nested: {
                     nested: {
                         nested: {
-                            nested: ['nnnn', 'eee', 'ss', 't', 'ee', 'ddd']
-                        }
-                    }
+                            nested: ["nnnn", "eee", "ss", "t", "ee", "ddd"],
+                        },
+                    },
                 },
                 null: null,
                 undefined: undefined,
-                emptyString: ''
+                emptyString: "",
             }
             const bCopy = clone(b)
 
@@ -189,23 +143,23 @@ describe('utils', () => {
     })
 
 
-    describe('compose / pipe', () => {
+    describe("compose / pipe", () => {
         const plusOneThenDouble = (num: number) => (num + 1) * 2
         const minusTwoThenTriple = (num: number) => (num - 2) * 3
 
-        it('compose execution order should go from bottom to top', () => {
+        it("compose execution order should go from bottom to top", () => {
             const result = compose(
                 plusOneThenDouble,
-                minusTwoThenTriple
+                minusTwoThenTriple,
             )(1)
 
             expect(result).toBe(-4)
         })
 
-        it('pipe execution order should go from top to bottom', () => {
+        it("pipe execution order should go from top to bottom", () => {
             const result = pipe(
                 plusOneThenDouble,
-                minusTwoThenTriple
+                minusTwoThenTriple,
             )(1)
 
             expect(result).toBe(6)

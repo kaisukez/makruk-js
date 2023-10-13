@@ -1,111 +1,13 @@
-import {
-    Color,
-    Piece,
+import { Color, EMPTY_FEN, Piece, SquareIndex } from "./constants"
 
-    INITIAL_FEN,
-    EMPTY_FEN,
+import { importFen, put } from "./state"
 
-    BIA_MOVE_OFFSETS,
-    BIA_ATTACK_OFFSETS,
-    THON_MOVE_OFFSETS,
-    THON_ATTACK_OFFSETS,
-    PIECE_MOVE_OFFSETS,
-    PIECE_ATTACK_OFFSETS,
-
-    IS_SLIDING_PIECE,
-
-    PIECE_POWER,
-
-    SquareIndex,
-
-    FLAGS,
-    BITS,
-
-    RANK_1,
-    RANK_2,
-    RANK_3,
-    RANK_4,
-    RANK_5,
-    RANK_6,
-    RANK_7,
-    RANK_8,
-
-    FILE_A,
-    FILE_B,
-    FILE_C,
-    FILE_D,
-    FILE_E,
-    FILE_F,
-    FILE_G,
-    FILE_H,
-
-    CountType,
-    // PIECE_POWER_COUNTDOWN,
-    // BOARD_POWER_COUNTDOWN
-} from './constants'
-
-import {
-    swapColor,
-    getAttackOffsets,
-    getMoveOffsets,
-    rank,
-    file,
-    squareColor,
-    algebraic,
-    ascii,
-    clone,
-    compose,
-    pipe
-} from './utils'
-
-import {
-    extractInfoFromFen,
-    getBoardStateFromBoardString,
-    forEachPieceFromBoardState,
-    getPiecePositions,
-    forEachPiece,
-    countPiece,
-    updatePiecePositionDictionary,
-    removePiecePositionIfExists,
-    put,
-    remove,
-    importFen,
-    exportFen
-} from './state'
-
-import {
-    canThisColorAttackThisSquare,
-    isKhunAttacked,
-    inCheck,
-    inCheckmate,
-    inStalemate,
-    inDraw,
-    gameOver,
-    calculateCountdown,
-
-    changePiecePosition,
-    step,
-    stepCountdown,
-    stepBackCountdown,
-    makeMove,
-    undoMove,
-    nextMove,
-
-    generateMoves,
-    generateLegalMoves,
-    move,
-} from './move'
+import { canThisColorAttackThisSquare, move } from "./move"
 
 const { WHITE, BLACK } = Color
-const {
-    BIA,
-    FLIPPED_BIA,
-    MA,
-    THON,
-    MET,
-    RUA,
-    KHUN,
-} = Piece
+const { BIA, FLIPPED_BIA, MA, THON, MET, RUA, KHUN } = Piece
+
+// @formatter:off
 const {
     a8, b8, c8, d8, e8, f8, g8, h8,
     a7, b7, c7, d7, e7, f7, g7, h7,
@@ -116,13 +18,10 @@ const {
     a2, b2, c2, d2, e2, f2, g2, h2,
     a1, b1, c1, d1, e1, f1, g1, h1
 } = SquareIndex
-const {
-    PIECE_POWER_COUNTDOWN,
-    BOARD_POWER_COUNTDOWN,
-} = CountType
+// @formatter:on
 
-describe('move', () => {
-    describe('canThisColorAttackThisSquare', () => {
+describe("move", () => {
+    describe("canTh,isColorAttackThisSquare", () => {
         // TODO
         const state = put(importFen(EMPTY_FEN), WHITE, BIA, c5)
 
@@ -245,7 +144,7 @@ describe('move', () => {
             },
         ]
 
-        test('can perform correctly', () => {
+        test("can perform correctly", () => {
             for (const test of tests) {
                 const {
                     color,
@@ -265,14 +164,14 @@ describe('move', () => {
                 for (const square of canAttack) {
                     const result = canThisColorAttackThisSquare(newState.boardState, color, square)
                     if (result !== true) {
-                        console.log('this test didn\'t pass', test)
+                        console.log("this test didn't pass", test)
                     }
                     expect(result).toBe(true)
                 }
                 for (const square of cannotAttack) {
                     const result = canThisColorAttackThisSquare(newState.boardState, color, square)
                     if (result !== false) {
-                        console.log('this test didn\'t pass', test)
+                        console.log("this test didn't pass", test)
                     }
                     expect(result).toBe(false)
                 }

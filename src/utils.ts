@@ -1,39 +1,16 @@
 import {
-    Color,
-    Piece,
-
-    INITIAL_FEN,
-
-    BIA_MOVE_OFFSETS,
     BIA_ATTACK_OFFSETS,
-    THON_MOVE_OFFSETS,
-    THON_ATTACK_OFFSETS,
-    PIECE_MOVE_OFFSETS,
-    PIECE_ATTACK_OFFSETS,
-
-    IS_SLIDING_PIECE,
-
-    SquareIndex,
-
-    RANK_1,
-    RANK_2,
-    RANK_3,
-    RANK_4,
-    RANK_5,
-    RANK_6,
-    RANK_7,
-    RANK_8,
-
+    BIA_MOVE_OFFSETS,
+    Color,
     FILE_A,
-    FILE_B,
-    FILE_C,
-    FILE_D,
-    FILE_E,
-    FILE_F,
-    FILE_G,
-    FILE_H,
-} from './constants'
-import { State } from './types'
+    Piece,
+    PIECE_ATTACK_OFFSETS,
+    PIECE_MOVE_OFFSETS,
+    SquareIndex,
+    THON_ATTACK_OFFSETS,
+    THON_MOVE_OFFSETS,
+} from "./constants"
+import { State } from "./types"
 
 
 export function swapColor(color: Color) {
@@ -90,53 +67,54 @@ export function squareColor(square: SquareIndex) {
 export type AlgebraicOptions = {
     thai?: boolean
 }
+
 export function algebraic(square: SquareIndex, optional: AlgebraicOptions = {}) {
     const { thai } = optional
 
     const _file = file(square)
     const _rank = rank(square)
 
-    let fileSymbols = 'abcdefgh'
-    let rankSymbols = '12345678'
+    let fileSymbols = "abcdefgh"
+    let rankSymbols = "12345678"
     if (thai) {
-        fileSymbols = 'กขคงจฉชญ'
+        fileSymbols = "กขคงจฉชญ"
     }
 
     return fileSymbols[_file] + rankSymbols[_rank]
 }
 
-export function ascii(boardState: State['boardState']) {
+export function ascii(boardState: State["boardState"]) {
     const end = (iterator: number) => iterator === SquareIndex.h1
 
-    let s = '     +------------------------+\n'
+    let s = "     +------------------------+\n"
     let i = SquareIndex.a8
 
     if (!boardState) {
-        throw { code: 'NO_BOARD_STATE' }
+        throw { code: "NO_BOARD_STATE" }
     }
 
     while (true) {
         /* display the rank */
         if (file(i) === FILE_A) {
             // s += ' ' + (parseInt(rank(i), 10) + 1) + ' |'
-            s += ' ' + (rank(i) + 1) + ' |'
+            s += " " + (rank(i) + 1) + " |"
         }
 
         /* empty piece */
         // if (boardState[i] == null || !(boardState[i].piece && boardState[i].color)) {
         const squareData = boardState[i]
         if (!squareData) {
-            s += ' . '
+            s += " . "
         } else {
             // const piece = squareData.piece
             // const color = squareData.color
             const [color, piece] = squareData
             const symbol = color === Color.WHITE ? piece.toUpperCase() : piece.toLowerCase()
-            s += ' ' + symbol + ' '
+            s += " " + symbol + " "
         }
 
         if ((i + 1) & 0x88) {
-            s += '|\n'
+            s += "|\n"
             if (end(i)) {
                 break
             }
@@ -145,8 +123,8 @@ export function ascii(boardState: State['boardState']) {
             i++
         }
     }
-    s += '     +------------------------+\n'
-    s += '     a  b  c  d  e  f  g  h\n'
+    s += "     +------------------------+\n"
+    s += "     a  b  c  d  e  f  g  h\n"
 
     return s
 }
@@ -154,28 +132,28 @@ export function ascii(boardState: State['boardState']) {
 // https://stackoverflow.com/a/728694/10154216
 export function clone<T>(obj: T): T {
     if (obj === null || typeof obj !== "object") {
-        return obj;
+        return obj
     }
 
     if (Array.isArray(obj)) {
-        const copyArray: any[] = [];
+        const copyArray: any[] = []
         for (let i = 0, len = (obj as any[]).length; i < len; i++) {
-            copyArray[i] = clone((obj as any[])[i]);
+            copyArray[i] = clone((obj as any[])[i])
         }
-        return copyArray as unknown as T;
+        return copyArray as unknown as T
     }
 
     if (obj instanceof Object) {
-        const copyObj: { [key: string]: any } = {};
+        const copyObj: { [key: string]: any } = {}
         for (const attr in obj) {
             if (Object.prototype.hasOwnProperty.call(obj, attr)) {
-                copyObj[attr] = clone((obj as { [key: string]: any })[attr]);
+                copyObj[attr] = clone((obj as { [key: string]: any })[attr])
             }
         }
-        return copyObj as T;
+        return copyObj as T
     }
 
-    throw { code: 'OBJECT_TYPE_IS_NOT_SUPPORTED' };
+    throw { code: "OBJECT_TYPE_IS_NOT_SUPPORTED" }
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/API/structuredClone
@@ -187,11 +165,11 @@ export function clone<T>(obj: T): T {
 export const compose = (...fns: Function[]) =>
     (...args: any) => fns.reduceRight(
         (params, f) => Array.isArray(params) ? f(...params) : f(params),
-        args
+        args,
     )
 
 export const pipe = (...fns: Function[]) =>
     (...args: any) => fns.reduce(
         (params, f) => Array.isArray(params) ? f(...params) : f(params),
-        args
+        args,
     )
