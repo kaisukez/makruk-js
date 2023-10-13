@@ -1,4 +1,4 @@
-import { CountType, INITIAL_FEN } from "./constants"
+
 
 import { ascii } from "./utils"
 
@@ -8,6 +8,7 @@ import { importFen } from "./state"
 
 import { State } from "./types"
 import { evaluate, findBestMove } from "./evaluation"
+import { CountType, INITIAL_FEN } from "./constants/Board"
 
 function getRandomInt(max: number) {
     return Math.floor(Math.random() * Math.floor(max))

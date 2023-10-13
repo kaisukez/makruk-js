@@ -1,5 +1,7 @@
-import { Color, CountType, Piece, SquareIndex } from "./constants"
+
 import { CountdownFlag } from "./move"
+import { CountType, SquareIndex } from "./constants/Board"
+import { Color, Piece } from "./constants/Piece"
 
 export type SquareData = [Color, Piece];
 

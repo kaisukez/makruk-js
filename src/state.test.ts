@@ -1,4 +1,4 @@
-import { BITS, Color, CountType, Piece, SquareIndex } from "./constants"
+import { BITS } from "./constants/Moving"
 
 import { clone } from "./utils"
 
@@ -17,6 +17,8 @@ import {
     updatePiecePositionDictionary,
 } from "./state"
 import { MoveObject, State } from "./types"
+import { CountType, SquareIndex } from "./constants/Board"
+import { Color, Piece } from "./constants/Piece"
 
 
 const { WHITE, BLACK } = Color
