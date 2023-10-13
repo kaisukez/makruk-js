@@ -1,16 +1,13 @@
+import { State } from "./types"
+import { FILE_A, SquareIndex } from "./constants/Board"
 import {
-    BIA_ATTACK_OFFSETS,
-    BIA_MOVE_OFFSETS,
-    Color,
-    FILE_A,
+    BIA_ATTACK_OFFSETS, BIA_MOVE_OFFSETS, Color,
     Piece,
     PIECE_ATTACK_OFFSETS,
     PIECE_MOVE_OFFSETS,
-    SquareIndex,
     THON_ATTACK_OFFSETS,
     THON_MOVE_OFFSETS,
-} from "./constants"
-import { State } from "./types"
+} from "./constants/Piece"
 
 
 export function swapColor(color: Color) {

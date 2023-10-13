@@ -1,6 +1,5 @@
-import { BIA_ATTACK_OFFSETS, Color, Piece, PIECE_ATTACK_OFFSETS, THON_ATTACK_OFFSETS } from "./constants"
-
 import { algebraic, ascii, clone, compose, file, getAttackOffsets, pipe, rank, swapColor } from "./utils"
+import { BIA_ATTACK_OFFSETS, Color, Piece, PIECE_ATTACK_OFFSETS, THON_ATTACK_OFFSETS } from "./constants/Piece"
 
 
 const { WHITE, BLACK } = Color

@@ -1,22 +1,18 @@
 import {
     ATTACKS,
     BITS,
-    Color,
-    CountType,
-    IS_SLIDING_PIECE,
-    Piece,
-    RANK_3,
-    RANK_6,
     RAYS,
-    SHIFTS,
-    SquareIndex,
-} from "./constants"
+
+
+} from "./constants/Moving"
 
 import { algebraic, clone, file, getAttackOffsets, getMoveOffsets, rank, swapColor } from "./utils"
 
 import { countPiece, exportFen, updatePiecePositionDictionaryInplace } from "./state"
 
 import { Countdown, Move, MoveObject, State } from "./types"
+import { CountType, RANK_3, RANK_6, SquareIndex } from "./constants/Board"
+import { Color, IS_SLIDING_PIECE, Piece, SHIFTS } from "./constants/Piece"
 
 /**
  *
