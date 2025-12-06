@@ -1,7 +1,5 @@
-
 import { CountdownFlag } from "./move"
-import { CountType, SquareIndex } from "./constants/Board"
-import { Color, Piece } from "./constants/Piece"
+import { Color, CountType, Piece, SquareIndex } from "./constants"
 
 export type SquareData = [Color, Piece];
 
@@ -36,6 +34,7 @@ export type State = {
     piecePositions: Record<Color, Record<Piece, number[]>>;
     countdown: Countdown | null;
     countdownHistory: Countdown[];
+    fenOccurrence: Record<string, number>;
 };
 
 export type PieceCount = {
