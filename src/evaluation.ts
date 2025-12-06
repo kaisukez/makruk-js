@@ -7,7 +7,7 @@ import {
 import { forEachPiece } from "./state"
 import { MoveObject, State } from "./types"
 import { Color, PIECE_POWER, SquareIndex as SI } from "./constants"
-import { inCheckmate, inDraw } from "./gameStatus"
+import { isCheckmate, isDraw } from "./gameStatus"
 
 const S1 = 0
 const S2 = 0.16
@@ -28,10 +28,10 @@ export const CenterScore = {
 // @formatter:on
 
 export function evaluate(state: State): number {
-    if (inDraw(state)) {
+    if (isDraw(state)) {
         return 0
     }
-    if (inCheckmate(state)) {
+    if (isCheckmate(state)) {
         if (state.activeColor === Color.WHITE) {
             return -Infinity
         } else {
@@ -59,14 +59,14 @@ export type MinimaxOutput = {
 }
 
 export function minimax(state: State, depth: number, alpha: number, beta: number): MinimaxOutput {
-    if (inDraw(state)) {
+    if (isDraw(state)) {
         return {
             bestScore: 0,
             bestMove: null,
         }
     }
 
-    if (inCheckmate(state)) {
+    if (isCheckmate(state)) {
         if (state.activeColor === Color.WHITE) {
             return {
                 bestScore: -Infinity,

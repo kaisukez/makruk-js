@@ -19,7 +19,7 @@ import {
     updatePiecePositionDictionary,
 } from "./state"
 import { Countdown, Move, MoveObject, SquareData, State } from "./types"
-import { inCheck, inCheckmate, isKhunAttacked } from "./gameStatus"
+import { isCheck, isCheckmate, isKhunAttacked } from "./gameStatus"
 
 export function calculatePiecePowerCountdown(state: State) {
     const pieceCount = countPiece(state.piecePositions)
@@ -119,7 +119,7 @@ export function changePiecePosition(
     from: SquareIndex,
     to: SquareIndex,
 ) {
-    if (!from || from === to) {
+    if ((from === undefined || from === null) || from === to) {
         return
     }
 
@@ -721,8 +721,8 @@ export function moveToSan(state: State, move: MoveObject) {
         updateFen: false,
     })!
     try {
-        if (inCheck(state)) {
-            if (inCheckmate(state)) {
+        if (isCheck(state)) {
+            if (isCheckmate(state)) {
                 output += "#"
             } else {
                 output += "+"
