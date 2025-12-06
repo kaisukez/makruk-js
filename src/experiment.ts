@@ -23,10 +23,10 @@ function runUntilGameFinished(state?: State) {
         }
         console.log("round", i)
         console.log("score", evaluate(makruk.state))
-        // console.log('gameOver(makruk.state)', gameOver(makruk.state))
-        // console.log('inCheckmate(makruk.state)', inCheckmate(makruk.state))
+        // console.log('gameOver(makruk.state)', isGameOver(makruk.state))
+        // console.log('isCheckmate(makruk.state)', isCheckmate(makruk.state))
         // console.log('makruk.state.activeColor', makruk.state.activeColor)
-        // console.log('inCheck(makruk.state)', inCheck(makruk.state))
+        // console.log('isCheck(makruk.state)', isCheck(makruk.state))
         // const m = generateLegalMoves(makruk.state)
         // console.log("m", m.map(mm => moveToSan(makruk.state, mm)))
         // console.log("legal moves", generateLegalMoves(makruk.state).map(m => moveToSan(makruk.state, m)))

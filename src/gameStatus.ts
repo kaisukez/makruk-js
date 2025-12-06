@@ -74,16 +74,16 @@ export const isKhunAttacked = (state: State, color: Color): boolean => {
     )
 }
 
-export const inCheck = (state: State): boolean =>
+export const isCheck = (state: State): boolean =>
     isKhunAttacked(state, state.activeColor)
 
-export const inCheckmate = (state: State): boolean =>
-    inCheck(state) && generateLegalMoves(state).length === 0
+export const isCheckmate = (state: State): boolean =>
+    isCheck(state) && generateLegalMoves(state).length === 0
 
-export const inStalemate = (state: State): boolean =>
-    !inCheck(state) && generateLegalMoves(state).length === 0
+export const isStalemate = (state: State): boolean =>
+    !isCheck(state) && generateLegalMoves(state).length === 0
 
-export const inThreefoldRepetition = (state: State): boolean =>
+export const isThreefoldRepetition = (state: State): boolean =>
     Object.values(state.fenOccurrence).some((count) => count >= 3)
 
 export const isFinishedCounting = (state: State): boolean => {
@@ -96,7 +96,7 @@ export const isFinishedCounting = (state: State): boolean => {
     )
 }
 
-export const inInsufficientMaterial = (state: State): boolean => {
+export const isInsufficientMaterial = (state: State): boolean => {
     const pieceCount = countPiece(state.piecePositions)
 
     return (
@@ -109,11 +109,11 @@ export const inInsufficientMaterial = (state: State): boolean => {
     )
 }
 
-export const inDraw = (state: State): boolean =>
-    inStalemate(state) ||
+export const isDraw = (state: State): boolean =>
+    isStalemate(state) ||
     isFinishedCounting(state) ||
-    inInsufficientMaterial(state) ||
-    inThreefoldRepetition(state)
+    isInsufficientMaterial(state) ||
+    isThreefoldRepetition(state)
 
 export const isGameOver = (state: State): boolean =>
-    inDraw(state) || inCheckmate(state)
+    isDraw(state) || isCheckmate(state)

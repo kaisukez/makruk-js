@@ -27,8 +27,8 @@ const newState: State = move(state, moves[0])
 
 ## Check if game over
 ```ts
-import { gameOver } from '@kaisukez/makruk-js'
-const end: boolean = gameOver(state)
+import { isGameOver } from '@kaisukez/makruk-js'
+const end: boolean = isGameOver(state)
 ```
 
 ## Simple AI (Minimax with Alpha-beta pruning technique)
@@ -38,14 +38,14 @@ import {
 	importFen,
 	INITIAL_FEN,
 	move,
-	gameOver,
+	isGameOver,
 	findBestMove,
 	ascii,
 } from '@kaisukez/makruk-js'
 
 function runUntilGameFinished(state?: State) {
 	state = state || importFen(INITIAL_FEN)
-	while(!gameOver(state)) {
+	while(!isGameOver(state)) {
 		const { bestMove } = findBestMove(state, 3)
 		if (!bestMove) { // there's no best move, it means you're already lost
 			break
@@ -136,7 +136,7 @@ runUntilGameFinished()
 
 ## Todos
 - [x] attacked (its name was changed to canThisColorAttackThisSquare) function
-- [x] inCheck / inCheckmate / inStalemate / inThreefoldRepetition
+- [x] isCheck / isCheckmate / isStalemate / isThreefoldRepetition
 - [x] insufficientMaterial (half finished but it's ok for now)
 - [x] functional programming utility function like "compose" ...
 - [x] refactor code
