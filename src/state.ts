@@ -1,10 +1,27 @@
-import { BITS } from "./constants/Moving"
-
-import { clone, swapColor } from "./utils"
-
+import { BITS, Color, CountType, Piece, SquareIndex } from "./constants"
+import { swapColor } from "./utils"
 import { Countdown, MoveObject, PieceCount, SquareData, State, toEnum } from "./types"
-import { CountType, SquareIndex } from "./constants/Board"
-import { Color, Piece } from "./constants/Piece"
+
+export type PiecePositionDelta = {
+    moved: {
+        color: Color;
+        piece: Piece;
+        index: number;
+        from: SquareIndex;
+        to: SquareIndex;
+    };
+    capture?: {
+        color: Color;
+        piece: Piece;
+        index: number;
+        square: SquareIndex;
+    };
+    promotion?: {
+        toPiece: Piece;
+        addedIndex: number;
+        removedIndex: number;
+    };
+};
 
 export type ExtractInfoFromFenOutput = {
     boardString: string;
@@ -18,15 +35,6 @@ export type ExtractInfoFromFenOutput = {
 };
 
 export function extractInfoFromFen(fen: string): ExtractInfoFromFenOutput {
-    if (typeof fen !== "string") {
-        throw {
-            code: "WRONG_INPUT_TYPE",
-            message: "fen must be string",
-            field: "fen",
-            fieldNumber: -1,
-        }
-    }
-
     const length = fen.split(" ").length
     if (length !== 3 && length !== 8) {
         throw {
@@ -398,10 +406,10 @@ export function countPiece(
  * updatePiecePositionDictionary(piecePositions, moveObject)
  * newPiecePosition = [5, 22, 49]
  */
-export function updatePiecePositionDictionaryInplace(
+export function updatePiecePositionDictionary(
     piecePositions: State["piecePositions"],
     moveObject: MoveObject,
-) {
+): PiecePositionDelta {
     const { color, piece, from, to, flags, promotion, captured } = moveObject
 
     if (
@@ -441,38 +449,83 @@ export function updatePiecePositionDictionaryInplace(
         }
     }
 
-    if (Array.isArray(piecePositions[color][piece])) {
-        const index = piecePositions[color][piece].indexOf(from)
-        if (index !== -1) {
-            piecePositions[color][piece][index] = to
+    const container = piecePositions[color][piece]
+    const index = container.indexOf(from)
+    if (index === -1) {
+        throw {
+            code: "PIECE_POSITION_NOT_FOUND",
+            message: "cannot locate piece position for update",
         }
+    }
 
-        if (flags & BITS.PROMOTION && promotion) {
-            const toDeleteIndex = piecePositions[color][piece].indexOf(to)
-            if (toDeleteIndex !== -1) {
-                piecePositions[color][piece].splice(toDeleteIndex, 1)
+    const delta: PiecePositionDelta = {
+        moved: {
+            color,
+            piece,
+            index,
+            from,
+            to,
+        },
+    }
+
+    container[index] = to
+
+    if (flags & BITS.PROMOTION && promotion) {
+        const removed = container.splice(index, 1)
+        if (!removed.length) {
+            throw {
+                code: "PIECE_POSITION_PROMOTION_CONFLICT",
+                message: "promotion cannot remove original piece position",
             }
-            piecePositions[color][promotion].push(to)
         }
+        const destination = piecePositions[color][promotion]
+        destination.push(to)
+        delta.promotion = {
+            toPiece: promotion,
+            addedIndex: destination.length - 1,
+            removedIndex: index,
+        }
+    }
 
-        if (flags & BITS.CAPTURE && captured) {
-            const toDeleteIndex =
-                piecePositions[swapColor(color)][captured].indexOf(to)
-            if (toDeleteIndex !== -1) {
-                piecePositions[swapColor(color)][captured].splice(toDeleteIndex, 1)
+    if (flags & BITS.CAPTURE && captured) {
+        const opponentColor = swapColor(color)
+        const opponentList = piecePositions[opponentColor][captured]
+        const captureIndex = opponentList.indexOf(to)
+        if (captureIndex !== -1) {
+            opponentList.splice(captureIndex, 1)
+            delta.capture = {
+                color: opponentColor,
+                piece: captured,
+                index: captureIndex,
+                square: to,
             }
         }
     }
 
-    return piecePositions
+    return delta
 }
 
-export function updatePiecePositionDictionary(
+export function revertPiecePositionDictionary(
     piecePositions: State["piecePositions"],
-    moveObject: MoveObject,
+    delta: PiecePositionDelta,
 ) {
-    const newPiecePositions = clone(piecePositions)
-    return updatePiecePositionDictionaryInplace(newPiecePositions, moveObject)
+    const { moved, promotion, capture } = delta
+
+    if (promotion) {
+        const promotedList = piecePositions[moved.color][promotion.toPiece]
+        promotedList.splice(promotion.addedIndex, 1)
+        piecePositions[moved.color][moved.piece].splice(promotion.removedIndex, 0, moved.from)
+    } else {
+        piecePositions[moved.color][moved.piece][moved.index] = moved.from
+    }
+
+    if (capture) {
+        piecePositions[capture.color][capture.piece].splice(
+            capture.index,
+            0,
+            capture.square,
+        )
+    }
 }
 
 export function createCountdownObject(
@@ -500,18 +553,14 @@ export function removePiecePositionIfExists(
     boardState: State["boardState"],
     squareIndex: SquareIndex,
 ) {
-    const newPiecePositions = clone(piecePositions)
-
     const squareData = boardState[squareIndex]
     if (squareData) {
         const [color, piece] = squareData
-        const toDeleteIndex = newPiecePositions[color][piece].indexOf(squareIndex)
+        const toDeleteIndex = piecePositions[color][piece].indexOf(squareIndex)
         if (toDeleteIndex !== -1) {
-            newPiecePositions[color][piece].splice(toDeleteIndex, 1)
+            piecePositions[color][piece].splice(toDeleteIndex, 1)
         }
     }
-
-    return newPiecePositions
 }
 
 export function put(
@@ -520,31 +569,25 @@ export function put(
     piece: Piece,
     squareIndex: SquareIndex,
 ) {
-    const newState = clone(state)
-
-    newState.piecePositions = removePiecePositionIfExists(
+    removePiecePositionIfExists(
         state.piecePositions,
         state.boardState,
         squareIndex,
     )
 
-    newState.boardState[squareIndex] = [color, piece]
-    if (!newState.piecePositions[color][piece].includes(squareIndex)) {
-        newState.piecePositions[color][piece].push(squareIndex)
+    state.boardState[squareIndex] = [color, piece]
+    if (!state.piecePositions[color][piece].includes(squareIndex)) {
+        state.piecePositions[color][piece].push(squareIndex)
     }
-
-    return newState
 }
 
 export function remove(state: State, squareIndex: SquareIndex) {
-    const newState = clone(state)
-    newState.piecePositions = removePiecePositionIfExists(
+    removePiecePositionIfExists(
         state.piecePositions,
         state.boardState,
         squareIndex,
     )
-    newState.boardState[squareIndex] = null
-    return newState
+    state.boardState[squareIndex] = null
 }
 
 export function importFen(fen: string): State {
@@ -552,7 +595,7 @@ export function importFen(fen: string): State {
     const fenInfo = extractInfoFromFen(fen)
     const boardState = getBoardStateFromBoardString(fenInfo.boardString)
     const piecePositions = getPiecePositions(boardState)
-    const state = {
+    const state: State = {
         activeColor: toEnum(Color, fenInfo.activeColor),
         moveNumber: parseInt(fenInfo.moveNumber, 10),
         boardState,
@@ -567,8 +610,9 @@ export function importFen(fen: string): State {
             fenInfo.countTo,
         ),
         countdownHistory: [],
+        fenOccurrence: {},
     }
-
+    state.fenOccurrence[fen] = 1
     return state
 }
 
@@ -619,3 +663,4 @@ export function exportFen(state: State): string {
 
     return result.join(" ")
 }
+

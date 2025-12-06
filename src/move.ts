@@ -1,154 +1,25 @@
 import {
-    ATTACKS,
+    ATTACK_OFFSETS,
     BITS,
-    RAYS,
-
-
-} from "./constants/Moving"
-
-import { algebraic, clone, file, getAttackOffsets, getMoveOffsets, rank, swapColor } from "./utils"
-
-import { countPiece, exportFen, updatePiecePositionDictionaryInplace } from "./state"
-
-import { Countdown, Move, MoveObject, State } from "./types"
-import { CountType, RANK_3, RANK_6, SquareIndex } from "./constants/Board"
-import { Color, IS_SLIDING_PIECE, Piece, SHIFTS } from "./constants/Piece"
-
-/**
- *
- * to find out if any of black piece can attack on e7 square
- *
- * canThisColorAttackThisSquare(BLACK, SQUARES.e7)
- *
- */
-export function canThisColorAttackThisSquare(
-    boardState: State["boardState"],
-    color: Color,
-    targetSquare: SquareIndex,
-) {
-    for (
-        let fromIndex = SquareIndex.a1;
-        fromIndex <= SquareIndex.h8;
-        fromIndex++
-    ) {
-        /* did we run off the end of the board */
-        if (fromIndex & 0x88) {
-            fromIndex += 7
-            continue
-        }
-
-        /* if empty square or wrong color */
-        const squareData = boardState[fromIndex]
-        if (!squareData || squareData[0] !== color) {
-            continue
-        }
-
-        const fromSquare = squareData
-        const lookUpIndex = fromIndex - targetSquare + 119
-
-        if (ATTACKS[lookUpIndex] & (1 << SHIFTS[fromSquare[0]][fromSquare[1]])) {
-            // if not sliding piece then return true
-            if (!IS_SLIDING_PIECE[fromSquare[1]]) {
-                return true
-            }
-
-            // if sliding piece then find out if it's blocked by other piece
-            // if it's blocked then we can't attack, otherwise we can
-            const offset = RAYS[lookUpIndex]
-            let j = fromIndex + offset
-
-            let blocked = false
-            while (j !== targetSquare) {
-                if (boardState[j]) {
-                    blocked = true
-                    break
-                }
-                j += offset
-            }
-
-            if (!blocked) {
-                return true
-            }
-        }
-    }
-
-    return false
-}
-
-// isKhunAttacked(state, WHITE) = is white khun attacked
-export function isKhunAttacked(state: State, color: Color) {
-    return canThisColorAttackThisSquare(
-        state.boardState,
-        swapColor(color),
-        state.piecePositions[color][Piece.KHUN][0],
-    )
-}
-
-export function inCheck(state: State) {
-    return isKhunAttacked(state, state.activeColor)
-}
-
-export function inCheckmate(state: State) {
-    return inCheck(state) && generateLegalMoves(state).length === 0
-}
-
-export function inStalemate(state: State) {
-    return !inCheck(state) && generateLegalMoves(state).length === 0
-}
-
-export function inDraw(state: State) {
-    return (
-        inStalemate(state) ||
-        isFinishedCounting(state) ||
-        insufficientMaterial(state) ||
-        inThreefoldRepetition(state)
-    )
-}
-
-export function gameOver(state: State) {
-    return inDraw(state) || inCheckmate(state)
-}
-
-export function inThreefoldRepetition(state: State) {
-    const positions: Record<string, number> = {}
-    let currentState = state
-
-    while (currentState && currentState.history && currentState.history.length) {
-        const fen = exportFen(currentState)
-        positions[fen] = fen in positions ? positions[fen] + 1 : 1
-        if (positions[fen] >= 3) {
-            return true
-        }
-
-        currentState = undoMove(currentState)
-    }
-
-    return false
-}
-
-export function insufficientMaterial(state: State): boolean {
-    const pieceCount = countPiece(state.piecePositions)
-
-    // came from answer in facebook group from the question I asked
-    return (
-        pieceCount.all === 2 ||
-        (pieceCount.all === 3 &&
-            (pieceCount.piece[Piece.BIA] === 1 ||
-                pieceCount.piece[Piece.FLIPPED_BIA] === 1 ||
-                pieceCount.piece[Piece.MET] === 1 ||
-                pieceCount.piece[Piece.MA] === 1))
-    )
-}
-
-export function isFinishedCounting(state: State) {
-    const { countdown, activeColor } = state
-
-    return (
-        countdown &&
-        countdown.countColor === activeColor &&
-        countdown.count >= countdown.countTo
-    )
-}
+    Color,
+    CountType,
+    IS_SLIDING_PIECE,
+    MOVE_OFFSETS,
+    Piece,
+    RANK_3,
+    RANK_6,
+    SquareIndex,
+} from "./constants"
+import { getAlgebraic, getFile, getRank, swapColor } from "./utils"
+import {
+    PiecePositionDelta,
+    countPiece,
+    exportFen,
+    revertPiecePositionDictionary,
+    updatePiecePositionDictionary,
+} from "./state"
+import { Countdown, Move, MoveObject, SquareData, State } from "./types"
+import { inCheck, inCheckmate, isKhunAttacked } from "./gameStatus"
 
 export function calculatePiecePowerCountdown(state: State) {
     const pieceCount = countPiece(state.piecePositions)
@@ -163,21 +34,21 @@ export function calculatePiecePowerCountdown(state: State) {
     }
 
     const opponentPieceCount = pieceCount[swapColor(state.activeColor)]
-    if (opponentPieceCount[Piece.RUA] in [1, 2]) {
+    if ([1, 2].includes(opponentPieceCount[Piece.RUA])) {
         return {
             countFrom: 1,
             countTo: 16 / opponentPieceCount[Piece.RUA],
         }
     }
 
-    if (opponentPieceCount[Piece.THON] in [1, 2]) {
+    if ([1, 2].includes(opponentPieceCount[Piece.THON])) {
         return {
             countFrom: 1,
             countTo: 44 / opponentPieceCount[Piece.THON],
         }
     }
 
-    if (opponentPieceCount[Piece.MA] in [1, 2]) {
+    if ([1, 2].includes(opponentPieceCount[Piece.MA])) {
         return {
             countFrom: 1,
             countTo: 64 / opponentPieceCount[Piece.MA],
@@ -243,32 +114,19 @@ export function calculateCountdown(state: State): Countdown | null {
  * @param {Number} to 0x88 square
  *
  */
-export function changePiecePositionInplace(
-    boardState: State["boardState"],
-    from: SquareIndex,
-    to: SquareIndex,
-) {
-    if (!from && !to) {
-        return boardState
-    }
-
-    boardState[to] = boardState[from]
-    boardState[from] = null
-
-    return boardState
-}
-
 export function changePiecePosition(
     boardState: State["boardState"],
     from: SquareIndex,
     to: SquareIndex,
 ) {
-    if (!from && !to) {
-        return boardState
+    if (!from || from === to) {
+        return
     }
-    const newBoardState = clone(boardState)
-    return changePiecePositionInplace(newBoardState, from, to)
+
+    boardState[to] = boardState[from]
+    boardState[from] = null
 }
+
 
 /**
  * Increase move counter (if black have made a move) and swap color
@@ -276,35 +134,28 @@ export function changePiecePosition(
  * @param {Object} state
  *
  */
-export function stepInplace(state: State) {
+export function step(state: State) {
     if (state.activeColor === Color.BLACK) {
         state.moveNumber++
     }
 
     state.activeColor = swapColor(state.activeColor)
-
-    return state
 }
 
-export function step(state: State) {
-    const newState = clone(state)
-    return stepInplace(newState)
-}
+// export function stepBackInplace(state: State) {
+//     if (state.activeColor === Color.WHITE) {
+//         state.moveNumber--
+//     }
+//
+//     state.activeColor = swapColor(state.activeColor)
+//
+//     return state
+// }
 
-export function stepBackInplace(state: State) {
-    if (state.activeColor === Color.WHITE) {
-        state.moveNumber--
-    }
-
-    state.activeColor = swapColor(state.activeColor)
-
-    return state
-}
-
-export function stepBack(state: State) {
-    const newState = clone(state)
-    return stepBackInplace(newState)
-}
+// export function stepBack(state: State) {
+//     const newState = clone(state)
+//     return stepBackInplace(newState)
+// }
 
 export type CountdownFlag = {
     startPiecePowerCountdown?: boolean;
@@ -378,11 +229,9 @@ export function stepCountdown(state: State, flags: StepCountdownFlags = {}) {
         return state
     }
 
-    const newState = clone(state)
-
     // if we didn't count yet and we give countdown flag
     // then start counting if countdown flag is valid
-    if (!newState.countdown) {
+    if (!state.countdown) {
         if (
             (startPiecePowerCountdown &&
                 countdown.countType === CountType.PIECE_POWER_COUNTDOWN) ||
@@ -390,9 +239,9 @@ export function stepCountdown(state: State, flags: StepCountdownFlags = {}) {
                 countdown.countType === CountType.BOARD_POWER_COUNTDOWN) ||
             startCountdown
         ) {
-            newState.countdown = countdown
+            state.countdown = countdown
         } else if (hasStartCountdownFlag(flags)) {
-            // console.log(flags, newState.countdown)
+            // console.log(flags, state.countdown)
             throw { code: "WRONG_COUNTDOWN_TYPE" }
         }
     }
@@ -403,13 +252,13 @@ export function stepCountdown(state: State, flags: StepCountdownFlags = {}) {
         if (hasStopCountdownFlag(flags)) {
             if (
                 (stopPiecePowerCountdown &&
-                    newState.countdown.countType === CountType.PIECE_POWER_COUNTDOWN) ||
+                    state.countdown.countType === CountType.PIECE_POWER_COUNTDOWN) ||
                 (stopBoardPowerCountdown &&
-                    newState.countdown.countType === CountType.BOARD_POWER_COUNTDOWN) ||
+                    state.countdown.countType === CountType.BOARD_POWER_COUNTDOWN) ||
                 stopCountdown
             ) {
-                // newState.countdownHistory.push(newState.countdown)
-                newState.countdown = null
+                // state.countdownHistory.push(state.countdown)
+                state.countdown = null
             } else {
                 throw { code: "WRONG_STOP_COUNTDOWN_FLAG" }
             }
@@ -417,41 +266,165 @@ export function stepCountdown(state: State, flags: StepCountdownFlags = {}) {
 
         // continue counting the same type
         else if (
-            newState.countdown.countType === countdown.countType &&
-            newState.activeColor === newState.countdown.countColor
+            state.countdown.countType === countdown.countType &&
+            state.activeColor === state.countdown.countColor
         ) {
-            newState.countdown.count++
+            state.countdown.count++
         }
 
             // continue counting different type only if we change from
         // board power countdown to piece power countdown
         else if (
-            newState.countdown.countType === CountType.BOARD_POWER_COUNTDOWN &&
+            state.countdown.countType === CountType.BOARD_POWER_COUNTDOWN &&
             countdown.countType === CountType.PIECE_POWER_COUNTDOWN
         ) {
-            newState.countdown = countdown
+            state.countdown = countdown
+        }
+    }
+}
+
+function cloneCountdown(countdown: Countdown | null): Countdown | null {
+    if (!countdown) {
+        return null
+    }
+    return { ...countdown }
+}
+
+function cloneSquareData(square: SquareData | null | undefined): SquareData | null {
+    return square ? [square[0], square[1]] : null
+}
+
+export type BoardDelta = {
+    from: SquareIndex;
+    to: SquareIndex;
+    fromPiece: SquareData | null;
+    toPiece: SquareData | null;
+};
+
+export type MoveUndo = {
+    board?: BoardDelta;
+    piecePositions?: PiecePositionDelta;
+    moveNumber: number;
+    activeColor: Color;
+    countdown: Countdown | null;
+    fenAfter?: string;
+    fenUpdated: boolean;
+};
+
+export type ApplyMoveOptions = {
+    optional?: CountdownFlag;
+    trackUndo?: boolean;
+    updateFen?: boolean;
+};
+
+export function applyMove(
+    state: State,
+    moveObject: MoveObject,
+    options: ApplyMoveOptions = {},
+): MoveUndo | undefined {
+    const {
+        optional = {},
+        trackUndo = false,
+        updateFen = true,
+    } = options
+
+    const boardDelta: BoardDelta | undefined = trackUndo
+        ? {
+              from: moveObject.from,
+              to: moveObject.to,
+              fromPiece: cloneSquareData(state.boardState[moveObject.from]),
+              toPiece: cloneSquareData(state.boardState[moveObject.to]),
+          }
+        : undefined
+
+    const undo: MoveUndo | undefined = trackUndo
+        ? {
+              board: boardDelta,
+              moveNumber: state.moveNumber,
+              activeColor: state.activeColor,
+              countdown: cloneCountdown(state.countdown),
+              fenUpdated: updateFen,
+          }
+        : undefined
+
+    changePiecePosition(
+        state.boardState,
+        moveObject.from,
+        moveObject.to,
+    )
+
+    if (moveObject.flags & BITS.PROMOTION && moveObject.promotion) {
+        state.boardState[moveObject.to]![1] = moveObject.promotion
+    }
+
+    stepCountdown(state, optional)
+    step(state)
+
+    const pieceDelta = updatePiecePositionDictionary(
+        state.piecePositions,
+        moveObject,
+    )
+    if (trackUndo) {
+        undo!.piecePositions = pieceDelta
+    }
+
+    if (updateFen) {
+        const fen = exportFen(state)
+        state.fenOccurrence[fen] = state.fenOccurrence[fen]
+            ? state.fenOccurrence[fen] + 1
+            : 1
+        if (trackUndo) {
+            undo!.fenAfter = fen
         }
     }
 
-    return newState
+    return undo
 }
 
-export function stepBackCountdown(state: State) {
-    const newState = clone(state)
+export function undoMove(state: State, undo?: MoveUndo) {
+    if (!undo) {
+        return
+    }
 
-    const { countdown, activeColor } = newState
-
-    if (countdown && countdown.countColor === activeColor) {
-        const { count, countFrom } = countdown
-        if (count > countFrom) {
-            countdown.count--
+    if (undo.fenUpdated && undo.fenAfter) {
+        const count = state.fenOccurrence[undo.fenAfter]
+        if (count <= 1) {
+            delete state.fenOccurrence[undo.fenAfter]
         } else {
-            newState.countdown = null
+            state.fenOccurrence[undo.fenAfter] = count - 1
         }
     }
 
-    return newState
+    state.activeColor = undo.activeColor
+    state.moveNumber = undo.moveNumber
+    state.countdown = cloneCountdown(undo.countdown)
+
+    if (undo.piecePositions) {
+        revertPiecePositionDictionary(state.piecePositions, undo.piecePositions)
+    }
+
+    if (undo.board) {
+        state.boardState[undo.board.from] = cloneSquareData(undo.board.fromPiece)
+        state.boardState[undo.board.to] = cloneSquareData(undo.board.toPiece)
+    }
 }
+
+// export function stepBackCountdown(state: State) {
+//     const newState = clone(state)
+//
+//     const { countdown, activeColor } = newState
+//
+//     if (countdown && countdown.countColor === activeColor) {
+//         const { count, countFrom } = countdown
+//         if (count > countFrom) {
+//             countdown.count--
+//         } else {
+//             newState.countdown = null
+//         }
+//     }
+//
+//     return newState
+// }
 
 export function makeMove(
     state: State,
@@ -459,87 +432,54 @@ export function makeMove(
     optional = {},
     keepFuture = false,
 ) {
-    let newState = clone(state)
-    // newState.boardState = changePiecePosition(
-    //     state.boardState,
-    //     moveObject.from,
-    //     moveObject.to
-    // )
-    newState.boardState = changePiecePositionInplace(
-        newState.boardState,
-        moveObject.from,
-        moveObject.to,
-    )
-
-    newState = stepCountdown(newState, optional)
-
-    if (moveObject.flags & BITS.PROMOTION && moveObject.promotion) {
-        newState.boardState[moveObject.to]![1] = moveObject.promotion
-    }
-
-    // newState = step(newState)
-    newState = stepInplace(newState)
-
-    // update position lookup table
-    // newState.piecePositions = updatePiecePositionDictionary(
-    //     newState.piecePositions,
-    //     moveObject
-    // )
-    newState.piecePositions = updatePiecePositionDictionaryInplace(
-        newState.piecePositions,
-        moveObject,
-    )
-
-    // newState.history.push({ ...moveObject, optional })
-    // if (!keepFuture) {
-    //     newState.future = []
-    // }
-
-    return newState
+    applyMove(state, moveObject, {
+        optional,
+        trackUndo: false,
+        updateFen: true,
+    })
 }
 
-export function nextMove(state: State) {
-    if (!state.future || (state.future && state.future.length === 0)) {
-        throw { code: "NO_FUTURE_MOVE" }
-    }
+// export function nextMove(state: State) {
+//     if (!state.future || (state.future && state.future.length === 0)) {
+//         throw { code: "NO_FUTURE_MOVE" }
+//     }
+//
+//     let newState = clone(state)
+//     if (!newState.future) {
+//         throw { code: "NO_FUTURE_MOVE" }
+//     }
+//     const nextMove = newState.future.shift()! // it's not undefined because we've check length of the future earlier
+//     makeMove(newState, nextMove, nextMove.optional, true)
+// }
 
-    let newState = clone(state)
-    if (!newState.future) {
-        throw { code: "NO_FUTURE_MOVE" }
-    }
-    const nextMove = newState.future.shift()! // it's not undefined because we've check length of the future earlier
-    newState = makeMove(newState, nextMove, nextMove.optional, true)
-    return newState
-}
-
-export function undoMove(state: State) {
-    if (!state.history || (state.history && state.history.length === 0)) {
-        throw { code: "NO_MOVE_HISTORY" }
-    }
-
-    let newState = clone(state)
-    newState = stepBack(newState)
-    newState = stepBackCountdown(newState)
-    if (!newState.history || !newState.future) {
-        throw { code: "NO_MOVE_HISTORY" }
-    }
-    const lastMove = newState.history.pop()! // it's not undefined because we've check length of the history earlier
-    newState.future.unshift(lastMove)
-
-    const { piece, from, to, flags, captured } = lastMove
-    const { boardState, activeColor } = newState
-    boardState[from] = boardState[to]
-    // boardState[from].type = piece // undo promotion
-    boardState[from]![1] = piece // undo promotion
-    boardState[to] = null
-
-    if (flags & BITS.CAPTURE && captured) {
-        // boardState[to] = { piece: captured, color: swapColor(activeColor) }
-        boardState[to] = [swapColor(activeColor), captured]
-    }
-
-    return newState
-}
+// export function undoMove(state: State) {
+//     if (!state.history || (state.history && state.history.length === 0)) {
+//         throw { code: "NO_MOVE_HISTORY" }
+//     }
+//
+//     let newState = clone(state)
+//     newState = stepBack(newState)
+//     newState = stepBackCountdown(newState)
+//     if (!newState.history || !newState.future) {
+//         throw { code: "NO_MOVE_HISTORY" }
+//     }
+//     const lastMove = newState.history.pop()! // it's not undefined because we've check length of the history earlier
+//     newState.future.unshift(lastMove)
+//
+//     const { piece, from, to, flags, captured } = lastMove
+//     const { boardState, activeColor } = newState
+//     boardState[from] = boardState[to]
+//     // boardState[from].type = piece // undo promotion
+//     boardState[from]![1] = piece // undo promotion
+//     boardState[to] = null
+//
+//     if (flags & BITS.CAPTURE && captured) {
+//         // boardState[to] = { piece: captured, color: swapColor(activeColor) }
+//         boardState[to] = [swapColor(activeColor), captured]
+//     }
+//
+//     return newState
+// }
 
 export type GenerateMovesForOneSquareOptions = {
     forColor?: Color;
@@ -575,7 +515,7 @@ export function generateMovesForOneSquare(
         return moves
     }
 
-    const attackOffsets = getAttackOffsets(color, piece)
+    const attackOffsets = ATTACK_OFFSETS[color][piece]
     for (const offset of attackOffsets) {
         squarePointer = squareIndex
         while (true) {
@@ -600,7 +540,7 @@ export function generateMovesForOneSquare(
                     }
                     if (
                         piece === Piece.BIA &&
-                        (rank(squarePointer) === RANK_3 || rank(squarePointer) === RANK_6)
+                        (getRank(squarePointer) === RANK_3 || getRank(squarePointer) === RANK_6)
                     ) {
                         move.promotion = Piece.FLIPPED_BIA
                         move.flags |= BITS.PROMOTION
@@ -616,7 +556,7 @@ export function generateMovesForOneSquare(
         }
     }
 
-    const moveOffsets = getMoveOffsets(color, piece)
+    const moveOffsets = MOVE_OFFSETS[color][piece]
     for (const offset of moveOffsets) {
         squarePointer = squareIndex
         while (true) {
@@ -639,7 +579,7 @@ export function generateMovesForOneSquare(
                 }
                 if (
                     piece === Piece.BIA &&
-                    (rank(squarePointer) === RANK_3 || rank(squarePointer) === RANK_6)
+                    (getRank(squarePointer) === RANK_3 || getRank(squarePointer) === RANK_6)
                 ) {
                     move.promotion = Piece.FLIPPED_BIA
                     move.flags |= BITS.PROMOTION
@@ -659,11 +599,22 @@ export function generateMovesForOneSquare(
         return moves
     }
 
-    const legalMoves = []
-    for (const move of moves) {
-        const newState = makeMove(state, move)
-        if (!isKhunAttacked(newState, swapColor(newState.activeColor))) {
-            legalMoves.push(move)
+    const legalMoves: MoveObject[] = []
+    for (const candidate of moves) {
+        const undo = applyMove(state, candidate, {
+            trackUndo: true,
+            updateFen: false,
+        })!
+        let legalMove = false
+        try {
+            const moverColor = swapColor(state.activeColor)
+            legalMove = !isKhunAttacked(state, moverColor)
+        } finally {
+            undoMove(state, undo)
+        }
+
+        if (legalMove) {
+            legalMoves.push(candidate)
         }
     }
 
@@ -705,11 +656,11 @@ export function getDisambiguator(
     let sameRank = 0
     let sameFile = 0
     samePieceAndDestinationMoves.forEach((move) => {
-        if (rank(move.from) === rank(from)) {
+        if (getRank(move.from) === getRank(from)) {
             sameRank++
         }
 
-        if (file(move.from) === file(from)) {
+        if (getFile(move.from) === getFile(from)) {
             sameFile++
         }
     })
@@ -718,15 +669,15 @@ export function getDisambiguator(
      * the move in question, use the square as the disambiguator
      */
     if (sameRank > 0 && sameFile > 0) {
-        return algebraic(from)
+        return getAlgebraic(from)
     } else if (sameFile > 0) {
         /* if the moving piece rests on the same file, use the rank symbol as the
          * disambiguator
          */
-        return algebraic(from).charAt(1)
+        return getAlgebraic(from).charAt(1)
     } else if (sameRank > 0) {
         /* else use the file symbol */
-        return algebraic(from).charAt(0)
+        return getAlgebraic(from).charAt(0)
     }
 
     return ""
@@ -754,24 +705,31 @@ export function moveToSan(state: State, move: MoveObject) {
 
     if (move.flags & BITS.CAPTURE) {
         if (move.piece === Piece.BIA) {
-            output += algebraic(move.from)[0]
+            output += getAlgebraic(move.from)[0]
         }
         output += "x"
     }
 
-    output += algebraic(move.to)
+    output += getAlgebraic(move.to)
 
     if (move.flags & BITS.PROMOTION && move.promotion) {
         output += "=" + move.promotion.toUpperCase()
     }
 
-    const newState = makeMove(state, move)
-    if (inCheck(newState)) {
-        if (inCheckmate(newState)) {
-            output += "#"
-        } else {
-            output += "+"
+    const undo = applyMove(state, move, {
+        trackUndo: true,
+        updateFen: false,
+    })!
+    try {
+        if (inCheck(state)) {
+            if (inCheckmate(state)) {
+                output += "#"
+            } else {
+                output += "+"
+            }
         }
+    } finally {
+        undoMove(state, undo)
     }
 
     return output
@@ -812,9 +770,9 @@ export function moveFromMoveObject(state: State, moveObject: MoveObject) {
         if (typeof moveObject.from === "number") {
             from = move.from
             to = move.to
-        } else if (moveObject.from === "string") {
-            from = algebraic(move.from)
-            to = algebraic(move.to)
+        } else if (typeof moveObject.from === "string") {
+            from = getAlgebraic(move.from)
+            to = getAlgebraic(move.to)
         }
 
         if (moveObject.from === from && moveObject.to === to) {
@@ -835,8 +793,9 @@ export function moveFromMoveObject(state: State, moveObject: MoveObject) {
  *     to: Number, algebraic position like e4 d7 ...
  * }
  *
+ * @param optional
  */
-export function move(state: State, move: Move, optional = {}): State {
+export function move(state: State, move: Move, optional = {}) {
     let moveObject
     if (typeof move === "string") {
         moveObject = moveFromSan(state, move)
@@ -848,7 +807,5 @@ export function move(state: State, move: Move, optional = {}): State {
         throw { code: "INVALID_MOVE" }
     }
 
-    const newState = makeMove(state, moveObject, optional)
-
-    return newState
+    makeMove(state, moveObject, optional)
 }

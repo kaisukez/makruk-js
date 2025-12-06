@@ -1,8 +1,13 @@
-import { generateLegalMoves, generateMovesForOneSquare, inCheckmate, inDraw, makeMove } from "./move"
+import {
+    applyMove,
+    generateLegalMoves,
+    generateMovesForOneSquare,
+    undoMove,
+} from "./move"
 import { forEachPiece } from "./state"
 import { MoveObject, State } from "./types"
-import { SquareIndex as SI } from "./constants/Board"
-import { Color, PIECE_POWER } from "./constants/Piece"
+import { Color, PIECE_POWER, SquareIndex as SI } from "./constants"
+import { inCheckmate, inDraw } from "./gameStatus"
 
 const S1 = 0
 const S2 = 0.16
@@ -89,9 +94,12 @@ export function minimax(state: State, depth: number, alpha: number, beta: number
         let bestMove = null
 
         for (const move of moves) {
-            // console.log('move white', moveToSan(state, move), depth)
-            const nextState = makeMove(state, move)
-            const { bestScore } = minimax(nextState, depth - 1, alpha, beta)
+            const undo = applyMove(state, move, {
+                trackUndo: true,
+                updateFen: false,
+            })!
+            const { bestScore } = minimax(state, depth - 1, alpha, beta)
+            undoMove(state, undo)
             if (bestScore > max) {
                 max = bestScore
                 bestMove = move
@@ -110,9 +118,12 @@ export function minimax(state: State, depth: number, alpha: number, beta: number
         let min = Infinity
         let bestMove = null
         for (const move of moves) {
-            // console.log('move black', moveToSan(state, move), depth)
-            const nextState = makeMove(state, move)
-            const { bestScore } = minimax(nextState, depth - 1, alpha, beta)
+            const undo = applyMove(state, move, {
+                trackUndo: true,
+                updateFen: false,
+            })!
+            const { bestScore } = minimax(state, depth - 1, alpha, beta)
+            undoMove(state, undo)
             if (bestScore < min) {
                 min = bestScore
                 bestMove = move
