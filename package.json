@@ -26,9 +26,19 @@
     "types": "./dist/index.d.ts",
     "exports": {
         ".": {
+            "types": "./dist/index.d.ts",
             "require": "./dist/index.js",
-            "import": "./dist/index.mjs",
-            "types": "./dist/index.d.ts"
+            "import": "./dist/index.mjs"
+        },
+        "./bitboard": {
+            "types": "./dist/bitboard.d.ts",
+            "require": "./dist/bitboard.js",
+            "import": "./dist/bitboard.mjs"
+        },
+        "./0x88": {
+            "types": "./dist/0x88.d.ts",
+            "require": "./dist/0x88.js",
+            "import": "./dist/0x88.mjs"
         },
         "./package.json": "./package.json"
     },
@@ -37,8 +47,12 @@
         "node": ">=20"
     },
     "scripts": {
-        "build": "rm -rf dist && tsup src/index.ts --format cjs,esm --dts --minify",
-        "test": "jest -c jest.config.js --coverage"
+        "build": "rm -rf dist && tsup src/index.ts src/bitboard.ts src/0x88.ts --format cjs,esm --dts --minify",
+        "test": "jest -c jest.config.js --coverage",
+        "benchmark": "npm run build && node benchmark/index.js",
+        "benchmark:fen": "npm run build && node benchmark/index.js fen",
+        "benchmark:moves": "npm run build && node benchmark/index.js moves",
+        "benchmark:ai": "npm run build && node benchmark/index.js ai"
     },
     "devDependencies": {
         "@babel/preset-env": "^7.28.5",
