@@ -1,5 +1,5 @@
-import { State } from "./types"
-import { Color, FILE_A, SquareIndex } from "./constants"
+import { Color, FILE_A, SquareIndex } from "config"
+import { State } from "core/types"
 
 export function swapColor(color: Color): Color {
     return color === Color.WHITE ? Color.BLACK : Color.WHITE

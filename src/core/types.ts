@@ -1,5 +1,6 @@
-import { CountdownFlag } from "./move"
-import { Color, CountType, Piece, SquareIndex } from "./constants"
+import { Color, CountType, Piece, SquareIndex } from "config"
+
+import { CountdownFlag } from "core/rules/countdown"
 
 export type SquareData = [Color, Piece];
 

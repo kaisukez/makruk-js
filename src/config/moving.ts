@@ -10,7 +10,7 @@ import {
     RUA_SHIFT,
     WHITE_BIA_SHIFT,
     WHITE_THON_SHIFT,
-} from "./Piece"
+} from "./piece"
 
 
 export const upLeft = // 373
