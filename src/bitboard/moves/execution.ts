@@ -1,20 +1,12 @@
-/**
- * Bitboard move execution
- */
-
-import type { Bitboard, BitboardState } from "bitboard/board/board"
+import type { Mask64, BoardState } from "bitboard/board/board"
 import { Color, Piece } from "common/const"
-import { EMPTY_BITBOARD, updateOccupancy } from "bitboard/board/board"
-import type { BitboardMove } from "bitboard/moves/generation"
+import { EMPTY_MASK, updateOccupancy } from "bitboard/board/board"
+import type { Move } from "bitboard/moves/generation"
 
-/**
- * Apply a bitboard move to the state and return a new state
- */
-export function applyBitboardMove(
-    state: BitboardState,
-    move: BitboardMove
-): BitboardState {
-    // Validate move squares
+export function applyMove(
+    state: BoardState,
+    move: Move
+): BoardState {
     if (move.from < 0 || move.from > 63) {
         throw new Error(`Invalid move.from: ${move.from}`)
     }
@@ -22,8 +14,7 @@ export function applyBitboardMove(
         throw new Error(`Invalid move.to: ${move.to}`)
     }
 
-    // Helper to get bitboard for a piece type from newState
-    const getBB = (s: BitboardState, color: Color, piece: Piece): Bitboard => {
+    const getPieceMask64 = (s: BoardState, color: Color, piece: Piece): Mask64 => {
         if (color === Color.WHITE) {
             switch (piece) {
                 case Piece.BIA: return s.whiteBia
@@ -45,7 +36,7 @@ export function applyBitboardMove(
                 case Piece.KHUN: return s.blackKhun
             }
         }
-        return EMPTY_BITBOARD
+        return EMPTY_MASK
     }
 
     const fromBit = 1n << BigInt(move.from)
@@ -55,8 +46,7 @@ export function applyBitboardMove(
     const clearFromBit = ALL_BITS ^ fromBit  // XOR to flip the bit
     const finalPiece = move.promotion || move.piece
 
-    // Start with current state
-    let newState: BitboardState = {
+    let newState: BoardState = {
         whiteBia: state.whiteBia,
         whiteFlippedBia: state.whiteFlippedBia,
         whiteMa: state.whiteMa,
@@ -71,89 +61,85 @@ export function applyBitboardMove(
         blackMet: state.blackMet,
         blackRua: state.blackRua,
         blackKhun: state.blackKhun,
-        whiteOccupancy: EMPTY_BITBOARD,
-        blackOccupancy: EMPTY_BITBOARD,
-        allOccupancy: EMPTY_BITBOARD,
+        whiteOccupancy: EMPTY_MASK,
+        blackOccupancy: EMPTY_MASK,
+        allOccupancy: EMPTY_MASK,
     }
 
-    // Remove captured piece if any
     if (move.captured !== undefined) {
         const enemyColor = move.color === Color.WHITE ? Color.BLACK : Color.WHITE
-        const capturedBB = getBB(newState, enemyColor, move.captured)
+        const capturedPieceMask = getPieceMask64(newState, enemyColor, move.captured)
         const clearToBit = ALL_BITS ^ toBit
 
         if (enemyColor === Color.WHITE) {
             switch (move.captured) {
-                case Piece.BIA: newState.whiteBia = capturedBB & clearToBit; break
-                case Piece.FLIPPED_BIA: newState.whiteFlippedBia = capturedBB & clearToBit; break
-                case Piece.MA: newState.whiteMa = capturedBB & clearToBit; break
-                case Piece.THON: newState.whiteThon = capturedBB & clearToBit; break
-                case Piece.MET: newState.whiteMet = capturedBB & clearToBit; break
-                case Piece.RUA: newState.whiteRua = capturedBB & clearToBit; break
-                case Piece.KHUN: newState.whiteKhun = capturedBB & clearToBit; break
+                case Piece.BIA: newState.whiteBia = capturedPieceMask & clearToBit; break
+                case Piece.FLIPPED_BIA: newState.whiteFlippedBia = capturedPieceMask & clearToBit; break
+                case Piece.MA: newState.whiteMa = capturedPieceMask & clearToBit; break
+                case Piece.THON: newState.whiteThon = capturedPieceMask & clearToBit; break
+                case Piece.MET: newState.whiteMet = capturedPieceMask & clearToBit; break
+                case Piece.RUA: newState.whiteRua = capturedPieceMask & clearToBit; break
+                case Piece.KHUN: newState.whiteKhun = capturedPieceMask & clearToBit; break
             }
         } else {
             switch (move.captured) {
-                case Piece.BIA: newState.blackBia = capturedBB & clearToBit; break
-                case Piece.FLIPPED_BIA: newState.blackFlippedBia = capturedBB & clearToBit; break
-                case Piece.MA: newState.blackMa = capturedBB & clearToBit; break
-                case Piece.THON: newState.blackThon = capturedBB & clearToBit; break
-                case Piece.MET: newState.blackMet = capturedBB & clearToBit; break
-                case Piece.RUA: newState.blackRua = capturedBB & clearToBit; break
-                case Piece.KHUN: newState.blackKhun = capturedBB & clearToBit; break
+                case Piece.BIA: newState.blackBia = capturedPieceMask & clearToBit; break
+                case Piece.FLIPPED_BIA: newState.blackFlippedBia = capturedPieceMask & clearToBit; break
+                case Piece.MA: newState.blackMa = capturedPieceMask & clearToBit; break
+                case Piece.THON: newState.blackThon = capturedPieceMask & clearToBit; break
+                case Piece.MET: newState.blackMet = capturedPieceMask & clearToBit; break
+                case Piece.RUA: newState.blackRua = capturedPieceMask & clearToBit; break
+                case Piece.KHUN: newState.blackKhun = capturedPieceMask & clearToBit; break
             }
         }
     }
 
-    // Remove piece from source square
-    const sourceBB = getBB(newState, move.color, move.piece)
+    const sourcePieceMask = getPieceMask64(newState, move.color, move.piece)
     if (move.color === Color.WHITE) {
         switch (move.piece) {
-            case Piece.BIA: newState.whiteBia = sourceBB & clearFromBit; break
-            case Piece.FLIPPED_BIA: newState.whiteFlippedBia = sourceBB & clearFromBit; break
-            case Piece.MA: newState.whiteMa = sourceBB & clearFromBit; break
-            case Piece.THON: newState.whiteThon = sourceBB & clearFromBit; break
-            case Piece.MET: newState.whiteMet = sourceBB & clearFromBit; break
-            case Piece.RUA: newState.whiteRua = sourceBB & clearFromBit; break
-            case Piece.KHUN: newState.whiteKhun = sourceBB & clearFromBit; break
+            case Piece.BIA: newState.whiteBia = sourcePieceMask & clearFromBit; break
+            case Piece.FLIPPED_BIA: newState.whiteFlippedBia = sourcePieceMask & clearFromBit; break
+            case Piece.MA: newState.whiteMa = sourcePieceMask & clearFromBit; break
+            case Piece.THON: newState.whiteThon = sourcePieceMask & clearFromBit; break
+            case Piece.MET: newState.whiteMet = sourcePieceMask & clearFromBit; break
+            case Piece.RUA: newState.whiteRua = sourcePieceMask & clearFromBit; break
+            case Piece.KHUN: newState.whiteKhun = sourcePieceMask & clearFromBit; break
         }
     } else {
         switch (move.piece) {
-            case Piece.BIA: newState.blackBia = sourceBB & clearFromBit; break
-            case Piece.FLIPPED_BIA: newState.blackFlippedBia = sourceBB & clearFromBit; break
-            case Piece.MA: newState.blackMa = sourceBB & clearFromBit; break
-            case Piece.THON: newState.blackThon = sourceBB & clearFromBit; break
-            case Piece.MET: newState.blackMet = sourceBB & clearFromBit; break
-            case Piece.RUA: newState.blackRua = sourceBB & clearFromBit; break
-            case Piece.KHUN: newState.blackKhun = sourceBB & clearFromBit; break
+            case Piece.BIA: newState.blackBia = sourcePieceMask & clearFromBit; break
+            case Piece.FLIPPED_BIA: newState.blackFlippedBia = sourcePieceMask & clearFromBit; break
+            case Piece.MA: newState.blackMa = sourcePieceMask & clearFromBit; break
+            case Piece.THON: newState.blackThon = sourcePieceMask & clearFromBit; break
+            case Piece.MET: newState.blackMet = sourcePieceMask & clearFromBit; break
+            case Piece.RUA: newState.blackRua = sourcePieceMask & clearFromBit; break
+            case Piece.KHUN: newState.blackKhun = sourcePieceMask & clearFromBit; break
         }
     }
 
-    // Add piece to destination square (with promotion if applicable)
-    const destBB = getBB(newState, move.color, finalPiece)
+    const destPieceMask = getPieceMask64(newState, move.color, finalPiece)
     if (move.color === Color.WHITE) {
         switch (finalPiece) {
-            case Piece.BIA: newState.whiteBia = destBB | toBit; break
-            case Piece.FLIPPED_BIA: newState.whiteFlippedBia = destBB | toBit; break
-            case Piece.MA: newState.whiteMa = destBB | toBit; break
-            case Piece.THON: newState.whiteThon = destBB | toBit; break
-            case Piece.MET: newState.whiteMet = destBB | toBit; break
-            case Piece.RUA: newState.whiteRua = destBB | toBit; break
-            case Piece.KHUN: newState.whiteKhun = destBB | toBit; break
+            case Piece.BIA: newState.whiteBia = destPieceMask | toBit; break
+            case Piece.FLIPPED_BIA: newState.whiteFlippedBia = destPieceMask | toBit; break
+            case Piece.MA: newState.whiteMa = destPieceMask | toBit; break
+            case Piece.THON: newState.whiteThon = destPieceMask | toBit; break
+            case Piece.MET: newState.whiteMet = destPieceMask | toBit; break
+            case Piece.RUA: newState.whiteRua = destPieceMask | toBit; break
+            case Piece.KHUN: newState.whiteKhun = destPieceMask | toBit; break
         }
     } else {
         switch (finalPiece) {
-            case Piece.BIA: newState.blackBia = destBB | toBit; break
-            case Piece.FLIPPED_BIA: newState.blackFlippedBia = destBB | toBit; break
-            case Piece.MA: newState.blackMa = destBB | toBit; break
-            case Piece.THON: newState.blackThon = destBB | toBit; break
-            case Piece.MET: newState.blackMet = destBB | toBit; break
-            case Piece.RUA: newState.blackRua = destBB | toBit; break
-            case Piece.KHUN: newState.blackKhun = destBB | toBit; break
+            case Piece.BIA: newState.blackBia = destPieceMask | toBit; break
+            case Piece.FLIPPED_BIA: newState.blackFlippedBia = destPieceMask | toBit; break
+            case Piece.MA: newState.blackMa = destPieceMask | toBit; break
+            case Piece.THON: newState.blackThon = destPieceMask | toBit; break
+            case Piece.MET: newState.blackMet = destPieceMask | toBit; break
+            case Piece.RUA: newState.blackRua = destPieceMask | toBit; break
+            case Piece.KHUN: newState.blackKhun = destPieceMask | toBit; break
         }
     }
 
-    // Update occupancy bitboards
     updateOccupancy(newState)
 
     return newState

@@ -1,11 +1,11 @@
 import { moveToSan, moveFromSan, squareToAlgebraic } from "bitboard/moves/notation"
-import { importFenBitboard, INITIAL_FEN_BITBOARD } from "bitboard/fen"
+import { importFen, INITIAL_FEN } from "bitboard/fen"
 import { generateLegalMoves } from "bitboard/moves/generation"
 import { Color } from "common/const"
 
 const { describe, expect, test } = globalThis as any
 
-describe("Bitboard SAN Notation Tests", () => {
+describe("Mask64 SAN Notation Tests", () => {
     test("squareToAlgebraic converts correctly", () => {
         expect(squareToAlgebraic(0)).toBe("a1")
         expect(squareToAlgebraic(7)).toBe("h1")
@@ -16,7 +16,7 @@ describe("Bitboard SAN Notation Tests", () => {
     })
 
     test("moveToSan generates SAN for initial position moves", () => {
-        const { state } = importFenBitboard(INITIAL_FEN_BITBOARD)
+        const { state } = importFen(INITIAL_FEN)
         const moves = generateLegalMoves(state, Color.WHITE)
         expect(moves.length).toBeGreaterThan(0)
 
@@ -29,7 +29,7 @@ describe("Bitboard SAN Notation Tests", () => {
     })
 
     test("round-trip: moveToSan then moveFromSan", () => {
-        const { state } = importFenBitboard(INITIAL_FEN_BITBOARD)
+        const { state } = importFen(INITIAL_FEN)
         const moves = generateLegalMoves(state, Color.WHITE)
 
         // Take first 10 moves and ensure round-trip works

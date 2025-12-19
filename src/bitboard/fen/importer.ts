@@ -2,8 +2,8 @@
  * FEN import for bitboard representation
  */
 
-import type { BitboardState } from "bitboard/board/board"
-import { createEmptyBitboardState, setPiece } from "bitboard/board/board"
+import type { BoardState } from "bitboard/board/board"
+import { createEmptyBoardState, setPiece } from "bitboard/board/board"
 import { Color, Piece } from "common/const"
 
 /**
@@ -27,10 +27,10 @@ const PIECE_SYMBOLS: Record<string, [Color, Piece]> = {
 }
 
 /**
- * Import FEN string to BitboardState
+ * Import FEN string to BoardState
  */
-export function importFenBitboard(fen: string): {
-    state: BitboardState
+export function importFen(fen: string): {
+    state: BoardState
     turn: Color
     moveNumber: number
 } {
@@ -39,7 +39,7 @@ export function importFenBitboard(fen: string): {
     const turn = parts[1] === 'w' ? Color.WHITE : Color.BLACK
     const moveNumber = parseInt(parts[2] || '1', 10)
 
-    const state = createEmptyBitboardState()
+    const state = createEmptyBoardState()
 
     // Parse board string
     const ranks = boardString.split('/')
@@ -58,8 +58,8 @@ export function importFenBitboard(fen: string): {
                 const pieceInfo = PIECE_SYMBOLS[char]
                 if (pieceInfo) {
                     const [color, piece] = pieceInfo
-                    const bitboardSquare = square + file
-                    setPiece(state, color, piece, bitboardSquare)
+                    const boardSquare = square + file
+                    setPiece(state, color, piece, boardSquare)
                 }
                 file++
             }
@@ -74,9 +74,9 @@ export function importFenBitboard(fen: string): {
 /**
  * Initial position FEN for Makruk
  */
-export const INITIAL_FEN_BITBOARD = 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTEKTMR w 1'
+export const INITIAL_FEN = 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTEKTMR w 1'
 
 /**
  * Empty board FEN
  */
-export const EMPTY_FEN_BITBOARD = '8/8/8/8/8/8/8/8 w 1'
+export const EMPTY_FEN = '8/8/8/8/8/8/8/8 w 1'

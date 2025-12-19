@@ -1,96 +1,51 @@
-# Performance Benchmarks
+# Benchmarks
 
-This directory contains performance benchmarks comparing the **0x88** and **Bitboard** implementations of Makruk-JS.
+Compares 0x88 vs Bitboard implementations.
 
-## Running Benchmarks
+## Usage
 
-### Run All Benchmarks
 ```bash
-npm run benchmark
-# or
-node benchmark/index.js
-```
-**Est. total time**: ~5-8 seconds
-
-### Run Specific Benchmarks
-```bash
-# FEN Import/Export only
-npm run benchmark:fen
-node benchmark/index.js fen
-
-# Move Generation only
-npm run benchmark:moves
-node benchmark/index.js moves
-
-# AI Search only
-npm run benchmark:ai
-node benchmark/index.js ai
+pnpm benchmark        # Run all
+pnpm benchmark:fen    # FEN only
+pnpm benchmark:moves  # Move generation only
+pnpm benchmark:ai     # AI search only
 ```
 
-## Benchmark Categories
+## Results
 
-### 1. FEN Operations (`fen-operations.js`)
-Tests the performance of importing and exporting FEN strings:
-- **Import**: Parse FEN string to internal state
-- **Export**: Convert internal state to FEN string
-- **100 iterations** per position (3 positions)
-- **Est. time**: ~1 second
+Tested on Apple M1, Node v24.
 
-### 2. Move Generation (`move-generation.js`)
-Tests the performance of generating all legal moves:
-- Initial position (most pieces)
-- Middlegame (moderate pieces)
-- Endgame (few pieces)
-- **100 iterations** per position (3 positions)
-- **Est. time**: ~1-2 seconds
+### FEN Operations
 
-### 3. AI Search (`ai-search.js`)
-Tests the performance of minimax search:
-- Search depths: 1 and 2 (depth 3 skipped for speed)
-- Different position types (2 positions)
-- Includes alpha-beta pruning
-- Tests move ordering efficiency
-- **Iterations**: 20 (depth 1), 5 (depth 2)
-- **Est. time**: ~2-4 seconds
+| Operation | 0x88 | Bitboard | Winner |
+|-----------|------|----------|--------|
+| Import initial | 0.012 ms | 0.024 ms | 0x88 2x faster |
+| Import middlegame | 0.006 ms | 0.007 ms | ~Equal |
+| Import endgame | 0.005 ms | 0.002 ms | Bitboard 2x faster |
+| Export initial | 0.004 ms | 0.00005 ms | Bitboard 80x faster |
+| Export middlegame | 0.003 ms | 0.00004 ms | Bitboard 64x faster |
+| Export endgame | 0.001 ms | 0.00004 ms | Bitboard 33x faster |
 
-## Metrics
+### Move Generation
 
-For each benchmark, the following metrics are reported:
+| Position | 0x88 | Bitboard | Winner |
+|----------|------|----------|--------|
+| Initial | 0.73 ms | 0.34 ms | Bitboard 2x faster |
+| Middlegame | 0.40 ms | 0.18 ms | Bitboard 2x faster |
+| Endgame | 0.10 ms | 0.02 ms | Bitboard 6x faster |
 
-- **Mean**: Average execution time
-- **Median**: Middle value (50th percentile)
-- **Min**: Fastest execution time
-- **Max**: Slowest execution time
-- **P95**: 95th percentile (95% of executions are faster)
-- **P99**: 99th percentile (99% of executions are faster)
+### AI Search
 
-## Implementation Comparison
+| Position | Depth | 0x88 | Bitboard | Winner |
+|----------|-------|------|----------|--------|
+| Endgame | 1 | 4.8 ms | 0.05 ms | Bitboard 96x faster |
+| Middlegame | 1 | 19.4 ms | 0.24 ms | Bitboard 82x faster |
+| Endgame | 2 | 55.6 ms | 0.009 ms | Bitboard 5866x faster |
+| Middlegame | 2 | 69.9 ms | 0.19 ms | Bitboard 374x faster |
 
-### 0x88 Implementation
-- Array-based board representation
-- O(1) square access
-- Simple and straightforward
-- More memory overhead
+## Files
 
-### Bitboard Implementation
-- Bitwise operations
-- Parallel piece operations
-- Potential for SIMD optimization
-- More complex implementation
-
-## Expected Results
-
-The relative performance depends on the operation:
-
-- **FEN Import**: Both should be similar (string parsing overhead)
-- **FEN Export**: Bitboard may be slightly slower (need to iterate bits)
-- **Move Generation**: Bitboard may be faster for sliding pieces
-- **AI Search**: Performance depends on move ordering and evaluation
-
-## Notes
-
-- Benchmarks run against the **built** code in `dist/`
-- Run `npm run build` before benchmarking
-- Results vary based on hardware and Node.js version
-- Includes warmup iterations to avoid JIT compilation effects
-- Move count verification ensures correctness
+- `utils.js` - Benchmark helper functions
+- `fen-operations.js` - FEN import/export
+- `move-generation.js` - Legal move generation
+- `ai-search.js` - Minimax search at depth 1-2

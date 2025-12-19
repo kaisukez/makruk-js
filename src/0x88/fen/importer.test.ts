@@ -5,6 +5,7 @@ import {
     extractInfoFromFen,
     createCountdownObject,
     importFen,
+    createInitialState,
     INITIAL_FEN,
     EMPTY_FEN,
 } from "0x88/fen/importer"
@@ -503,5 +504,15 @@ describe("INITIAL_FEN constant", () => {
 describe("EMPTY_FEN constant", () => {
     test("should have correct value", () => {
         expect(EMPTY_FEN).toBe("4k3/8/8/8/8/8/8/4K3 w 1")
+    })
+})
+
+describe("createInitialState", () => {
+    test("should create initial state equivalent to importFen(INITIAL_FEN)", () => {
+        const state = createInitialState()
+
+        expect(state.activeColor).toBe(Color.WHITE)
+        expect(state.moveNumber).toBe(1)
+        expect(state.fenOccurrence[INITIAL_FEN]).toBe(1)
     })
 })

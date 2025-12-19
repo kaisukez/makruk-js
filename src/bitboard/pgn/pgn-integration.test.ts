@@ -1,6 +1,6 @@
 import { importPgn, exportPgnFromHistory } from "bitboard/pgn"
 import { importFen, exportFen, generateLegalMoves, move } from "bitboard/index"
-import { INITIAL_FEN_BITBOARD } from "bitboard/fen"
+import { INITIAL_FEN } from "bitboard/fen"
 
 const { describe, expect, test } = globalThis as any
 
@@ -19,7 +19,7 @@ const MAKRUK_WITH_CAPTURES = `[Event "Capture Test"]
 
 1. b4 b5 2. c4 c5 3. cxb5 *`
 
-describe("Bitboard PGN Integration Tests", () => {
+describe("Mask64 PGN Integration Tests", () => {
     test("importPgn creates array of states", () => {
         const states = importPgn(SIMPLE_MAKRUK_GAME)
 
@@ -27,7 +27,7 @@ describe("Bitboard PGN Integration Tests", () => {
         expect(states.length).toBe(7)
 
         // First state should be initial position
-        expect(states[0].fen).toBe(INITIAL_FEN_BITBOARD)
+        expect(states[0].fen).toBe(INITIAL_FEN)
 
         // Each state should have valid FEN
         states.forEach((state, index) => {
@@ -40,7 +40,7 @@ describe("Bitboard PGN Integration Tests", () => {
         const states = importPgn(SIMPLE_MAKRUK_GAME)
 
         // After first move (1. b3), white pawn should have moved
-        expect(states[1].fen).not.toBe(INITIAL_FEN_BITBOARD)
+        expect(states[1].fen).not.toBe(INITIAL_FEN)
 
         // Each subsequent state should be different
         for (let i = 1; i < states.length; i++) {
@@ -56,8 +56,8 @@ describe("Bitboard PGN Integration Tests", () => {
 
         // Each state should be valid
         states.forEach(state => {
-            expect(state._bitboard).toBeDefined()
-            expect(state._turn).toBeDefined()
+            expect(state.board).toBeDefined()
+            expect(state.turn).toBeDefined()
         })
     })
 
@@ -86,7 +86,7 @@ describe("Bitboard PGN Integration Tests", () => {
 
         // Should have just the initial state
         expect(states.length).toBe(1)
-        expect(states[0].fen).toBe(INITIAL_FEN_BITBOARD)
+        expect(states[0].fen).toBe(INITIAL_FEN)
     })
 
     test("exportPgnFromHistory creates valid PGN structure", () => {
@@ -110,7 +110,7 @@ describe("Bitboard PGN Integration Tests", () => {
     })
 
     test("exportPgnFromHistory with default tags", () => {
-        const initialState = importFen(INITIAL_FEN_BITBOARD)
+        const initialState = importFen(INITIAL_FEN)
 
         const pgn = exportPgnFromHistory([initialState])
 
@@ -201,11 +201,11 @@ describe("Bitboard PGN Integration Tests", () => {
     })
 
     test("move function works with SAN strings", () => {
-        let state = importFen(INITIAL_FEN_BITBOARD)
+        let state = importFen(INITIAL_FEN)
 
         // Test pawn move
         state = move(state, 'b4')
-        expect(state.fen).not.toBe(INITIAL_FEN_BITBOARD)
+        expect(state.fen).not.toBe(INITIAL_FEN)
 
         // Test knight move (Makruk uses M for knight/Ma)
         state = move(state, 'b5')
@@ -217,7 +217,7 @@ describe("Bitboard PGN Integration Tests", () => {
     })
 
     test("generated moves have SAN notation", () => {
-        const state = importFen(INITIAL_FEN_BITBOARD)
+        const state = importFen(INITIAL_FEN)
         const moves = generateLegalMoves(state)
 
         // All moves should have SAN

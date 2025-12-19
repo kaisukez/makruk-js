@@ -10,7 +10,7 @@ import {
     getBishopAttacks,
     getQueenAttacks,
 } from "bitboard/rules/attacks"
-import { EMPTY_BITBOARD } from "bitboard/board/board"
+import { EMPTY_MASK } from "bitboard/board/board"
 
 describe("getKnightAttacks", () => {
     test("should return attack bitboard for knight on d4", () => {
@@ -130,7 +130,7 @@ describe("getPawnMoves", () => {
         const moves = getPawnMoves(square, true)
 
         // Should be able to move 1 or 2 squares forward
-        expect(moves).not.toBe(EMPTY_BITBOARD)
+        expect(moves).not.toBe(EMPTY_MASK)
         expect(typeof moves).toBe("bigint")
     })
 
@@ -147,7 +147,7 @@ describe("getPawnMoves", () => {
         const moves = getPawnMoves(square, false)
 
         // Should be able to move 1 or 2 squares forward
-        expect(moves).not.toBe(EMPTY_BITBOARD)
+        expect(moves).not.toBe(EMPTY_MASK)
         expect(typeof moves).toBe("bigint")
     })
 
@@ -177,19 +177,19 @@ describe("getPawnMoves", () => {
 describe("getRookAttacks", () => {
     test("should return attacks for rook on empty board", () => {
         const square = 27 // d4
-        const occupancy = EMPTY_BITBOARD
+        const occupancy = EMPTY_MASK
         const attacks = getRookAttacks(square, occupancy)
 
-        expect(attacks).not.toBe(EMPTY_BITBOARD)
+        expect(attacks).not.toBe(EMPTY_MASK)
         expect(typeof attacks).toBe("bigint")
     })
 
     test("should return attacks for rook in corner", () => {
         const square = 0 // a1
-        const occupancy = EMPTY_BITBOARD
+        const occupancy = EMPTY_MASK
         const attacks = getRookAttacks(square, occupancy)
 
-        expect(attacks).not.toBe(EMPTY_BITBOARD)
+        expect(attacks).not.toBe(EMPTY_MASK)
         expect(typeof attacks).toBe("bigint")
     })
 
@@ -200,7 +200,7 @@ describe("getRookAttacks", () => {
         const attacks = getRookAttacks(square, occupancy)
 
         // Should include the blocker square but not beyond
-        expect(attacks & (1n << BigInt(blocker))).not.toBe(EMPTY_BITBOARD)
+        expect(attacks & (1n << BigInt(blocker))).not.toBe(EMPTY_MASK)
     })
 
     test("should stop at blocking piece on south", () => {
@@ -210,7 +210,7 @@ describe("getRookAttacks", () => {
         const attacks = getRookAttacks(square, occupancy)
 
         // Should include the blocker square but not beyond
-        expect(attacks & (1n << BigInt(blocker))).not.toBe(EMPTY_BITBOARD)
+        expect(attacks & (1n << BigInt(blocker))).not.toBe(EMPTY_MASK)
     })
 
     test("should stop at blocking piece on east", () => {
@@ -220,7 +220,7 @@ describe("getRookAttacks", () => {
         const attacks = getRookAttacks(square, occupancy)
 
         // Should include the blocker square but not beyond
-        expect(attacks & (1n << BigInt(blocker))).not.toBe(EMPTY_BITBOARD)
+        expect(attacks & (1n << BigInt(blocker))).not.toBe(EMPTY_MASK)
     })
 
     test("should stop at blocking piece on west", () => {
@@ -230,7 +230,7 @@ describe("getRookAttacks", () => {
         const attacks = getRookAttacks(square, occupancy)
 
         // Should include the blocker square but not beyond
-        expect(attacks & (1n << BigInt(blocker))).not.toBe(EMPTY_BITBOARD)
+        expect(attacks & (1n << BigInt(blocker))).not.toBe(EMPTY_MASK)
     })
 
     test("should handle multiple blockers", () => {
@@ -241,12 +241,12 @@ describe("getRookAttacks", () => {
         const attacks = getRookAttacks(square, occupancy)
 
         expect(typeof attacks).toBe("bigint")
-        expect(attacks).not.toBe(EMPTY_BITBOARD)
+        expect(attacks).not.toBe(EMPTY_MASK)
     })
 
     test("should work for all squares", () => {
         for (let sq = 0; sq < 64; sq++) {
-            const attacks = getRookAttacks(sq, EMPTY_BITBOARD)
+            const attacks = getRookAttacks(sq, EMPTY_MASK)
             expect(typeof attacks).toBe("bigint")
         }
     })
@@ -255,19 +255,19 @@ describe("getRookAttacks", () => {
 describe("getBishopAttacks", () => {
     test("should return attacks for bishop on empty board", () => {
         const square = 27 // d4
-        const occupancy = EMPTY_BITBOARD
+        const occupancy = EMPTY_MASK
         const attacks = getBishopAttacks(square, occupancy)
 
-        expect(attacks).not.toBe(EMPTY_BITBOARD)
+        expect(attacks).not.toBe(EMPTY_MASK)
         expect(typeof attacks).toBe("bigint")
     })
 
     test("should return attacks for bishop in corner", () => {
         const square = 0 // a1
-        const occupancy = EMPTY_BITBOARD
+        const occupancy = EMPTY_MASK
         const attacks = getBishopAttacks(square, occupancy)
 
-        expect(attacks).not.toBe(EMPTY_BITBOARD)
+        expect(attacks).not.toBe(EMPTY_MASK)
         expect(typeof attacks).toBe("bigint")
     })
 
@@ -278,7 +278,7 @@ describe("getBishopAttacks", () => {
         const attacks = getBishopAttacks(square, occupancy)
 
         // Should include the blocker square but not beyond
-        expect(attacks & (1n << BigInt(blocker))).not.toBe(EMPTY_BITBOARD)
+        expect(attacks & (1n << BigInt(blocker))).not.toBe(EMPTY_MASK)
     })
 
     test("should stop at blocking piece on northwest", () => {
@@ -288,7 +288,7 @@ describe("getBishopAttacks", () => {
         const attacks = getBishopAttacks(square, occupancy)
 
         // Should include the blocker square but not beyond
-        expect(attacks & (1n << BigInt(blocker))).not.toBe(EMPTY_BITBOARD)
+        expect(attacks & (1n << BigInt(blocker))).not.toBe(EMPTY_MASK)
     })
 
     test("should stop at blocking piece on southeast", () => {
@@ -298,7 +298,7 @@ describe("getBishopAttacks", () => {
         const attacks = getBishopAttacks(square, occupancy)
 
         // Should include the blocker square but not beyond
-        expect(attacks & (1n << BigInt(blocker))).not.toBe(EMPTY_BITBOARD)
+        expect(attacks & (1n << BigInt(blocker))).not.toBe(EMPTY_MASK)
     })
 
     test("should stop at blocking piece on southwest", () => {
@@ -308,7 +308,7 @@ describe("getBishopAttacks", () => {
         const attacks = getBishopAttacks(square, occupancy)
 
         // Should include the blocker square but not beyond
-        expect(attacks & (1n << BigInt(blocker))).not.toBe(EMPTY_BITBOARD)
+        expect(attacks & (1n << BigInt(blocker))).not.toBe(EMPTY_MASK)
     })
 
     test("should handle multiple blockers", () => {
@@ -319,12 +319,12 @@ describe("getBishopAttacks", () => {
         const attacks = getBishopAttacks(square, occupancy)
 
         expect(typeof attacks).toBe("bigint")
-        expect(attacks).not.toBe(EMPTY_BITBOARD)
+        expect(attacks).not.toBe(EMPTY_MASK)
     })
 
     test("should work for all squares", () => {
         for (let sq = 0; sq < 64; sq++) {
-            const attacks = getBishopAttacks(sq, EMPTY_BITBOARD)
+            const attacks = getBishopAttacks(sq, EMPTY_MASK)
             expect(typeof attacks).toBe("bigint")
         }
     })
@@ -333,19 +333,19 @@ describe("getBishopAttacks", () => {
 describe("getQueenAttacks", () => {
     test("should return combined rook and bishop attacks", () => {
         const square = 27 // d4
-        const occupancy = EMPTY_BITBOARD
+        const occupancy = EMPTY_MASK
         const attacks = getQueenAttacks(square, occupancy)
 
-        expect(attacks).not.toBe(EMPTY_BITBOARD)
+        expect(attacks).not.toBe(EMPTY_MASK)
         expect(typeof attacks).toBe("bigint")
     })
 
     test("should work in corner", () => {
         const square = 0 // a1
-        const occupancy = EMPTY_BITBOARD
+        const occupancy = EMPTY_MASK
         const attacks = getQueenAttacks(square, occupancy)
 
-        expect(attacks).not.toBe(EMPTY_BITBOARD)
+        expect(attacks).not.toBe(EMPTY_MASK)
         expect(typeof attacks).toBe("bigint")
     })
 
@@ -356,12 +356,12 @@ describe("getQueenAttacks", () => {
         const attacks = getQueenAttacks(square, occupancy)
 
         expect(typeof attacks).toBe("bigint")
-        expect(attacks).not.toBe(EMPTY_BITBOARD)
+        expect(attacks).not.toBe(EMPTY_MASK)
     })
 
     test("should equal rook + bishop attacks", () => {
         const square = 27 // d4
-        const occupancy = EMPTY_BITBOARD
+        const occupancy = EMPTY_MASK
         const queenAttacks = getQueenAttacks(square, occupancy)
         const rookAttacks = getRookAttacks(square, occupancy)
         const bishopAttacks = getBishopAttacks(square, occupancy)
@@ -371,7 +371,7 @@ describe("getQueenAttacks", () => {
 
     test("should work for all squares", () => {
         for (let sq = 0; sq < 64; sq++) {
-            const attacks = getQueenAttacks(sq, EMPTY_BITBOARD)
+            const attacks = getQueenAttacks(sq, EMPTY_MASK)
             expect(typeof attacks).toBe("bigint")
         }
     })

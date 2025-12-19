@@ -11,9 +11,9 @@
  * we can use the same pattern as King attacks but filtered to diagonal squares only.
  */
 
-import type { Bitboard } from "bitboard/board/board"
+import type { Mask64 } from "bitboard/board/board"
 import {
-    EMPTY_BITBOARD,
+    EMPTY_MASK,
     FILE_A,
     FILE_H,
     RANK_1,
@@ -29,15 +29,15 @@ import {
 } from "bitboard/board/board"
 
 // Pre-computed attack tables (initialized at module load)
-const knightAttacks: Bitboard[] = new Array(64)
-const kingAttacks: Bitboard[] = new Array(64)
-const whitePawnAttacks: Bitboard[] = new Array(64)
-const blackPawnAttacks: Bitboard[] = new Array(64)
-const whitePawnMoves: Bitboard[] = new Array(64)
-const blackPawnMoves: Bitboard[] = new Array(64)
+const knightAttacks: Mask64[] = new Array(64)
+const kingAttacks: Mask64[] = new Array(64)
+const whitePawnAttacks: Mask64[] = new Array(64)
+const blackPawnAttacks: Mask64[] = new Array(64)
+const whitePawnMoves: Mask64[] = new Array(64)
+const blackPawnMoves: Mask64[] = new Array(64)
 
 // Diagonal-only attacks for Thon/Met (Makruk Bishop/Queen)
-const diagonalAttacks: Bitboard[] = new Array(64)
+const diagonalAttacks: Mask64[] = new Array(64)
 
 /**
  * Initialize all pre-computed attack tables
@@ -49,7 +49,7 @@ function initializeAttackTables(): void {
         const file = square % 8
 
         // Knight attacks (8 possible L-shaped moves)
-        let knight = EMPTY_BITBOARD
+        let knight = EMPTY_MASK
         if (file >= 1 && rank <= 5) knight |= bb << 15n // up-up-left
         if (file <= 6 && rank <= 5) knight |= bb << 17n // up-up-right
         if (file <= 5 && rank <= 6) knight |= bb << 10n // up-right-right
@@ -61,7 +61,7 @@ function initializeAttackTables(): void {
         knightAttacks[square] = knight
 
         // King attacks (8 directions, one square each)
-        let king = EMPTY_BITBOARD
+        let king = EMPTY_MASK
         king |= shiftNorth(bb)
         king |= shiftSouth(bb)
         king |= shiftEast(bb)
@@ -73,7 +73,7 @@ function initializeAttackTables(): void {
         kingAttacks[square] = king
 
         // Diagonal attacks only (for Thon/Met in Makruk)
-        let diagonal = EMPTY_BITBOARD
+        let diagonal = EMPTY_MASK
         diagonal |= shiftNorthEast(bb)
         diagonal |= shiftNorthWest(bb)
         diagonal |= shiftSouthEast(bb)
@@ -81,13 +81,13 @@ function initializeAttackTables(): void {
         diagonalAttacks[square] = diagonal
 
         // White pawn attacks (northeast and northwest)
-        let whitePawnAtk = EMPTY_BITBOARD
+        let whitePawnAtk = EMPTY_MASK
         whitePawnAtk |= shiftNorthEast(bb)
         whitePawnAtk |= shiftNorthWest(bb)
         whitePawnAttacks[square] = whitePawnAtk
 
         // Black pawn attacks (southeast and southwest)
-        let blackPawnAtk = EMPTY_BITBOARD
+        let blackPawnAtk = EMPTY_MASK
         blackPawnAtk |= shiftSouthEast(bb)
         blackPawnAtk |= shiftSouthWest(bb)
         blackPawnAttacks[square] = blackPawnAtk
@@ -114,35 +114,35 @@ initializeAttackTables()
 /**
  * Get knight attack bitboard for a square
  */
-export function getKnightAttacks(square: number): Bitboard {
+export function getKnightAttacks(square: number): Mask64 {
     return knightAttacks[square]
 }
 
 /**
  * Get king attack bitboard for a square
  */
-export function getKingAttacks(square: number): Bitboard {
+export function getKingAttacks(square: number): Mask64 {
     return kingAttacks[square]
 }
 
 /**
  * Get diagonal attack bitboard for a square (for Makruk Thon/Met)
  */
-export function getDiagonalAttacks(square: number): Bitboard {
+export function getDiagonalAttacks(square: number): Mask64 {
     return diagonalAttacks[square]
 }
 
 /**
  * Get pawn attack bitboard for a square
  */
-export function getPawnAttacks(square: number, isWhite: boolean): Bitboard {
+export function getPawnAttacks(square: number, isWhite: boolean): Mask64 {
     return isWhite ? whitePawnAttacks[square] : blackPawnAttacks[square]
 }
 
 /**
  * Get pawn move bitboard for a square (non-captures)
  */
-export function getPawnMoves(square: number, isWhite: boolean): Bitboard {
+export function getPawnMoves(square: number, isWhite: boolean): Mask64 {
     return isWhite ? whitePawnMoves[square] : blackPawnMoves[square]
 }
 
@@ -150,8 +150,8 @@ export function getPawnMoves(square: number, isWhite: boolean): Bitboard {
  * Generate rook attacks from a square with given occupancy
  * Uses classical approach (not magic bitboards)
  */
-export function getRookAttacks(square: number, occupancy: Bitboard): Bitboard {
-    let attacks = EMPTY_BITBOARD
+export function getRookAttacks(square: number, occupancy: Mask64): Mask64 {
+    let attacks = EMPTY_MASK
     const rank = Math.floor(square / 8)
     const file = square % 8
 
@@ -194,8 +194,8 @@ export function getRookAttacks(square: number, occupancy: Bitboard): Bitboard {
  * Generate bishop attacks from a square with given occupancy
  * Uses classical approach (not magic bitboards)
  */
-export function getBishopAttacks(square: number, occupancy: Bitboard): Bitboard {
-    let attacks = EMPTY_BITBOARD
+export function getBishopAttacks(square: number, occupancy: Mask64): Mask64 {
+    let attacks = EMPTY_MASK
     const rank = Math.floor(square / 8)
     const file = square % 8
 
@@ -238,6 +238,6 @@ export function getBishopAttacks(square: number, occupancy: Bitboard): Bitboard 
  * Generate queen attacks (combination of rook and bishop)
  * Note: In standard chess. In Makruk, "Met" only moves one square diagonally.
  */
-export function getQueenAttacks(square: number, occupancy: Bitboard): Bitboard {
+export function getQueenAttacks(square: number, occupancy: Mask64): Mask64 {
     return getRookAttacks(square, occupancy) | getBishopAttacks(square, occupancy)
 }
