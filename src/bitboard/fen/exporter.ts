@@ -2,14 +2,14 @@
  * FEN export for bitboard representation
  */
 
-import type { Bitboard, BitboardState } from "bitboard/board/board"
+import type { Mask64, BoardState } from "bitboard/board/board"
 import { Color } from "common/const"
 
 /**
- * Export BitboardState to FEN string (optimized version)
+ * Export BoardState to FEN string (optimized version)
  */
-export function exportFenBitboard(
-    state: BitboardState,
+export function exportFen(
+    state: BoardState,
     turn: Color,
     moveNumber: number
 ): string {
@@ -17,18 +17,18 @@ export function exportFenBitboard(
     const pieceMap = new Array<string | null>(64).fill(null)
 
     // Helper to populate piece map from bitboard
-    function populatePieceMap(bb: Bitboard, symbol: string): void {
-        let tempBB = bb
-        while (tempBB !== 0n) {
+    function populatePieceMap(bb: Mask64, symbol: string): void {
+        let temp = bb
+        while (temp !== 0n) {
             // Find LSB
             let square = 0
-            let testBB = tempBB
-            while ((testBB & 1n) === 0n) {
-                testBB >>= 1n
+            let test = temp
+            while ((test & 1n) === 0n) {
+                test >>= 1n
                 square++
             }
             pieceMap[square] = symbol
-            tempBB &= tempBB - 1n // Clear LSB
+            temp &= temp - 1n // Clear LSB
         }
     }
 

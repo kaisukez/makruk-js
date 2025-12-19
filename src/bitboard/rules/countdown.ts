@@ -3,8 +3,8 @@
  */
 
 import { Color, CountType, Piece } from "common/const"
-import { BitboardState } from "bitboard/board/board"
-import { popCount, getPieceBitboard } from "bitboard/board/board"
+import { BoardState } from "bitboard/board/board"
+import { popCount, getPieceMask64 } from "bitboard/board/board"
 
 export type Countdown = {
     countColor: Color
@@ -36,7 +36,7 @@ export type PieceCount = {
 /**
  * Count all pieces on the board from bitboards
  */
-export function countPiecesFromBitboard(state: BitboardState): PieceCount {
+export function countPiecesFromMask64(state: BoardState): PieceCount {
     const pieceCount: PieceCount = {
         all: 0,
         color: {
@@ -75,7 +75,7 @@ export function countPiecesFromBitboard(state: BitboardState): PieceCount {
     // Count each piece type for each color
     for (const color of [Color.WHITE, Color.BLACK]) {
         for (const piece of Object.values(Piece)) {
-            const bb = getPieceBitboard(state, color, piece)
+            const bb = getPieceMask64(state, color, piece)
             const count = popCount(bb)
 
             pieceCount[color][piece] = count
@@ -97,10 +97,10 @@ function swapColor(color: Color): Color {
  * Activates when player only has Khun left and there are no Bia on the board
  */
 export function calculatePiecePowerCountdown(
-    state: BitboardState,
+    state: BoardState,
     activeColor: Color
 ): { countFrom: number; countTo: number } | null {
-    const pieceCount = countPiecesFromBitboard(state)
+    const pieceCount = countPiecesFromMask64(state)
 
     // to activate piece power countdown
     // one must only have Khun left and there must be no Bia left on the board
@@ -146,10 +146,10 @@ export function calculatePiecePowerCountdown(
  * Activates when player has more than 1 piece and there are no Bia on the board
  */
 export function calculateBoardPowerCountdown(
-    state: BitboardState,
+    state: BoardState,
     activeColor: Color
 ): { countFrom: number; countTo: number } | null {
-    const pieceCount = countPiecesFromBitboard(state)
+    const pieceCount = countPiecesFromMask64(state)
 
     // to activate board power countdown
     // one must have more than 1 piece (including Khun)
@@ -171,7 +171,7 @@ export function calculateBoardPowerCountdown(
  * Calculate countdown for the current position
  */
 export function calculateCountdown(
-    state: BitboardState,
+    state: BoardState,
     activeColor: Color
 ): Countdown | null {
     const piecePowerCountdown = calculatePiecePowerCountdown(state, activeColor)
@@ -223,7 +223,7 @@ export function hasCountdownFlag(flags: CountdownFlag = {}): boolean {
  * This function mutates the countdown parameter
  */
 export function stepCountdown(
-    state: BitboardState,
+    state: BoardState,
     activeColor: Color,
     countdown: Countdown | null,
     flags: StepCountdownFlags = {}

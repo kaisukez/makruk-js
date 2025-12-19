@@ -4,10 +4,10 @@
  */
 
 import { Piece } from "common/const"
-import type { BitboardMove } from "bitboard/types"
-import type { BitboardState } from "bitboard/board/board"
+import type { Move } from "bitboard/types"
+import type { BoardState } from "bitboard/board/board"
 import { generateLegalMoves } from "bitboard/moves/generation"
-import { applyBitboardMove } from "bitboard/moves/execution"
+import { applyMove } from "bitboard/moves/execution"
 import { isCheck } from "bitboard/rules/status"
 import { Color } from "common/const"
 
@@ -48,8 +48,8 @@ function getRank(square: number): number {
  * Get disambiguator for ambiguous moves
  */
 function getDisambiguator(
-    possibleMoves: BitboardMove[],
-    move: BitboardMove,
+    possibleMoves: Move[],
+    move: Move,
 ): string {
     const { from, to, piece } = move
 
@@ -92,12 +92,12 @@ function getDisambiguator(
 }
 
 /**
- * Convert a BitboardMove to Standard Algebraic Notation (SAN)
+ * Convert a Move to Standard Algebraic Notation (SAN)
  */
 export function moveToSan(
-    state: BitboardState,
+    state: BoardState,
     turn: Color,
-    move: BitboardMove,
+    move: Move,
 ): string {
     const possibleMoves = generateLegalMoves(state, turn)
     const disambiguator = getDisambiguator(possibleMoves, move)
@@ -126,7 +126,7 @@ export function moveToSan(
     }
 
     // Check/checkmate notation
-    const newState = applyBitboardMove(state, move)
+    const newState = applyMove(state, move)
     const newTurn = turn === Color.WHITE ? Color.BLACK : Color.WHITE
     if (isCheck(newState, newTurn)) {
         // Simple check - not implementing full checkmate detection here
@@ -156,10 +156,10 @@ export function strippedSan(san: string): string {
  * Parse SAN string and find matching legal move
  */
 export function moveFromSan(
-    state: BitboardState,
+    state: BoardState,
     turn: Color,
     san: string,
-): BitboardMove | null {
+): Move | null {
     const possibleMoves = generateLegalMoves(state, turn)
 
     // Strip off any move decorations: e.g Nf3+?!

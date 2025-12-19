@@ -1,5 +1,5 @@
 /**
- * Bitboard representation for Makruk
+ * Mask64 representation for Makruk
  *
  * Each bitboard is a 64-bit integer (using BigInt) representing the 8x8 board.
  * Bit 0 = a1, Bit 1 = b1, ..., Bit 7 = h1, Bit 8 = a2, ..., Bit 63 = h8
@@ -11,62 +11,62 @@
 
 import { Color, Piece, SquareIndex } from "common/const"
 
-// Bitboard type (64-bit unsigned integer)
-export type Bitboard = bigint
+// Mask64 type (64-bit unsigned integer)
+export type Mask64 = bigint
 
-// Bitboard representation of the board state
-export interface BitboardState {
+// Mask64 representation of the board state
+export interface BoardState {
     // Individual piece bitboards
-    whiteBia: Bitboard
-    whiteFlippedBia: Bitboard
-    whiteMa: Bitboard
-    whiteThon: Bitboard
-    whiteMet: Bitboard
-    whiteRua: Bitboard
-    whiteKhun: Bitboard
+    whiteBia: Mask64
+    whiteFlippedBia: Mask64
+    whiteMa: Mask64
+    whiteThon: Mask64
+    whiteMet: Mask64
+    whiteRua: Mask64
+    whiteKhun: Mask64
 
-    blackBia: Bitboard
-    blackFlippedBia: Bitboard
-    blackMa: Bitboard
-    blackThon: Bitboard
-    blackMet: Bitboard
-    blackRua: Bitboard
-    blackKhun: Bitboard
+    blackBia: Mask64
+    blackFlippedBia: Mask64
+    blackMa: Mask64
+    blackThon: Mask64
+    blackMet: Mask64
+    blackRua: Mask64
+    blackKhun: Mask64
 
     // Occupancy bitboards (computed on demand)
-    whiteOccupancy: Bitboard
-    blackOccupancy: Bitboard
-    allOccupancy: Bitboard
+    whiteOccupancy: Mask64
+    blackOccupancy: Mask64
+    allOccupancy: Mask64
 }
 
 // Constants
-export const EMPTY_BITBOARD: Bitboard = 0n
-export const FULL_BITBOARD: Bitboard = 0xFFFFFFFFFFFFFFFFn
+export const EMPTY_MASK: Mask64 = 0n
+export const FULL_MASK: Mask64 = 0xFFFFFFFFFFFFFFFFn
 
 // Rank masks
-export const RANK_1: Bitboard = 0xFFn
-export const RANK_2: Bitboard = 0xFF00n
-export const RANK_3: Bitboard = 0xFF0000n
-export const RANK_4: Bitboard = 0xFF000000n
-export const RANK_5: Bitboard = 0xFF00000000n
-export const RANK_6: Bitboard = 0xFF0000000000n
-export const RANK_7: Bitboard = 0xFF000000000000n
-export const RANK_8: Bitboard = 0xFF00000000000000n
+export const RANK_1: Mask64 = 0xFFn
+export const RANK_2: Mask64 = 0xFF00n
+export const RANK_3: Mask64 = 0xFF0000n
+export const RANK_4: Mask64 = 0xFF000000n
+export const RANK_5: Mask64 = 0xFF00000000n
+export const RANK_6: Mask64 = 0xFF0000000000n
+export const RANK_7: Mask64 = 0xFF000000000000n
+export const RANK_8: Mask64 = 0xFF00000000000000n
 
 // File masks
-export const FILE_A: Bitboard = 0x0101010101010101n
-export const FILE_B: Bitboard = 0x0202020202020202n
-export const FILE_C: Bitboard = 0x0404040404040404n
-export const FILE_D: Bitboard = 0x0808080808080808n
-export const FILE_E: Bitboard = 0x1010101010101010n
-export const FILE_F: Bitboard = 0x2020202020202020n
-export const FILE_G: Bitboard = 0x4040404040404040n
-export const FILE_H: Bitboard = 0x8080808080808080n
+export const FILE_A: Mask64 = 0x0101010101010101n
+export const FILE_B: Mask64 = 0x0202020202020202n
+export const FILE_C: Mask64 = 0x0404040404040404n
+export const FILE_D: Mask64 = 0x0808080808080808n
+export const FILE_E: Mask64 = 0x1010101010101010n
+export const FILE_F: Mask64 = 0x2020202020202020n
+export const FILE_G: Mask64 = 0x4040404040404040n
+export const FILE_H: Mask64 = 0x8080808080808080n
 
 /**
  * Convert 0x88 square index to bitboard square (0-63)
  */
-export function squareIndexToBitboardSquare(squareIndex: SquareIndex): number {
+export function squareIndexToMask64Square(squareIndex: SquareIndex): number {
     const rank = Math.floor(squareIndex / 16)
     const file = squareIndex % 16
     return rank * 8 + file
@@ -75,7 +75,7 @@ export function squareIndexToBitboardSquare(squareIndex: SquareIndex): number {
 /**
  * Convert bitboard square (0-63) to 0x88 square index
  */
-export function bitboardSquareToSquareIndex(square: number): SquareIndex {
+export function squareToIndex(square: number): SquareIndex {
     const rank = Math.floor(square / 8)
     const file = square % 8
     return (rank * 16 + file) as SquareIndex
@@ -84,14 +84,14 @@ export function bitboardSquareToSquareIndex(square: number): SquareIndex {
 /**
  * Set a bit at the given square
  */
-export function setBit(bitboard: Bitboard, square: number): Bitboard {
+export function setBit(bitboard: Mask64, square: number): Mask64 {
     return bitboard | (1n << BigInt(square))
 }
 
 /**
  * Clear a bit at the given square
  */
-export function clearBit(bitboard: Bitboard, square: number): Bitboard {
+export function clearBit(bitboard: Mask64, square: number): Mask64 {
     const ALL_BITS = 0xFFFFFFFFFFFFFFFFn
     const mask = 1n << BigInt(square)
     return bitboard & (ALL_BITS ^ mask)
@@ -100,14 +100,14 @@ export function clearBit(bitboard: Bitboard, square: number): Bitboard {
 /**
  * Get bit at the given square (returns 1 or 0)
  */
-export function getBit(bitboard: Bitboard, square: number): number {
+export function getBit(bitboard: Mask64, square: number): number {
     return (bitboard & (1n << BigInt(square))) !== 0n ? 1 : 0
 }
 
 /**
  * Count the number of set bits (population count)
  */
-export function popCount(bitboard: Bitboard): number {
+export function popCount(bitboard: Mask64): number {
     let count = 0
     let bb = bitboard
 
@@ -123,7 +123,7 @@ export function popCount(bitboard: Bitboard): number {
  * Get the index of the least significant bit (LSB)
  * Returns -1 if bitboard is empty
  */
-export function getLSB(bitboard: Bitboard): number {
+export function getLSB(bitboard: Mask64): number {
     if (bitboard === 0n) return -1
 
     let square = 0
@@ -145,7 +145,7 @@ export function getLSB(bitboard: Bitboard): number {
  * Pop the least significant bit and return its index
  * Returns both the new bitboard and the popped square
  */
-export function popLSB(bitboard: Bitboard): { bb: Bitboard; square: number } {
+export function popLSB(bitboard: Mask64): { bb: Mask64; square: number } {
     const square = getLSB(bitboard)
     const bb = bitboard & (bitboard - 1n) // Clear LSB
     return { bb, square }
@@ -155,7 +155,7 @@ export function popLSB(bitboard: Bitboard): { bb: Bitboard; square: number } {
  * Get the index of the most significant bit (MSB)
  * Returns -1 if bitboard is empty
  */
-export function getMSB(bitboard: Bitboard): number {
+export function getMSB(bitboard: Mask64): number {
     if (bitboard === 0n) return -1
 
     let square = 0
@@ -172,90 +172,90 @@ export function getMSB(bitboard: Bitboard): number {
 /**
  * Shift bitboard north (up one rank)
  */
-export function shiftNorth(bitboard: Bitboard): Bitboard {
+export function shiftNorth(bitboard: Mask64): Mask64 {
     return bitboard << 8n
 }
 
 /**
  * Shift bitboard south (down one rank)
  */
-export function shiftSouth(bitboard: Bitboard): Bitboard {
+export function shiftSouth(bitboard: Mask64): Mask64 {
     return bitboard >> 8n
 }
 
 /**
  * Shift bitboard east (right one file)
  */
-export function shiftEast(bitboard: Bitboard): Bitboard {
-    return (bitboard & (FULL_BITBOARD ^ FILE_H)) << 1n
+export function shiftEast(bitboard: Mask64): Mask64 {
+    return (bitboard & (FULL_MASK ^ FILE_H)) << 1n
 }
 
 /**
  * Shift bitboard west (left one file)
  */
-export function shiftWest(bitboard: Bitboard): Bitboard {
-    return (bitboard & (FULL_BITBOARD ^ FILE_A)) >> 1n
+export function shiftWest(bitboard: Mask64): Mask64 {
+    return (bitboard & (FULL_MASK ^ FILE_A)) >> 1n
 }
 
 /**
  * Shift bitboard north-east
  */
-export function shiftNorthEast(bitboard: Bitboard): Bitboard {
-    return (bitboard & (FULL_BITBOARD ^ FILE_H)) << 9n
+export function shiftNorthEast(bitboard: Mask64): Mask64 {
+    return (bitboard & (FULL_MASK ^ FILE_H)) << 9n
 }
 
 /**
  * Shift bitboard north-west
  */
-export function shiftNorthWest(bitboard: Bitboard): Bitboard {
-    return (bitboard & (FULL_BITBOARD ^ FILE_A)) << 7n
+export function shiftNorthWest(bitboard: Mask64): Mask64 {
+    return (bitboard & (FULL_MASK ^ FILE_A)) << 7n
 }
 
 /**
  * Shift bitboard south-east
  */
-export function shiftSouthEast(bitboard: Bitboard): Bitboard {
-    return (bitboard & (FULL_BITBOARD ^ FILE_H)) >> 7n
+export function shiftSouthEast(bitboard: Mask64): Mask64 {
+    return (bitboard & (FULL_MASK ^ FILE_H)) >> 7n
 }
 
 /**
  * Shift bitboard south-west
  */
-export function shiftSouthWest(bitboard: Bitboard): Bitboard {
-    return (bitboard & (FULL_BITBOARD ^ FILE_A)) >> 9n
+export function shiftSouthWest(bitboard: Mask64): Mask64 {
+    return (bitboard & (FULL_MASK ^ FILE_A)) >> 9n
 }
 
 /**
  * Create an empty bitboard state
  */
-export function createEmptyBitboardState(): BitboardState {
+export function createEmptyBoardState(): BoardState {
     return {
-        whiteBia: EMPTY_BITBOARD,
-        whiteFlippedBia: EMPTY_BITBOARD,
-        whiteMa: EMPTY_BITBOARD,
-        whiteThon: EMPTY_BITBOARD,
-        whiteMet: EMPTY_BITBOARD,
-        whiteRua: EMPTY_BITBOARD,
-        whiteKhun: EMPTY_BITBOARD,
+        whiteBia: EMPTY_MASK,
+        whiteFlippedBia: EMPTY_MASK,
+        whiteMa: EMPTY_MASK,
+        whiteThon: EMPTY_MASK,
+        whiteMet: EMPTY_MASK,
+        whiteRua: EMPTY_MASK,
+        whiteKhun: EMPTY_MASK,
 
-        blackBia: EMPTY_BITBOARD,
-        blackFlippedBia: EMPTY_BITBOARD,
-        blackMa: EMPTY_BITBOARD,
-        blackThon: EMPTY_BITBOARD,
-        blackMet: EMPTY_BITBOARD,
-        blackRua: EMPTY_BITBOARD,
-        blackKhun: EMPTY_BITBOARD,
+        blackBia: EMPTY_MASK,
+        blackFlippedBia: EMPTY_MASK,
+        blackMa: EMPTY_MASK,
+        blackThon: EMPTY_MASK,
+        blackMet: EMPTY_MASK,
+        blackRua: EMPTY_MASK,
+        blackKhun: EMPTY_MASK,
 
-        whiteOccupancy: EMPTY_BITBOARD,
-        blackOccupancy: EMPTY_BITBOARD,
-        allOccupancy: EMPTY_BITBOARD,
+        whiteOccupancy: EMPTY_MASK,
+        blackOccupancy: EMPTY_MASK,
+        allOccupancy: EMPTY_MASK,
     }
 }
 
 /**
  * Update occupancy bitboards
  */
-export function updateOccupancy(state: BitboardState): void {
+export function updateOccupancy(state: BoardState): void {
     state.whiteOccupancy =
         state.whiteBia |
         state.whiteFlippedBia |
@@ -280,7 +280,7 @@ export function updateOccupancy(state: BitboardState): void {
 /**
  * Get the bitboard for a specific piece
  */
-export function getPieceBitboard(state: BitboardState, color: Color, piece: Piece): Bitboard {
+export function getPieceMask64(state: BoardState, color: Color, piece: Piece): Mask64 {
     if (color === Color.WHITE) {
         switch (piece) {
             case Piece.BIA: return state.whiteBia
@@ -290,7 +290,7 @@ export function getPieceBitboard(state: BitboardState, color: Color, piece: Piec
             case Piece.MET: return state.whiteMet
             case Piece.RUA: return state.whiteRua
             case Piece.KHUN: return state.whiteKhun
-            default: return EMPTY_BITBOARD
+            default: return EMPTY_MASK
         }
     } else {
         switch (piece) {
@@ -301,7 +301,7 @@ export function getPieceBitboard(state: BitboardState, color: Color, piece: Piec
             case Piece.MET: return state.blackMet
             case Piece.RUA: return state.blackRua
             case Piece.KHUN: return state.blackKhun
-            default: return EMPTY_BITBOARD
+            default: return EMPTY_MASK
         }
     }
 }
@@ -309,7 +309,7 @@ export function getPieceBitboard(state: BitboardState, color: Color, piece: Piec
 /**
  * Set a piece on the bitboard
  */
-export function setPiece(state: BitboardState, color: Color, piece: Piece, square: number): void {
+export function setPiece(state: BoardState, color: Color, piece: Piece, square: number): void {
     const bit = 1n << BigInt(square)
 
     if (color === Color.WHITE) {
@@ -340,7 +340,7 @@ export function setPiece(state: BitboardState, color: Color, piece: Piece, squar
 /**
  * Remove a piece from the bitboard
  */
-export function removePiece(state: BitboardState, color: Color, piece: Piece, square: number): void {
+export function removePiece(state: BoardState, color: Color, piece: Piece, square: number): void {
     const ALL_BITS = 0xFFFFFFFFFFFFFFFFn
     const mask = 1n << BigInt(square)
     const bit = ALL_BITS ^ mask
@@ -374,7 +374,7 @@ export function removePiece(state: BitboardState, color: Color, piece: Piece, sq
  * Get piece at a square
  * Returns [color, piece] or null if empty
  */
-export function getPieceAt(state: BitboardState, square: number): [Color, Piece] | null {
+export function getPieceAt(state: BoardState, square: number): [Color, Piece] | null {
     const bit = 1n << BigInt(square)
 
     // Check white pieces
@@ -401,7 +401,7 @@ export function getPieceAt(state: BitboardState, square: number): [Color, Piece]
 /**
  * Print bitboard for debugging
  */
-export function printBitboard(bitboard: Bitboard): string {
+export function printMask64(bitboard: Mask64): string {
     let result = '\n'
 
     for (let rank = 7; rank >= 0; rank--) {
@@ -417,4 +417,52 @@ export function printBitboard(bitboard: Bitboard): string {
     result += '  a b c d e f g h\n'
 
     return result
+}
+
+/**
+ * Clone a bitboard state
+ */
+export function cloneBoardState(state: BoardState): BoardState {
+    return { ...state }
+}
+
+/**
+ * Place a piece on the board (returns new state)
+ * If there's already a piece at the square, it will be replaced
+ */
+export function put(
+    state: BoardState,
+    color: Color,
+    piece: Piece,
+    square: number
+): BoardState {
+    const newState = cloneBoardState(state)
+
+    // Remove existing piece if any
+    const existingPiece = getPieceAt(newState, square)
+    if (existingPiece) {
+        const [existingColor, existingPieceType] = existingPiece
+        removePiece(newState, existingColor, existingPieceType, square)
+    }
+
+    // Place new piece
+    setPiece(newState, color, piece, square)
+
+    return newState
+}
+
+/**
+ * Remove a piece from the board (returns new state)
+ */
+export function remove(state: BoardState, square: number): BoardState {
+    const newState = cloneBoardState(state)
+
+    // Find and remove the piece at this square
+    const existingPiece = getPieceAt(newState, square)
+    if (existingPiece) {
+        const [color, piece] = existingPiece
+        removePiece(newState, color, piece, square)
+    }
+
+    return newState
 }

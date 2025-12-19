@@ -5,9 +5,9 @@
  * and uses piece-square tables and simple heuristics instead.
  */
 
-import type { Bitboard, BitboardState } from "bitboard/board/board"
+import type { Mask64, BoardState } from "bitboard/board/board"
 import { Color, Piece, PIECE_POWER } from "common/const"
-import { EMPTY_BITBOARD, popLSB, popCount } from "bitboard/board/board"
+import { EMPTY_MASK, popLSB, popCount } from "bitboard/board/board"
 import { generateLegalMoves } from "bitboard/moves"
 
 // Piece-square table for positional evaluation
@@ -34,13 +34,13 @@ const PIECE_SQUARE_TABLE = new Float64Array([
 /**
  * Evaluate a single bitboard with piece values and position scores
  */
-function evaluateBitboard(bb: Bitboard, pieceValue: number, colorMultiplier: number): number {
+function evaluateMask64(bb: Mask64, pieceValue: number, colorMultiplier: number): number {
     let score = 0
-    let tempBB = bb
+    let temp = bb
 
-    while (tempBB !== EMPTY_BITBOARD) {
-        const { bb: newBB, square } = popLSB(tempBB)
-        tempBB = newBB
+    while (temp !== EMPTY_MASK) {
+        const { bb: remaining, square } = popLSB(temp)
+        temp = remaining
 
         // Add piece material value + position value
         score += (pieceValue + PIECE_SQUARE_TABLE[square]) * colorMultiplier
@@ -53,26 +53,26 @@ function evaluateBitboard(bb: Bitboard, pieceValue: number, colorMultiplier: num
  * Fast evaluation without legal move generation
  * Uses material + piece-square tables only
  */
-export function evaluateFast(state: BitboardState): number {
+export function evaluateFast(state: BoardState): number {
     let score = 0
 
     // White pieces (positive score)
-    score += evaluateBitboard(state.whiteBia, PIECE_POWER[Piece.BIA], 1)
-    score += evaluateBitboard(state.whiteFlippedBia, PIECE_POWER[Piece.FLIPPED_BIA], 1)
-    score += evaluateBitboard(state.whiteMa, PIECE_POWER[Piece.MA], 1)
-    score += evaluateBitboard(state.whiteThon, PIECE_POWER[Piece.THON], 1)
-    score += evaluateBitboard(state.whiteMet, PIECE_POWER[Piece.MET], 1)
-    score += evaluateBitboard(state.whiteRua, PIECE_POWER[Piece.RUA], 1)
-    score += evaluateBitboard(state.whiteKhun, PIECE_POWER[Piece.KHUN], 1)
+    score += evaluateMask64(state.whiteBia, PIECE_POWER[Piece.BIA], 1)
+    score += evaluateMask64(state.whiteFlippedBia, PIECE_POWER[Piece.FLIPPED_BIA], 1)
+    score += evaluateMask64(state.whiteMa, PIECE_POWER[Piece.MA], 1)
+    score += evaluateMask64(state.whiteThon, PIECE_POWER[Piece.THON], 1)
+    score += evaluateMask64(state.whiteMet, PIECE_POWER[Piece.MET], 1)
+    score += evaluateMask64(state.whiteRua, PIECE_POWER[Piece.RUA], 1)
+    score += evaluateMask64(state.whiteKhun, PIECE_POWER[Piece.KHUN], 1)
 
     // Black pieces (negative score)
-    score += evaluateBitboard(state.blackBia, PIECE_POWER[Piece.BIA], -1)
-    score += evaluateBitboard(state.blackFlippedBia, PIECE_POWER[Piece.FLIPPED_BIA], -1)
-    score += evaluateBitboard(state.blackMa, PIECE_POWER[Piece.MA], -1)
-    score += evaluateBitboard(state.blackThon, PIECE_POWER[Piece.THON], -1)
-    score += evaluateBitboard(state.blackMet, PIECE_POWER[Piece.MET], -1)
-    score += evaluateBitboard(state.blackRua, PIECE_POWER[Piece.RUA], -1)
-    score += evaluateBitboard(state.blackKhun, PIECE_POWER[Piece.KHUN], -1)
+    score += evaluateMask64(state.blackBia, PIECE_POWER[Piece.BIA], -1)
+    score += evaluateMask64(state.blackFlippedBia, PIECE_POWER[Piece.FLIPPED_BIA], -1)
+    score += evaluateMask64(state.blackMa, PIECE_POWER[Piece.MA], -1)
+    score += evaluateMask64(state.blackThon, PIECE_POWER[Piece.THON], -1)
+    score += evaluateMask64(state.blackMet, PIECE_POWER[Piece.MET], -1)
+    score += evaluateMask64(state.blackRua, PIECE_POWER[Piece.RUA], -1)
+    score += evaluateMask64(state.blackKhun, PIECE_POWER[Piece.KHUN], -1)
 
     return score
 }
@@ -81,7 +81,7 @@ export function evaluateFast(state: BitboardState): number {
  * Evaluation with mobility (includes legal move generation)
  * This is slower but more accurate
  */
-export function evaluateWithMobility(state: BitboardState, turn: Color): number {
+export function evaluateWithMobility(state: BoardState, turn: Color): number {
     let score = evaluateFast(state)
 
     // Add mobility bonus (number of legal moves)
@@ -98,7 +98,7 @@ export function evaluateWithMobility(state: BitboardState, turn: Color): number 
  * Check if position is a draw
  * Simple heuristic: insufficient material
  */
-export function isDraw(state: BitboardState): boolean {
+export function isDraw(state: BoardState): boolean {
     // Count total pieces
     const totalPieces = popCount(state.allOccupancy)
 
@@ -116,7 +116,7 @@ export function isDraw(state: BitboardState): boolean {
 /**
  * Check if position is checkmate for the current player
  */
-export function isCheckmate(state: BitboardState, turn: Color): boolean {
+export function isCheckmate(state: BoardState, turn: Color): boolean {
     const legalMoves = generateLegalMoves(state, turn)
 
     if (legalMoves.length > 0) {
@@ -136,7 +136,7 @@ export function isCheckmate(state: BitboardState, turn: Color): boolean {
  * Full evaluation (used for leaf nodes in search)
  * Checks for terminal positions first, then evaluates
  */
-export function evaluate(state: BitboardState, turn: Color, useFullEval: boolean = false): number {
+export function evaluate(state: BoardState, turn: Color, useFullEval: boolean = false): number {
     // Check for draw
     if (isDraw(state)) {
         return 0
@@ -176,7 +176,7 @@ export function evaluate(state: BitboardState, turn: Color, useFullEval: boolean
  * Quiescence search evaluation (only considers captures)
  * Used to avoid horizon effect in alpha-beta search
  */
-export function evaluateQuiet(state: BitboardState, turn: Color): number {
+export function evaluateQuiet(state: BoardState, turn: Color): number {
     // For now, just use fast evaluation
     // In a full implementation, this would do quiescence search
     return evaluateFast(state)

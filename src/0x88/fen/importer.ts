@@ -282,3 +282,7 @@ export function importFen(fen: string): State {
 
 export const INITIAL_FEN = "rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1"
 export const EMPTY_FEN = "4k3/8/8/8/8/8/8/4K3 w 1"
+
+export function createInitialState(): State {
+    return importFen(INITIAL_FEN)
+}

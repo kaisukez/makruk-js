@@ -1,12 +1,12 @@
 const { describe, expect, test } = globalThis as any
 
 import { Color, Piece } from "common/const"
-import { importFenBitboard, INITIAL_FEN_BITBOARD } from "bitboard/fen"
+import { importFen, INITIAL_FEN } from "bitboard/fen"
 import { generateLegalMoves } from "bitboard/moves/generation"
 
 describe("generateLegalMoves", () => {
     test("should generate moves from initial position", () => {
-        const { state, turn } = importFenBitboard(INITIAL_FEN_BITBOARD)
+        const { state, turn } = importFen(INITIAL_FEN)
         const moves = generateLegalMoves(state, turn)
 
         expect(moves.length).toBeGreaterThan(0)
@@ -14,14 +14,14 @@ describe("generateLegalMoves", () => {
     })
 
     test("should generate no moves for empty board with no kings", () => {
-        const { state, turn } = importFenBitboard("8/8/8/8/8/8/8/8 w 1")
+        const { state, turn } = importFen("8/8/8/8/8/8/8/8 w 1")
         const moves = generateLegalMoves(state, turn)
 
         expect(moves.length).toBe(0)
     })
 
     test("should generate correct pawn moves", () => {
-        const { state, turn } = importFenBitboard(INITIAL_FEN_BITBOARD)
+        const { state, turn } = importFen(INITIAL_FEN)
         const moves = generateLegalMoves(state, turn)
 
         const pawnMoves = moves.filter(m => m.piece === Piece.BIA)
@@ -29,7 +29,7 @@ describe("generateLegalMoves", () => {
     })
 
     test("should generate correct rook moves", () => {
-        const { state, turn } = importFenBitboard(INITIAL_FEN_BITBOARD)
+        const { state, turn } = importFen(INITIAL_FEN)
         const moves = generateLegalMoves(state, turn)
 
         const rookMoves = moves.filter(m => m.piece === Piece.RUA)
@@ -37,7 +37,7 @@ describe("generateLegalMoves", () => {
     })
 
     test("should generate correct knight moves", () => {
-        const { state, turn } = importFenBitboard(INITIAL_FEN_BITBOARD)
+        const { state, turn } = importFen(INITIAL_FEN)
         const moves = generateLegalMoves(state, turn)
 
         const knightMoves = moves.filter(m => m.piece === Piece.MA)
@@ -45,7 +45,7 @@ describe("generateLegalMoves", () => {
     })
 
     test("should generate correct thon moves including forward", () => {
-        const { state, turn } = importFenBitboard(INITIAL_FEN_BITBOARD)
+        const { state, turn } = importFen(INITIAL_FEN)
         const moves = generateLegalMoves(state, turn)
 
         const thonMoves = moves.filter(m => m.piece === Piece.THON)
@@ -53,7 +53,7 @@ describe("generateLegalMoves", () => {
     })
 
     test("should include color in generated moves", () => {
-        const { state, turn } = importFenBitboard(INITIAL_FEN_BITBOARD)
+        const { state, turn } = importFen(INITIAL_FEN)
         const moves = generateLegalMoves(state, turn)
 
         moves.forEach(move => {
@@ -62,7 +62,7 @@ describe("generateLegalMoves", () => {
     })
 
     test("should include from and to squares", () => {
-        const { state, turn } = importFenBitboard(INITIAL_FEN_BITBOARD)
+        const { state, turn } = importFen(INITIAL_FEN)
         const moves = generateLegalMoves(state, turn)
 
         moves.forEach(move => {
@@ -77,7 +77,7 @@ describe("generateLegalMoves", () => {
 
     test("should generate pawn promotion moves", () => {
         // White pawn on rank 5 can promote by moving to rank 6
-        const { state } = importFenBitboard("k7/8/8/B7/8/8/8/K7 w 1")
+        const { state } = importFen("k7/8/8/B7/8/8/8/K7 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
 
         const promotionMoves = moves.filter(m => m.promotion === Piece.FLIPPED_BIA)
@@ -88,7 +88,7 @@ describe("generateLegalMoves", () => {
 
     test("should generate pawn capture with promotion", () => {
         // White pawn on rank 5 can capture and promote
-        const { state } = importFenBitboard("k7/8/1b6/B7/8/8/8/K7 w 1")
+        const { state } = importFen("k7/8/1b6/B7/8/8/8/K7 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
 
         const capturePromotions = moves.filter(m =>
@@ -99,7 +99,7 @@ describe("generateLegalMoves", () => {
 
     test("should generate black pawn promotion moves", () => {
         // Black pawn on rank 4 can promote by moving to rank 3
-        const { state } = importFenBitboard("k7/8/8/8/b7/8/8/K7 b 1")
+        const { state } = importFen("k7/8/8/8/b7/8/8/K7 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
 
         const promotionMoves = moves.filter(m => m.promotion === Piece.FLIPPED_BIA)
@@ -108,7 +108,7 @@ describe("generateLegalMoves", () => {
 
     test("should generate black pawn capture with promotion", () => {
         // Black pawn on rank 4 can capture and promote
-        const { state } = importFenBitboard("k7/8/8/8/b7/1B6/8/K7 b 1")
+        const { state } = importFen("k7/8/8/8/b7/1B6/8/K7 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
 
         const capturePromotions = moves.filter(m =>
@@ -119,7 +119,7 @@ describe("generateLegalMoves", () => {
 
     test("should generate FlippedBia moves", () => {
         // White FlippedBia on d4 can move diagonally
-        const { state } = importFenBitboard("k7/8/8/8/3F4/8/8/K7 w 1")
+        const { state } = importFen("k7/8/8/8/3F4/8/8/K7 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
 
         const flippedBiaMoves = moves.filter(m => m.piece === Piece.FLIPPED_BIA)
@@ -129,7 +129,7 @@ describe("generateLegalMoves", () => {
 
     test("should generate FlippedBia capture moves", () => {
         // White FlippedBia can capture black piece
-        const { state } = importFenBitboard("k7/8/8/8/3F4/2b5/8/K7 w 1")
+        const { state } = importFen("k7/8/8/8/3F4/2b5/8/K7 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
 
         const captureMoves = moves.filter(m =>
@@ -140,7 +140,7 @@ describe("generateLegalMoves", () => {
 
     test("should generate black FlippedBia moves", () => {
         // Black FlippedBia on d5 can move diagonally
-        const { state } = importFenBitboard("k7/8/8/3f4/8/8/8/K7 b 1")
+        const { state } = importFen("k7/8/8/3f4/8/8/8/K7 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
 
         const flippedBiaMoves = moves.filter(m => m.piece === Piece.FLIPPED_BIA)
@@ -149,7 +149,7 @@ describe("generateLegalMoves", () => {
 
     test("should not allow moves that leave king in check", () => {
         // White king in check from black rook, limited escape moves
-        const { state } = importFenBitboard("4k3/8/8/8/4r3/8/8/4K3 w 1")
+        const { state } = importFen("4k3/8/8/8/4r3/8/8/4K3 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
 
         // All generated moves should be legal (not leaving king in check)
@@ -161,7 +161,7 @@ describe("generateLegalMoves", () => {
     })
 
     test("should generate moves for black color", () => {
-        const { state } = importFenBitboard(INITIAL_FEN_BITBOARD)
+        const { state } = importFen(INITIAL_FEN)
         const blackMoves = generateLegalMoves(state, Color.BLACK)
 
         expect(blackMoves.length).toBe(23) // Same as white from initial position
@@ -172,7 +172,7 @@ describe("generateLegalMoves", () => {
 
     test("should generate pawn capture without promotion", () => {
         // White pawn on rank 3 can capture black piece on rank 4 (not promotion rank)
-        const { state } = importFenBitboard("k7/8/8/8/1b6/B7/8/K7 w 1")
+        const { state } = importFen("k7/8/8/8/1b6/B7/8/K7 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
 
         const captureWithoutPromotion = moves.filter(m =>

@@ -1,6 +1,7 @@
 .idea
 .vscode
 .npm-cache
+CLAUDE.md
 
 node_modules
 dist

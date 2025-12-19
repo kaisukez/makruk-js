@@ -5,8 +5,8 @@
  * and adapts them for bitboard State objects
  */
 
-import { INITIAL_FEN_BITBOARD } from "bitboard/fen"
-import { importFen, move as bitboardMove } from "bitboard/index"
+import { INITIAL_FEN } from "bitboard/fen"
+import { importFen, move } from "bitboard/index"
 import type { State } from "bitboard/index"
 
 // Import parser and exporter from common (they work with PgnGame objects, not State)
@@ -24,14 +24,14 @@ import type { PgnExportOptions, PgnGame, PgnParseOptions } from "common/pgn/type
 export function importPgn(pgnString: string, options?: PgnParseOptions): State[] {
     const game = coreParsePgn(pgnString, options)
 
-    const startingFen = game.tags.FEN || INITIAL_FEN_BITBOARD
+    const startingFen = game.tags.FEN || INITIAL_FEN
     let currentState = importFen(startingFen)
 
     const states: State[] = [currentState]
 
     for (const pgnMove of game.moves) {
         try {
-            currentState = bitboardMove(currentState, pgnMove.san)
+            currentState = move(currentState, pgnMove.san)
             states.push(currentState)
         } catch (error) {
             console.warn(`Failed to apply move ${pgnMove.san}:`, error)
