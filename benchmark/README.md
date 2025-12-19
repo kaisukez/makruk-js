@@ -38,14 +38,18 @@ Tested on Apple M1, Node v24.
 
 | Position | Depth | 0x88 | Bitboard | Winner |
 |----------|-------|------|----------|--------|
-| Endgame | 1 | 4.8 ms | 0.05 ms | Bitboard 96x faster |
-| Middlegame | 1 | 19.4 ms | 0.24 ms | Bitboard 82x faster |
-| Endgame | 2 | 55.6 ms | 0.009 ms | Bitboard 5866x faster |
-| Middlegame | 2 | 69.9 ms | 0.19 ms | Bitboard 374x faster |
+| Endgame | 1 | 5 ms | 0.012 ms | Bitboard 400x faster |
+| Middlegame | 1 | 19 ms | 0.026 ms | Bitboard 750x faster |
+| Endgame | 3 | 151 ms | 0.007 ms | Bitboard 22000x faster |
+| Middlegame | 3 | 503 ms | 0.038 ms | Bitboard 13000x faster |
+| Endgame | 5 | 1.8 s | 0.006 ms | Bitboard 300000x faster |
+| Middlegame | 5 | 9.4 s | 0.029 ms | Bitboard 320000x faster |
+
+The deeper the search, the more the transposition table and move ordering optimizations pay off - up to 320,000x speedup at depth 5.
 
 ## Files
 
 - `utils.js` - Benchmark helper functions
 - `fen-operations.js` - FEN import/export
 - `move-generation.js` - Legal move generation
-- `ai-search.js` - Minimax search at depth 1-2
+- `ai-search.js` - Minimax search at depths 1, 3, 5

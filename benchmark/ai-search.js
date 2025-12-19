@@ -14,13 +14,13 @@ const FENS = {
 function run() {
     console.log('=== AI SEARCH ===\n')
 
-    for (const depth of [1, 2]) {
+    for (const depth of [1, 3, 5]) {
         console.log(`--- Depth ${depth} ---\n`)
+        const iterations = depth === 1 ? 10 : depth === 3 ? 3 : 1
 
         for (const [name, fen] of Object.entries(FENS)) {
             const s1 = ox88.importFen(fen)
             const s2 = bitboard.importFen(fen)
-            const iterations = depth === 1 ? 20 : 5
 
             compare(
                 `Search ${name}`,

@@ -834,4 +834,4 @@ src/0x88/
 
 ## Note
 
-This implementation is deprecated. The [bitboard implementation](../bitboard/README.md) is 2-100x faster for most operations due to parallel bit operations and is recommended for all new projects.
+This implementation is deprecated. The [bitboard implementation](../bitboard/README.md) is significantly faster due to parallel bit operations and is recommended for all new projects. See [benchmark/README.md](../../benchmark/README.md) for performance comparisons.
