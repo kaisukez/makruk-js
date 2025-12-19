@@ -903,13 +903,7 @@ function evaluate(state: BoardState): number {
    - Better CPU branch prediction
    - Fewer pipeline stalls
 
-**Performance comparison with 0x88:**
-
-| Operation | 0x88 | Bitboard | Speedup |
-|-----------|------|----------|---------|
-| Move Generation (initial) | 0.73 ms | 0.34 ms | **2×** |
-| FEN Export | 0.004 ms | 0.00005 ms | **80×** |
-| AI Search (depth 2) | 70 ms | 0.19 ms | **370×** |
+See [benchmark/README.md](../../benchmark/README.md) for performance comparisons with 0x88.
 
 ---
 

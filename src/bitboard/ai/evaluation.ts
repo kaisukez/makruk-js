@@ -1,86 +1,200 @@
 /**
  * Position evaluation for bitboard representation
  *
- * This is an optimized version that removes expensive legal move generation
- * and uses piece-square tables and simple heuristics instead.
+ * Features:
+ * - Material counting with Makruk piece values
+ * - Piece-square tables for positional play
+ * - King safety evaluation
+ * - Pawn advancement bonus
  */
 
 import type { Mask64, BoardState } from "bitboard/board/board"
-import { Color, Piece, PIECE_POWER } from "common/const"
-import { EMPTY_MASK, popLSB, popCount } from "bitboard/board/board"
-import { generateLegalMoves } from "bitboard/moves"
+import { Piece, PIECE_POWER } from "common/const"
+import { EMPTY_MASK, popLSB, popCount, getLSB } from "bitboard/board/board"
 
-// Piece-square table for positional evaluation
-// Higher values for central squares
-const PIECE_SQUARE_TABLE = new Float64Array([
-    // Rank 1 (a1-h1)
-    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+// Center control bonus (d4, e4, d5, e5 area)
+const CENTER_MASK = 0x0000001818000000n
+
+// Piece-square table for general pieces (center preference)
+const GENERAL_PST = new Float64Array([
+    // Rank 1 (a1-h1) - back rank
+    0.00, 0.05, 0.05, 0.10, 0.10, 0.05, 0.05, 0.00,
     // Rank 2 (a2-h2)
-    0.00, 0.16, 0.16, 0.16, 0.16, 0.16, 0.16, 0.00,
+    0.05, 0.10, 0.15, 0.20, 0.20, 0.15, 0.10, 0.05,
     // Rank 3 (a3-h3)
-    0.00, 0.16, 0.32, 0.32, 0.32, 0.32, 0.16, 0.00,
-    // Rank 4 (a4-h4)
-    0.00, 0.16, 0.32, 0.48, 0.48, 0.32, 0.16, 0.00,
-    // Rank 5 (a5-h5)
-    0.00, 0.16, 0.32, 0.48, 0.48, 0.32, 0.16, 0.00,
+    0.05, 0.15, 0.25, 0.30, 0.30, 0.25, 0.15, 0.05,
+    // Rank 4 (a4-h4) - center
+    0.10, 0.20, 0.30, 0.40, 0.40, 0.30, 0.20, 0.10,
+    // Rank 5 (a5-h5) - center
+    0.10, 0.20, 0.30, 0.40, 0.40, 0.30, 0.20, 0.10,
     // Rank 6 (a6-h6)
-    0.00, 0.16, 0.32, 0.32, 0.32, 0.32, 0.16, 0.00,
+    0.05, 0.15, 0.25, 0.30, 0.30, 0.25, 0.15, 0.05,
     // Rank 7 (a7-h7)
-    0.00, 0.16, 0.16, 0.16, 0.16, 0.16, 0.16, 0.00,
-    // Rank 8 (a8-h8)
+    0.05, 0.10, 0.15, 0.20, 0.20, 0.15, 0.10, 0.05,
+    // Rank 8 (a8-h8) - back rank
+    0.00, 0.05, 0.05, 0.10, 0.10, 0.05, 0.05, 0.00,
+])
+
+// Pawn (Bia) advancement table for white (flip for black)
+// Pawns are more valuable as they advance toward promotion
+const WHITE_BIA_PST = new Float64Array([
+    // Rank 1 - shouldn't be here
+    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+    // Rank 2 - shouldn't be here
+    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+    // Rank 3 - starting position
+    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+    // Rank 4 - advanced one
+    0.10, 0.10, 0.15, 0.20, 0.20, 0.15, 0.10, 0.10,
+    // Rank 5 - good advancement
+    0.15, 0.15, 0.20, 0.30, 0.30, 0.20, 0.15, 0.15,
+    // Rank 6 - near promotion (rank 6 = promotes)
+    0.30, 0.30, 0.40, 0.50, 0.50, 0.40, 0.30, 0.30,
+    // Rank 7 - shouldn't reach (promotes at rank 6)
+    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+    // Rank 8 - shouldn't reach
     0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
 ])
 
+// Black pawn table (mirrored)
+const BLACK_BIA_PST = new Float64Array([
+    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+    0.30, 0.30, 0.40, 0.50, 0.50, 0.40, 0.30, 0.30,
+    0.15, 0.15, 0.20, 0.30, 0.30, 0.20, 0.15, 0.15,
+    0.10, 0.10, 0.15, 0.20, 0.20, 0.15, 0.10, 0.10,
+    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+])
+
+// King safety - prefer edges in opening/middlegame, center in endgame
+const KING_SAFETY_PST = new Float64Array([
+    // Rank 1 - safe corners
+    0.20, 0.30, 0.10, 0.00, 0.00, 0.10, 0.30, 0.20,
+    // Rank 2
+    0.20, 0.20, 0.00, -0.10, -0.10, 0.00, 0.20, 0.20,
+    // Rank 3-6 - exposed
+    0.00, 0.00, -0.10, -0.20, -0.20, -0.10, 0.00, 0.00,
+    -0.10, -0.10, -0.20, -0.30, -0.30, -0.20, -0.10, -0.10,
+    -0.10, -0.10, -0.20, -0.30, -0.30, -0.20, -0.10, -0.10,
+    0.00, 0.00, -0.10, -0.20, -0.20, -0.10, 0.00, 0.00,
+    // Rank 7
+    0.20, 0.20, 0.00, -0.10, -0.10, 0.00, 0.20, 0.20,
+    // Rank 8 - safe corners
+    0.20, 0.30, 0.10, 0.00, 0.00, 0.10, 0.30, 0.20,
+])
+
 /**
- * Evaluate a single bitboard with piece values and position scores
+ * Evaluate a bitboard with piece values and piece-square table
  */
-function evaluateMask64(bb: Mask64, pieceValue: number, colorMultiplier: number): number {
+function evaluateWithPST(bb: Mask64, pieceValue: number, pst: Float64Array, colorMultiplier: number): number {
     let score = 0
     let temp = bb
 
     while (temp !== EMPTY_MASK) {
         const { bb: remaining, square } = popLSB(temp)
         temp = remaining
-
-        // Add piece material value + position value
-        score += (pieceValue + PIECE_SQUARE_TABLE[square]) * colorMultiplier
+        score += (pieceValue + pst[square]) * colorMultiplier
     }
 
     return score
 }
 
 /**
- * Fast evaluation without legal move generation
- * Uses material + piece-square tables only
+ * Fast evaluation - material + piece-square tables
+ * This is the main evaluation used during search
  */
 export function evaluateFast(state: BoardState): number {
     let score = 0
 
-    // White pieces (positive score)
-    score += evaluateMask64(state.whiteBia, PIECE_POWER[Piece.BIA], 1)
-    score += evaluateMask64(state.whiteFlippedBia, PIECE_POWER[Piece.FLIPPED_BIA], 1)
-    score += evaluateMask64(state.whiteMa, PIECE_POWER[Piece.MA], 1)
-    score += evaluateMask64(state.whiteThon, PIECE_POWER[Piece.THON], 1)
-    score += evaluateMask64(state.whiteMet, PIECE_POWER[Piece.MET], 1)
-    score += evaluateMask64(state.whiteRua, PIECE_POWER[Piece.RUA], 1)
-    score += evaluateMask64(state.whiteKhun, PIECE_POWER[Piece.KHUN], 1)
+    // Material count (using popCount for efficiency)
+    const whiteBiaCount = popCount(state.whiteBia)
+    const whiteFlippedCount = popCount(state.whiteFlippedBia)
+    const whiteMaCount = popCount(state.whiteMa)
+    const whiteThonCount = popCount(state.whiteThon)
+    const whiteMetCount = popCount(state.whiteMet)
+    const whiteRuaCount = popCount(state.whiteRua)
 
-    // Black pieces (negative score)
-    score += evaluateMask64(state.blackBia, PIECE_POWER[Piece.BIA], -1)
-    score += evaluateMask64(state.blackFlippedBia, PIECE_POWER[Piece.FLIPPED_BIA], -1)
-    score += evaluateMask64(state.blackMa, PIECE_POWER[Piece.MA], -1)
-    score += evaluateMask64(state.blackThon, PIECE_POWER[Piece.THON], -1)
-    score += evaluateMask64(state.blackMet, PIECE_POWER[Piece.MET], -1)
-    score += evaluateMask64(state.blackRua, PIECE_POWER[Piece.RUA], -1)
-    score += evaluateMask64(state.blackKhun, PIECE_POWER[Piece.KHUN], -1)
+    const blackBiaCount = popCount(state.blackBia)
+    const blackFlippedCount = popCount(state.blackFlippedBia)
+    const blackMaCount = popCount(state.blackMa)
+    const blackThonCount = popCount(state.blackThon)
+    const blackMetCount = popCount(state.blackMet)
+    const blackRuaCount = popCount(state.blackRua)
+
+    // Material score
+    score += (whiteBiaCount - blackBiaCount) * PIECE_POWER[Piece.BIA]
+    score += (whiteFlippedCount - blackFlippedCount) * PIECE_POWER[Piece.FLIPPED_BIA]
+    score += (whiteMaCount - blackMaCount) * PIECE_POWER[Piece.MA]
+    score += (whiteThonCount - blackThonCount) * PIECE_POWER[Piece.THON]
+    score += (whiteMetCount - blackMetCount) * PIECE_POWER[Piece.MET]
+    score += (whiteRuaCount - blackRuaCount) * PIECE_POWER[Piece.RUA]
+
+    // Positional bonuses using piece-square tables
+    // Bia (pawns) - advancement bonus
+    score += evaluateWithPST(state.whiteBia, 0, WHITE_BIA_PST, 1)
+    score += evaluateWithPST(state.blackBia, 0, BLACK_BIA_PST, -1)
+
+    // Flipped Bia - center control
+    score += evaluateWithPST(state.whiteFlippedBia, 0, GENERAL_PST, 1)
+    score += evaluateWithPST(state.blackFlippedBia, 0, GENERAL_PST, -1)
+
+    // Ma (knights) - center control
+    score += evaluateWithPST(state.whiteMa, 0, GENERAL_PST, 1)
+    score += evaluateWithPST(state.blackMa, 0, GENERAL_PST, -1)
+
+    // Thon - center control
+    score += evaluateWithPST(state.whiteThon, 0, GENERAL_PST, 1)
+    score += evaluateWithPST(state.blackThon, 0, GENERAL_PST, -1)
+
+    // Met - center control
+    score += evaluateWithPST(state.whiteMet, 0, GENERAL_PST, 1)
+    score += evaluateWithPST(state.blackMet, 0, GENERAL_PST, -1)
+
+    // Rua - slight center preference
+    score += evaluateWithPST(state.whiteRua, 0, GENERAL_PST, 0.5)
+    score += evaluateWithPST(state.blackRua, 0, GENERAL_PST, -0.5)
+
+    // King safety
+    if (state.whiteKhun !== EMPTY_MASK) {
+        const whiteKingSquare = getLSB(state.whiteKhun)
+        score += KING_SAFETY_PST[whiteKingSquare]
+    }
+    if (state.blackKhun !== EMPTY_MASK) {
+        const blackKingSquare = getLSB(state.blackKhun)
+        score -= KING_SAFETY_PST[blackKingSquare]
+    }
+
+    // Center control bonus
+    const whiteCenterPieces = popCount(state.whiteOccupancy & CENTER_MASK)
+    const blackCenterPieces = popCount(state.blackOccupancy & CENTER_MASK)
+    score += (whiteCenterPieces - blackCenterPieces) * 0.1
 
     return score
+}
+
+/**
+ * Check if position is a draw (insufficient material)
+ */
+export function isDraw(state: BoardState): boolean {
+    const totalPieces = popCount(state.allOccupancy)
+
+    // Only kings remain
+    if (totalPieces <= 2) {
+        return true
+    }
+
+    return false
 }
 
 /**
  * Evaluation with mobility (includes legal move generation)
  * This is slower but more accurate
  */
+import { Color } from "common/const"
+import { generateLegalMoves } from "bitboard/moves"
+
 export function evaluateWithMobility(state: BoardState, turn: Color): number {
     let score = evaluateFast(state)
 
@@ -95,41 +209,11 @@ export function evaluateWithMobility(state: BoardState, turn: Color): number {
 }
 
 /**
- * Check if position is a draw
- * Simple heuristic: insufficient material
- */
-export function isDraw(state: BoardState): boolean {
-    // Count total pieces
-    const totalPieces = popCount(state.allOccupancy)
-
-    // If only kings remain, it's a draw
-    if (totalPieces <= 2) {
-        return true
-    }
-
-    // More sophisticated draw detection can be added here
-    // (e.g., same position 3 times, 50-move rule, etc.)
-
-    return false
-}
-
-/**
  * Check if position is checkmate for the current player
  */
 export function isCheckmate(state: BoardState, turn: Color): boolean {
     const legalMoves = generateLegalMoves(state, turn)
-
-    if (legalMoves.length > 0) {
-        return false
-    }
-
-    // No legal moves - check if in check
-    // If king is in check and no legal moves = checkmate
-    // If king is not in check and no legal moves = stalemate
-    // For now, we'll consider no legal moves as checkmate
-    // (proper check detection would be needed for stalemate)
-
-    return true
+    return legalMoves.length === 0
 }
 
 /**
@@ -177,7 +261,5 @@ export function evaluate(state: BoardState, turn: Color, useFullEval: boolean = 
  * Used to avoid horizon effect in alpha-beta search
  */
 export function evaluateQuiet(state: BoardState, turn: Color): number {
-    // For now, just use fast evaluation
-    // In a full implementation, this would do quiescence search
     return evaluateFast(state)
 }
