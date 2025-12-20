@@ -7,9 +7,7 @@
 
 import type { Move, Game } from "bitboard/types"
 import { Color } from "common/const"
-import { applyMove } from "bitboard/moves/execution"
-import { minimax, MinimaxOutput, TranspositionTable, createTranspositionTable } from "./search"
-import { computeHash } from "bitboard/hash"
+import { minimax, MinimaxOutput, TranspositionTable, createTranspositionTable, applyMoveForSearch } from "./search"
 
 /**
  * Shared bounds structure for parallel alpha-beta
@@ -94,17 +92,7 @@ export function searchMoves(
     let totalNodes = 0
 
     for (const move of moves) {
-        const newBoard = applyMove(game.board, move)
-        const newTurn = game.turn === Color.WHITE ? Color.BLACK : Color.WHITE
-        const newHash = computeHash(newBoard, newTurn)
-        const newGame: Game = {
-            board: newBoard,
-            turn: newTurn,
-            moveNumber: game.moveNumber,
-            hash: newHash,
-            positionOccurrence: game.positionOccurrence,
-            countdown: game.countdown,
-        }
+        const newGame = applyMoveForSearch(game, move)
         const result = minimax(newGame, depth - 1, -Infinity, Infinity, table)
 
         totalNodes += result.nodesSearched
@@ -151,17 +139,7 @@ export function searchMovesWithSharedBounds(
             beta = Math.min(bestScore, sharedBound)
         }
 
-        const newBoard = applyMove(game.board, move)
-        const newTurn = game.turn === Color.WHITE ? Color.BLACK : Color.WHITE
-        const newHash = computeHash(newBoard, newTurn)
-        const newGame: Game = {
-            board: newBoard,
-            turn: newTurn,
-            moveNumber: game.moveNumber,
-            hash: newHash,
-            positionOccurrence: game.positionOccurrence,
-            countdown: game.countdown,
-        }
+        const newGame = applyMoveForSearch(game, move)
         const result = minimax(newGame, depth - 1, alpha, beta, table)
 
         totalNodes += result.nodesSearched

@@ -3,8 +3,48 @@ import type { Move, Game } from "bitboard/types"
 import { Color, PIECE_POWER } from "common/const"
 import { generateLegalMoves } from "bitboard/moves/generation"
 import { applyMove } from "bitboard/moves/execution"
-import { evaluateFast, isDraw } from "bitboard/ai/evaluation"
-import { computeHash } from "bitboard/hash"
+import { evaluateFast } from "bitboard/ai/evaluation"
+import { updateHashForMove } from "bitboard/hash"
+import { isDraw } from "bitboard/rules/status"
+import { stepCountdown, CountdownErrorCode } from "bitboard/rules/countdown"
+
+/**
+ * Apply a move during search, updating countdown and position occurrence
+ */
+export function applyMoveForSearch(game: Game, move: Move): Game {
+    const newBoard = applyMove(game.board, move)
+    const newTurn = game.turn === Color.WHITE ? Color.BLACK : Color.WHITE
+    const newHash = updateHashForMove(game.hash, move)
+
+    // Update position occurrence for threefold repetition
+    const newOccurrence = new Map(game.positionOccurrence)
+    newOccurrence.set(newHash, (newOccurrence.get(newHash) || 0) + 1)
+
+    // Update countdown - step it for the player who just moved
+    // Countdown ticks when the counting player makes a move
+    let newCountdown = game.countdown
+    if (game.countdown && game.countdown.countColor === game.turn) {
+        try {
+            newCountdown = stepCountdown(newBoard, newTurn, game.countdown)
+        } catch (e) {
+            const knownCodes: string[] = Object.values(CountdownErrorCode)
+            const isKnownError = e && typeof e === 'object' && 'code' in e &&
+                knownCodes.includes((e as { code: string }).code)
+            if (!isKnownError) {
+                throw e
+            }
+        }
+    }
+
+    return {
+        board: newBoard,
+        turn: newTurn,
+        moveNumber: game.moveNumber,
+        hash: newHash,
+        positionOccurrence: newOccurrence,
+        countdown: newCountdown,
+    }
+}
 
 export interface MinimaxOutput {
     bestScore: number
@@ -156,11 +196,11 @@ function quiescence(
 }
 
 /**
- * Internal minimax with TT parameter
+ * Internal minimax with TT parameter - works with full Game state
+ * to properly track countdown and position occurrence for draw detection
  */
 function minimaxWithTT(
-    state: Board,
-    turn: Color,
+    game: Game,
     depth: number,
     alpha: number,
     beta: number,
@@ -169,7 +209,7 @@ function minimaxWithTT(
     const nodesCounter = { count: 1 }
 
     // Transposition table lookup
-    const hash = tt ? computeHash(state, turn) : 0n
+    const hash = tt ? game.hash : 0n
     let ttBestMove: Move | null = null
 
     if (tt) {
@@ -201,8 +241,8 @@ function minimaxWithTT(
         }
     }
 
-    // Check for draw
-    if (isDraw(state)) {
+    // Check for draw (uses full Game state - checks countdown, repetition, etc.)
+    if (isDraw(game)) {
         return {
             bestScore: 0,
             bestMove: null,
@@ -211,9 +251,9 @@ function minimaxWithTT(
     }
 
     // Generate and check for no legal moves (checkmate/stalemate)
-    const moves = generateLegalMoves(state, turn)
+    const moves = generateLegalMoves(game.board, game.turn)
     if (moves.length === 0) {
-        const score = turn === Color.WHITE ? -Infinity : Infinity
+        const score = game.turn === Color.WHITE ? -Infinity : Infinity
         return {
             bestScore: score,
             bestMove: null,
@@ -223,7 +263,7 @@ function minimaxWithTT(
 
     // At depth 0, use quiescence search instead of static eval
     if (depth === 0) {
-        const score = quiescence(state, turn, alpha, beta, nodesCounter)
+        const score = quiescence(game.board, game.turn, alpha, beta, nodesCounter)
         return {
             bestScore: score,
             bestMove: null,
@@ -234,15 +274,15 @@ function minimaxWithTT(
     // Order moves for better pruning
     orderMoves(moves, ttBestMove)
 
-    const isMaximizing = turn === Color.WHITE
+    const isMaximizing = game.turn === Color.WHITE
     let bestScore = isMaximizing ? -Infinity : Infinity
     let bestMove: Move | null = null
     const originalAlpha = alpha
 
     for (const move of moves) {
-        const newState = applyMove(state, move)
-        const newTurn = turn === Color.WHITE ? Color.BLACK : Color.WHITE
-        const result = minimaxWithTT(newState, newTurn, depth - 1, alpha, beta, tt)
+        // Apply move with proper countdown and occurrence tracking
+        const newGame = applyMoveForSearch(game, move)
+        const result = minimaxWithTT(newGame, depth - 1, alpha, beta, tt)
 
         nodesCounter.count += result.nodesSearched
 
@@ -298,7 +338,7 @@ export function minimax(
     beta: number,
     tt: TranspositionTable | null = null
 ): MinimaxOutput {
-    return minimaxWithTT(game.board, game.turn, depth, alpha, beta, tt)
+    return minimaxWithTT(game, depth, alpha, beta, tt)
 }
 
 export function findBestMove(
@@ -307,7 +347,7 @@ export function findBestMove(
     tt: TranspositionTable | null = null
 ): MinimaxOutput {
     const table = tt ?? createTranspositionTable()
-    return minimaxWithTT(game.board, game.turn, depth, -Infinity, Infinity, table)
+    return minimaxWithTT(game, depth, -Infinity, Infinity, table)
 }
 
 export function iterativeDeepening(
