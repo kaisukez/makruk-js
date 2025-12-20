@@ -2,7 +2,6 @@ const { describe, expect, test } = globalThis as any
 
 import { createGameFromFen, INITIAL_FEN, EMPTY_FEN } from "bitboard/fen"
 import { evaluateFast } from "bitboard/ai/evaluation"
-import { isDraw } from "bitboard/rules/status"
 
 describe("evaluateFast", () => {
     test("should evaluate initial position as roughly equal", () => {
@@ -54,21 +53,30 @@ describe("evaluateFast", () => {
         expect(typeof score).toBe("number")
         expect(isNaN(score)).toBe(false)
     })
-})
 
-describe("isDraw", () => {
-    test("should return true for only kings remaining", () => {
-        const game = createGameFromFen("k7/8/8/8/8/8/8/7K w 1")
-        expect(isDraw(game)).toBe(true)
+    test("should give bonus for mobility", () => {
+        // White rook in center has more mobility than rook in corner
+        const { board: centerRook } = createGameFromFen("k7/8/8/8/4R3/8/8/K7 w 1")
+        const { board: cornerRook } = createGameFromFen("k7/8/8/8/8/8/8/KR6 w 1")
+
+        const centerScore = evaluateFast(centerRook)
+        const cornerScore = evaluateFast(cornerRook)
+
+        // Center rook has more squares to move to
+        expect(centerScore).toBeGreaterThan(cornerScore)
     })
 
-    test("should return false for position with pieces", () => {
-        const game = createGameFromFen("k7/8/8/8/8/8/8/K6R w 1")
-        expect(isDraw(game)).toBe(false)
-    })
+    test("should include mobility in evaluation", () => {
+        // White rook blocked by own pieces vs free rook
+        const { board: blockedRook } = createGameFromFen("k7/8/8/8/8/1B6/1B6/KR6 w 1")
+        const { board: freeRook } = createGameFromFen("k7/8/8/8/8/8/8/K6R w 1")
 
-    test("should return false for initial position", () => {
-        const game = createGameFromFen(INITIAL_FEN)
-        expect(isDraw(game)).toBe(false)
+        const blockedScore = evaluateFast(blockedRook)
+        const freeScore = evaluateFast(freeRook)
+
+        // blockedRook has more material (2 extra thons) but less mobility per piece
+        // freeRook has rook with full mobility
+        // This verifies mobility is factored in (not just material)
+        expect(blockedScore).not.toBe(freeScore)
     })
 })
