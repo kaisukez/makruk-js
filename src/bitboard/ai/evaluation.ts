@@ -9,7 +9,8 @@
  */
 
 import type { Mask64, Board } from "bitboard/board/board"
-import { Piece, PIECE_POWER } from "common/const"
+import { Color, Piece, PIECE_POWER } from "common/const"
+import { generateLegalMoves } from "bitboard/moves/generation"
 import { EMPTY_MASK, popLSB, popCount, getLSB } from "bitboard/board/board"
 
 // Center control bonus (d4, e4, d5, e5 area)
@@ -170,6 +171,12 @@ export function evaluateFast(state: Board): number {
     const whiteCenterPieces = popCount(state.whiteOccupancy & CENTER_MASK)
     const blackCenterPieces = popCount(state.blackOccupancy & CENTER_MASK)
     score += (whiteCenterPieces - blackCenterPieces) * 0.1
+
+    // Mobility bonus
+    const whiteMoves = generateLegalMoves(state, Color.WHITE).length
+    const blackMoves = generateLegalMoves(state, Color.BLACK).length
+    score += 0.02 * whiteMoves
+    score -= 0.02 * blackMoves
 
     return score
 }
