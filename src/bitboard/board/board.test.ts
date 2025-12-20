@@ -2,7 +2,7 @@ const { describe, expect, test } = globalThis as any
 
 import { Color, Piece, SquareIndex } from "common/const"
 import {
-    createEmptyBoardState,
+    createEmptyBoard,
     setPiece,
     getPieceAt,
     removePiece,
@@ -29,9 +29,9 @@ import {
     printMask64,
 } from "bitboard/board/board"
 
-describe("createEmptyBoardState", () => {
+describe("createEmptyBoard", () => {
     test("should create an empty bitboard state", () => {
-        const state = createEmptyBoardState()
+        const state = createEmptyBoard()
 
         expect(state.whiteBia).toBe(EMPTY_MASK)
         expect(state.blackBia).toBe(EMPTY_MASK)
@@ -50,7 +50,7 @@ describe("createEmptyBoardState", () => {
 
 describe("setPiece", () => {
     test("should set a white rook on square 0", () => {
-        const state = createEmptyBoardState()
+        const state = createEmptyBoard()
         setPiece(state, Color.WHITE, Piece.RUA, 0)
 
         expect(state.whiteRua).toBe(1n)
@@ -58,7 +58,7 @@ describe("setPiece", () => {
     })
 
     test("should set a black khun on square 4", () => {
-        const state = createEmptyBoardState()
+        const state = createEmptyBoard()
         setPiece(state, Color.BLACK, Piece.KHUN, 4)
 
         expect(state.blackKhun).toBe(16n) // 2^4
@@ -66,7 +66,7 @@ describe("setPiece", () => {
     })
 
     test("should set multiple pieces on different squares", () => {
-        const state = createEmptyBoardState()
+        const state = createEmptyBoard()
         setPiece(state, Color.WHITE, Piece.BIA, 16) // a3
         setPiece(state, Color.WHITE, Piece.BIA, 17) // b3
         setPiece(state, Color.BLACK, Piece.BIA, 48) // a7
@@ -78,19 +78,19 @@ describe("setPiece", () => {
 
 describe("getPieceAt", () => {
     test("should return null for empty square", () => {
-        const state = createEmptyBoardState()
+        const state = createEmptyBoard()
         expect(getPieceAt(state, 0)).toBe(null)
     })
 
     test("should return piece at given square", () => {
-        const state = createEmptyBoardState()
+        const state = createEmptyBoard()
         setPiece(state, Color.WHITE, Piece.MA, 10)
 
         expect(getPieceAt(state, 10)).toEqual([Color.WHITE, Piece.MA])
     })
 
     test("should return correct piece for multiple pieces", () => {
-        const state = createEmptyBoardState()
+        const state = createEmptyBoard()
         setPiece(state, Color.WHITE, Piece.RUA, 0)
         setPiece(state, Color.BLACK, Piece.KHUN, 60)
 
@@ -102,7 +102,7 @@ describe("getPieceAt", () => {
 
 describe("removePiece", () => {
     test("should remove a piece from the board", () => {
-        const state = createEmptyBoardState()
+        const state = createEmptyBoard()
         setPiece(state, Color.WHITE, Piece.RUA, 5)
 
         expect(getPieceAt(state, 5)).toEqual([Color.WHITE, Piece.RUA])
@@ -114,7 +114,7 @@ describe("removePiece", () => {
     })
 
     test("should remove correct piece when multiple pieces present", () => {
-        const state = createEmptyBoardState()
+        const state = createEmptyBoard()
         setPiece(state, Color.WHITE, Piece.BIA, 16)
         setPiece(state, Color.WHITE, Piece.BIA, 17)
         setPiece(state, Color.WHITE, Piece.BIA, 18)
@@ -127,7 +127,7 @@ describe("removePiece", () => {
     })
 
     test("should remove all white piece types", () => {
-        const state = createEmptyBoardState()
+        const state = createEmptyBoard()
         setPiece(state, Color.WHITE, Piece.BIA, 8)
         setPiece(state, Color.WHITE, Piece.FLIPPED_BIA, 9)
         setPiece(state, Color.WHITE, Piece.MA, 10)
@@ -154,7 +154,7 @@ describe("removePiece", () => {
     })
 
     test("should remove all black piece types", () => {
-        const state = createEmptyBoardState()
+        const state = createEmptyBoard()
         setPiece(state, Color.BLACK, Piece.BIA, 48)
         setPiece(state, Color.BLACK, Piece.FLIPPED_BIA, 49)
         setPiece(state, Color.BLACK, Piece.MA, 50)
@@ -331,7 +331,7 @@ describe("shift functions", () => {
 
 describe("updateOccupancy", () => {
     test("should update occupancy bitboards", () => {
-        const state = createEmptyBoardState()
+        const state = createEmptyBoard()
         setPiece(state, Color.WHITE, Piece.RUA, 0)
         setPiece(state, Color.WHITE, Piece.KHUN, 4)
         setPiece(state, Color.BLACK, Piece.RUA, 56)
@@ -346,7 +346,7 @@ describe("updateOccupancy", () => {
 
 describe("getPieceMask64", () => {
     test("should get bitboard for white pieces", () => {
-        const state = createEmptyBoardState()
+        const state = createEmptyBoard()
         setPiece(state, Color.WHITE, Piece.BIA, 8)
         setPiece(state, Color.WHITE, Piece.FLIPPED_BIA, 9)
         setPiece(state, Color.WHITE, Piece.MA, 10)
@@ -365,7 +365,7 @@ describe("getPieceMask64", () => {
     })
 
     test("should get bitboard for black pieces", () => {
-        const state = createEmptyBoardState()
+        const state = createEmptyBoard()
         setPiece(state, Color.BLACK, Piece.BIA, 48)
         setPiece(state, Color.BLACK, Piece.FLIPPED_BIA, 49)
         setPiece(state, Color.BLACK, Piece.MA, 50)
@@ -384,7 +384,7 @@ describe("getPieceMask64", () => {
     })
 
     test("should return empty bitboard for invalid piece type", () => {
-        const state = createEmptyBoardState()
+        const state = createEmptyBoard()
         // Test default case by using an invalid piece value
         expect(getPieceMask64(state, Color.WHITE, 99 as unknown as Piece)).toBe(EMPTY_MASK)
         expect(getPieceMask64(state, Color.BLACK, 99 as unknown as Piece)).toBe(EMPTY_MASK)
@@ -412,7 +412,7 @@ describe("printMask64", () => {
 
 describe("setPiece with all piece types", () => {
     test("should set all white piece types", () => {
-        const state = createEmptyBoardState()
+        const state = createEmptyBoard()
         setPiece(state, Color.WHITE, Piece.BIA, 8)
         setPiece(state, Color.WHITE, Piece.FLIPPED_BIA, 9)
         setPiece(state, Color.WHITE, Piece.MA, 10)
@@ -431,7 +431,7 @@ describe("setPiece with all piece types", () => {
     })
 
     test("should set all black piece types", () => {
-        const state = createEmptyBoardState()
+        const state = createEmptyBoard()
         setPiece(state, Color.BLACK, Piece.BIA, 48)
         setPiece(state, Color.BLACK, Piece.FLIPPED_BIA, 49)
         setPiece(state, Color.BLACK, Piece.MA, 50)

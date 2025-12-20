@@ -1,8 +1,10 @@
-import type { BoardState } from "bitboard/board/board"
-import type { Move } from "bitboard/moves"
+import type { Board } from "bitboard/board/board"
+import type { Move, Game } from "bitboard/types"
 import { Color, PIECE_POWER } from "common/const"
-import { generateLegalMoves, applyMove } from "bitboard/moves"
+import { generateLegalMoves } from "bitboard/moves/generation"
+import { applyMove } from "bitboard/moves/execution"
 import { evaluateFast, isDraw } from "bitboard/ai/evaluation"
+import { computeHash } from "bitboard/hash"
 
 export interface MinimaxOutput {
     bestScore: number
@@ -17,18 +19,44 @@ interface TranspositionEntry {
     bestMove: Move | null
 }
 
-/**
- * Hash function using all 14 bitboards for correct transposition table behavior
- */
-function hashState(state: BoardState, turn: Color): string {
-    return `${state.whiteBia}_${state.whiteFlippedBia}_${state.whiteMa}_${state.whiteThon}_${state.whiteMet}_${state.whiteRua}_${state.whiteKhun}_${state.blackBia}_${state.blackFlippedBia}_${state.blackMa}_${state.blackThon}_${state.blackMet}_${state.blackRua}_${state.blackKhun}_${turn}`
+export interface TranspositionTable {
+    get(hash: bigint): TranspositionEntry | undefined
+    set(hash: bigint, entry: TranspositionEntry): void
+    clear(): void
+    size(): number
 }
+
+/**
+ * Create a new transposition table
+ */
+export function createTranspositionTable(maxSize: number = 1000000): TranspositionTable {
+    const table = new Map<bigint, TranspositionEntry>()
+
+    return {
+        get(hash: bigint): TranspositionEntry | undefined {
+            return table.get(hash)
+        },
+        set(hash: bigint, entry: TranspositionEntry): void {
+            if (table.size >= maxSize) {
+                table.clear()
+            }
+            table.set(hash, entry)
+        },
+        clear(): void {
+            table.clear()
+        },
+        size(): number {
+            return table.size
+        }
+    }
+}
+
 
 /**
  * MVV-LVA (Most Valuable Victim - Least Valuable Attacker) score for move ordering
  * Higher score = search first
  */
-function getMoveScore(move: Move, ttBestMove: Move | null): number {
+export function getMoveScore(move: Move, ttBestMove?: Move | null): number {
     // Transposition table best move gets highest priority
     if (ttBestMove && move.from === ttBestMove.from && move.to === ttBestMove.to) {
         return 10000
@@ -51,58 +79,27 @@ function getMoveScore(move: Move, ttBestMove: Move | null): number {
 }
 
 /**
- * Sort moves for better alpha-beta pruning
+ * Sort moves for better alpha-beta pruning (mutates array in place)
  * Order: TT best move > captures (MVV-LVA) > promotions > quiet moves
  */
-function orderMoves(moves: Move[], ttBestMove: Move | null): void {
+export function orderMoves(moves: Move[], ttBestMove?: Move | null): void {
     moves.sort((a, b) => getMoveScore(b, ttBestMove) - getMoveScore(a, ttBestMove))
 }
 
 /**
  * Generate only capture moves for quiescence search
  */
-function generateCaptures(state: BoardState, turn: Color): Move[] {
+function generateCaptures(state: Board, turn: Color): Move[] {
     const moves = generateLegalMoves(state, turn)
     return moves.filter(m => m.captured)
 }
-
-class TranspositionTable {
-    private table: Map<string, TranspositionEntry>
-    private maxSize: number
-
-    constructor(maxSize: number = 1000000) {
-        this.table = new Map()
-        this.maxSize = maxSize
-    }
-
-    get(hash: string): TranspositionEntry | undefined {
-        return this.table.get(hash)
-    }
-
-    set(hash: string, entry: TranspositionEntry): void {
-        if (this.table.size >= this.maxSize) {
-            this.table.clear()
-        }
-        this.table.set(hash, entry)
-    }
-
-    clear(): void {
-        this.table.clear()
-    }
-
-    size(): number {
-        return this.table.size
-    }
-}
-
-const transpositionTable = new TranspositionTable()
 
 /**
  * Quiescence search - search captures until position is quiet
  * Avoids horizon effect where evaluation at depth 0 misses obvious captures
  */
 function quiescence(
-    state: BoardState,
+    state: Board,
     turn: Color,
     alpha: number,
     beta: number,
@@ -158,22 +155,25 @@ function quiescence(
     return isMaximizing ? alpha : beta
 }
 
-export function minimax(
-    state: BoardState,
+/**
+ * Internal minimax with TT parameter
+ */
+function minimaxWithTT(
+    state: Board,
     turn: Color,
     depth: number,
     alpha: number,
     beta: number,
-    useTranspositionTable: boolean = true
+    tt: TranspositionTable | null
 ): MinimaxOutput {
     const nodesCounter = { count: 1 }
 
     // Transposition table lookup
-    const hash = useTranspositionTable ? hashState(state, turn) : ''
+    const hash = tt ? computeHash(state, turn) : 0n
     let ttBestMove: Move | null = null
 
-    if (useTranspositionTable) {
-        const cachedEntry = transpositionTable.get(hash)
+    if (tt) {
+        const cachedEntry = tt.get(hash)
         if (cachedEntry) {
             ttBestMove = cachedEntry.bestMove
 
@@ -242,7 +242,7 @@ export function minimax(
     for (const move of moves) {
         const newState = applyMove(state, move)
         const newTurn = turn === Color.WHITE ? Color.BLACK : Color.WHITE
-        const result = minimax(newState, newTurn, depth - 1, alpha, beta, useTranspositionTable)
+        const result = minimaxWithTT(newState, newTurn, depth - 1, alpha, beta, tt)
 
         nodesCounter.count += result.nodesSearched
 
@@ -266,7 +266,7 @@ export function minimax(
     }
 
     // Store in transposition table
-    if (useTranspositionTable) {
+    if (tt) {
         let flag: 'exact' | 'lowerbound' | 'upperbound'
         if (bestScore <= originalAlpha) {
             flag = 'upperbound'
@@ -276,7 +276,7 @@ export function minimax(
             flag = 'exact'
         }
 
-        transpositionTable.set(hash, {
+        tt.set(hash, {
             depth,
             score: bestScore,
             flag,
@@ -291,42 +291,30 @@ export function minimax(
     }
 }
 
-export function findBestMove(
-    state: BoardState,
-    turn: Color,
+export function minimax(
+    game: Game,
     depth: number,
-    options: {
-        useTranspositionTable?: boolean
-        clearCache?: boolean
-    } = {}
+    alpha: number,
+    beta: number,
+    tt: TranspositionTable | null = null
 ): MinimaxOutput {
-    const {
-        useTranspositionTable = true,
-        clearCache = false,
-    } = options
-
-    if (clearCache) {
-        transpositionTable.clear()
-    }
-
-    return minimax(state, turn, depth, -Infinity, Infinity, useTranspositionTable)
+    return minimaxWithTT(game.board, game.turn, depth, alpha, beta, tt)
 }
 
-export function getTranspositionTableStats() {
-    return {
-        size: transpositionTable.size(),
-    }
-}
-
-export function clearTranspositionTable() {
-    transpositionTable.clear()
+export function findBestMove(
+    game: Game,
+    depth: number,
+    tt: TranspositionTable | null = null
+): MinimaxOutput {
+    const table = tt ?? createTranspositionTable()
+    return minimaxWithTT(game.board, game.turn, depth, -Infinity, Infinity, table)
 }
 
 export function iterativeDeepening(
-    state: BoardState,
-    turn: Color,
+    game: Game,
     maxDepth: number,
-    timeLimitMs?: number
+    timeLimitMs?: number,
+    tt: TranspositionTable | null = null
 ): MinimaxOutput {
     let bestResult: MinimaxOutput = {
         bestScore: 0,
@@ -334,13 +322,11 @@ export function iterativeDeepening(
         nodesSearched: 0,
     }
 
+    const table = tt ?? createTranspositionTable()
     const startTime = Date.now()
 
     for (let depth = 1; depth <= maxDepth; depth++) {
-        const result = findBestMove(state, turn, depth, {
-            useTranspositionTable: true,
-            clearCache: depth === 1,
-        })
+        const result = findBestMove(game, depth, table)
 
         bestResult = result
 

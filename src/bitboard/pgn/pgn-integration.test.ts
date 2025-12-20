@@ -1,5 +1,5 @@
 import { importPgn, exportPgnFromHistory } from "bitboard/pgn"
-import { importFen, exportFen, generateLegalMoves, move } from "bitboard/index"
+import { createGameFromFen, exportFen, generateLegalMoves, move } from "bitboard/index"
 import { INITIAL_FEN } from "bitboard/fen"
 
 const { describe, expect, test } = globalThis as any
@@ -27,12 +27,12 @@ describe("Mask64 PGN Integration Tests", () => {
         expect(states.length).toBe(7)
 
         // First state should be initial position
-        expect(states[0].fen).toBe(INITIAL_FEN)
+        expect(exportFen(states[0])).toBe(INITIAL_FEN)
 
-        // Each state should have valid FEN
-        states.forEach((state, index) => {
-            expect(state.fen).toBeTruthy()
-            expect(typeof state.fen).toBe('string')
+        // Each state should have valid board
+        states.forEach((state) => {
+            expect(state.board).toBeDefined()
+            expect(state.turn).toBeDefined()
         })
     })
 
@@ -40,11 +40,11 @@ describe("Mask64 PGN Integration Tests", () => {
         const states = importPgn(SIMPLE_MAKRUK_GAME)
 
         // After first move (1. b3), white pawn should have moved
-        expect(states[1].fen).not.toBe(INITIAL_FEN)
+        expect(exportFen(states[1])).not.toBe(INITIAL_FEN)
 
         // Each subsequent state should be different
         for (let i = 1; i < states.length; i++) {
-            expect(states[i].fen).not.toBe(states[i - 1].fen)
+            expect(exportFen(states[i])).not.toBe(exportFen(states[i - 1]))
         }
     })
 
@@ -72,7 +72,7 @@ describe("Mask64 PGN Integration Tests", () => {
         const states = importPgn(pgnWithFen)
 
         // First state should match custom FEN (move number might differ)
-        const firstFen = states[0].fen
+        const firstFen = exportFen(states[0])
         expect(firstFen.split(' ')[0]).toBe(customFen.split(' ')[0])
     })
 
@@ -86,7 +86,7 @@ describe("Mask64 PGN Integration Tests", () => {
 
         // Should have just the initial state
         expect(states.length).toBe(1)
-        expect(states[0].fen).toBe(INITIAL_FEN)
+        expect(exportFen(states[0])).toBe(INITIAL_FEN)
     })
 
     test("exportPgnFromHistory creates valid PGN structure", () => {
@@ -110,7 +110,7 @@ describe("Mask64 PGN Integration Tests", () => {
     })
 
     test("exportPgnFromHistory with default tags", () => {
-        const initialState = importFen(INITIAL_FEN)
+        const initialState = createGameFromFen(INITIAL_FEN)
 
         const pgn = exportPgnFromHistory([initialState])
 
@@ -201,11 +201,11 @@ describe("Mask64 PGN Integration Tests", () => {
     })
 
     test("move function works with SAN strings", () => {
-        let state = importFen(INITIAL_FEN)
+        let state = createGameFromFen(INITIAL_FEN)
 
         // Test pawn move
         state = move(state, 'b4')
-        expect(state.fen).not.toBe(INITIAL_FEN)
+        expect(exportFen(state)).not.toBe(INITIAL_FEN)
 
         // Test knight move (Makruk uses M for knight/Ma)
         state = move(state, 'b5')
@@ -216,15 +216,16 @@ describe("Mask64 PGN Integration Tests", () => {
         expect(moves.length).toBeGreaterThan(0)
     })
 
-    test("generated moves have SAN notation", () => {
-        const state = importFen(INITIAL_FEN)
+    test("generated moves have proper structure", () => {
+        const state = createGameFromFen(INITIAL_FEN)
         const moves = generateLegalMoves(state)
 
-        // All moves should have SAN
-        moves.forEach(move => {
-            expect(move.san).toBeTruthy()
-            expect(typeof move.san).toBe('string')
-            expect(move.san.length).toBeGreaterThan(0)
+        // All moves should have from/to/piece/color
+        moves.forEach(m => {
+            expect(typeof m.from).toBe('number')
+            expect(typeof m.to).toBe('number')
+            expect(m.piece).toBeDefined()
+            expect(m.color).toBeDefined()
         })
     })
 })

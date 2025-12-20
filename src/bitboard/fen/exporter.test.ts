@@ -1,41 +1,41 @@
 const { describe, expect, test } = globalThis as any
 
 import { Color } from "common/const"
-import { importFen, INITIAL_FEN, EMPTY_FEN } from "bitboard/fen/importer"
+import { createGameFromFen, INITIAL_FEN, EMPTY_FEN } from "bitboard/fen/importer"
 import { exportFen } from "bitboard/fen/exporter"
 
 describe("exportFen", () => {
     test("should export initial position correctly", () => {
-        const { state, turn, moveNumber } = importFen(INITIAL_FEN)
-        const exported = exportFen(state, turn, moveNumber)
+        const game = createGameFromFen(INITIAL_FEN)
+        const exported = exportFen(game)
 
         expect(exported).toBe(INITIAL_FEN)
     })
 
     test("should export empty board correctly", () => {
-        const { state, turn, moveNumber } = importFen(EMPTY_FEN)
-        const exported = exportFen(state, turn, moveNumber)
+        const game = createGameFromFen(EMPTY_FEN)
+        const exported = exportFen(game)
 
         expect(exported).toBe(EMPTY_FEN)
     })
 
     test("should export with correct turn", () => {
-        const { state, moveNumber } = importFen(EMPTY_FEN)
+        const game = createGameFromFen(EMPTY_FEN)
 
-        const whiteFen = exportFen(state, Color.WHITE, moveNumber)
+        const whiteFen = exportFen({ ...game, turn: Color.WHITE })
         expect(whiteFen).toContain(" w ")
 
-        const blackFen = exportFen(state, Color.BLACK, moveNumber)
+        const blackFen = exportFen({ ...game, turn: Color.BLACK })
         expect(blackFen).toContain(" b ")
     })
 
     test("should export with correct move number", () => {
-        const { state, turn } = importFen(EMPTY_FEN)
+        const game = createGameFromFen(EMPTY_FEN)
 
-        const fen1 = exportFen(state, turn, 1)
+        const fen1 = exportFen({ ...game, moveNumber: 1 })
         expect(fen1).toMatch(/ 1$/)
 
-        const fen42 = exportFen(state, turn, 42)
+        const fen42 = exportFen({ ...game, moveNumber: 42 })
         expect(fen42).toMatch(/ 42$/)
     })
 })

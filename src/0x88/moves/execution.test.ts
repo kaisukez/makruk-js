@@ -1,7 +1,7 @@
 const { describe, expect, test } = globalThis as any
 
 import { BITS, Color, EMPTY_FEN, INITIAL_FEN, Piece, SquareIndex } from "common/const"
-import { importFen, exportFen } from "0x88/fen"
+import { createGameFromFen, exportFen } from "0x88/fen"
 import { put } from "0x88/board"
 import {
     changePiecePosition,
@@ -13,28 +13,28 @@ import { MoveObject } from "0x88/types"
 
 describe("changePiecePosition", () => {
     test("should move piece from one square to another", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         changePiecePosition(state.boardState, SquareIndex.a3, SquareIndex.a4)
         expect(state.boardState[SquareIndex.a3]).toBeNull()
         expect(state.boardState[SquareIndex.a4]).toEqual([Color.WHITE, Piece.BIA])
     })
 
     test("should do nothing when from is null", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const originalBoardState = [...state.boardState]
         changePiecePosition(state.boardState, null as any, SquareIndex.a3)
         expect(state.boardState).toEqual(originalBoardState)
     })
 
     test("should do nothing when from equals to", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const originalPiece = state.boardState[SquareIndex.a3]
         changePiecePosition(state.boardState, SquareIndex.a3, SquareIndex.a3)
         expect(state.boardState[SquareIndex.a3]).toEqual(originalPiece)
     })
 
     test("should overwrite destination square", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         changePiecePosition(state.boardState, SquareIndex.a3, SquareIndex.a6)
         expect(state.boardState[SquareIndex.a6]).toEqual([Color.WHITE, Piece.BIA])
     })
@@ -42,27 +42,27 @@ describe("changePiecePosition", () => {
 
 describe("step", () => {
     test("should swap white to black without incrementing move number", () => {
-        const state = importFen(INITIAL_FEN)
-        expect(state.activeColor).toBe(Color.WHITE)
+        const state = createGameFromFen(INITIAL_FEN)
+        expect(state.turn).toBe(Color.WHITE)
         expect(state.moveNumber).toBe(1)
         step(state)
-        expect(state.activeColor).toBe(Color.BLACK)
+        expect(state.turn).toBe(Color.BLACK)
         expect(state.moveNumber).toBe(1)
     })
 
     test("should swap black to white and increment move number", () => {
-        let state = importFen(INITIAL_FEN)
-        state.activeColor = Color.BLACK
+        let state = createGameFromFen(INITIAL_FEN)
+        state.turn = Color.BLACK
         state.moveNumber = 5
         step(state)
-        expect(state.activeColor).toBe(Color.WHITE)
+        expect(state.turn).toBe(Color.WHITE)
         expect(state.moveNumber).toBe(6)
     })
 })
 
 describe("applyMove", () => {
     test("should return new state without mutating original", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const move: MoveObject = {
             color: Color.WHITE,
             piece: Piece.BIA,
@@ -77,7 +77,7 @@ describe("applyMove", () => {
     })
 
     test("should move piece on board", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const move: MoveObject = {
             color: Color.WHITE,
             piece: Piece.BIA,
@@ -91,7 +91,7 @@ describe("applyMove", () => {
     })
 
     test("should handle promotion", () => {
-        let state = importFen(EMPTY_FEN)
+        let state = createGameFromFen(EMPTY_FEN)
         state = put(state, Color.WHITE, Piece.BIA, SquareIndex.d5)
         const move: MoveObject = {
             color: Color.WHITE,
@@ -106,7 +106,7 @@ describe("applyMove", () => {
     })
 
     test("should update piece positions", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const move: MoveObject = {
             color: Color.WHITE,
             piece: Piece.BIA,
@@ -120,7 +120,7 @@ describe("applyMove", () => {
     })
 
     test("should swap active color", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const move: MoveObject = {
             color: Color.WHITE,
             piece: Piece.BIA,
@@ -129,12 +129,12 @@ describe("applyMove", () => {
             flags: BITS.NORMAL,
         }
         const { newState } = applyMove(state, move)
-        expect(newState.activeColor).toBe(Color.BLACK)
+        expect(newState.turn).toBe(Color.BLACK)
     })
 
     test("should increment move number after black move", () => {
-        let state = importFen(INITIAL_FEN)
-        state.activeColor = Color.BLACK
+        let state = createGameFromFen(INITIAL_FEN)
+        state.turn = Color.BLACK
         const move: MoveObject = {
             color: Color.BLACK,
             piece: Piece.BIA,
@@ -147,7 +147,7 @@ describe("applyMove", () => {
     })
 
     test("should track undo when requested", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const move: MoveObject = {
             color: Color.WHITE,
             piece: Piece.BIA,
@@ -162,7 +162,7 @@ describe("applyMove", () => {
     })
 
     test("should not track undo when not requested", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const move: MoveObject = {
             color: Color.WHITE,
             piece: Piece.BIA,
@@ -175,7 +175,7 @@ describe("applyMove", () => {
     })
 
     test("should update FEN occurrence when updateFen is true", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const move: MoveObject = {
             color: Color.WHITE,
             piece: Piece.BIA,
@@ -189,7 +189,7 @@ describe("applyMove", () => {
     })
 
     test("should handle capture moves", () => {
-        let state = importFen(EMPTY_FEN)
+        let state = createGameFromFen(EMPTY_FEN)
         state = put(state, Color.WHITE, Piece.BIA, SquareIndex.d4)
         state = put(state, Color.BLACK, Piece.BIA, SquareIndex.e5)
         const move: MoveObject = {
@@ -208,7 +208,7 @@ describe("applyMove", () => {
 
 describe("undoMove", () => {
     test("should restore board state", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const move: MoveObject = {
             color: Color.WHITE,
             piece: Piece.BIA,
@@ -223,7 +223,7 @@ describe("undoMove", () => {
     })
 
     test("should restore active color", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const move: MoveObject = {
             color: Color.WHITE,
             piece: Piece.BIA,
@@ -233,12 +233,12 @@ describe("undoMove", () => {
         }
         const { newState, undo } = applyMove(state, move, { trackUndo: true })
         const restoredState = undoMove(newState, undo)
-        expect(restoredState.activeColor).toBe(Color.WHITE)
+        expect(restoredState.turn).toBe(Color.WHITE)
     })
 
     test("should restore move number", () => {
-        let state = importFen(INITIAL_FEN)
-        state.activeColor = Color.BLACK
+        let state = createGameFromFen(INITIAL_FEN)
+        state.turn = Color.BLACK
         const move: MoveObject = {
             color: Color.BLACK,
             piece: Piece.BIA,
@@ -253,7 +253,7 @@ describe("undoMove", () => {
     })
 
     test("should restore piece positions", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const move: MoveObject = {
             color: Color.WHITE,
             piece: Piece.BIA,
@@ -268,7 +268,7 @@ describe("undoMove", () => {
     })
 
     test("should restore captured piece", () => {
-        let state = importFen(EMPTY_FEN)
+        let state = createGameFromFen(EMPTY_FEN)
         state = put(state, Color.WHITE, Piece.BIA, SquareIndex.d4)
         state = put(state, Color.BLACK, Piece.BIA, SquareIndex.e5)
         const move: MoveObject = {
@@ -286,7 +286,7 @@ describe("undoMove", () => {
     })
 
     test("should update FEN occurrence", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const move: MoveObject = {
             color: Color.WHITE,
             piece: Piece.BIA,
@@ -302,14 +302,14 @@ describe("undoMove", () => {
     })
 
     test("should do nothing when undo is undefined", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const restoredState = undoMove(state, undefined)
-        expect(restoredState.activeColor).toBe(state.activeColor)
+        expect(restoredState.turn).toBe(state.turn)
         expect(restoredState).toBe(state)
     })
 
     test("should handle promotion undo", () => {
-        let state = importFen(EMPTY_FEN)
+        let state = createGameFromFen(EMPTY_FEN)
         state = put(state, Color.WHITE, Piece.BIA, SquareIndex.d5)
         const move: MoveObject = {
             color: Color.WHITE,

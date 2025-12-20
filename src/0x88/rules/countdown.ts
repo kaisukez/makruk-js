@@ -29,13 +29,13 @@ export function calculatePiecePowerCountdown(state: State) {
     // to activate piece power countdown
     // one must only have Khun left and there must be no Bia left on the board
     if (
-        pieceCount.color[state.activeColor] !== 1 ||
+        pieceCount.color[state.turn] !== 1 ||
         pieceCount.piece[Piece.BIA] !== 0
     ) {
         return null
     }
 
-    const opponentColor = swapColor(state.activeColor)
+    const opponentColor = swapColor(state.turn)
     const opponentPieceCount = pieceCount[opponentColor]
     if ([1, 2].includes(opponentPieceCount[Piece.RUA])) {
         return {
@@ -71,7 +71,7 @@ export function calculateBoardPowerCountdown(state: State) {
     // one must have more than 1 piece (including Khun)
     // and there must be no Bia left on the board
     if (
-        pieceCount.color[state.activeColor] === 1 ||
+        pieceCount.color[state.turn] === 1 ||
         pieceCount.piece[Piece.BIA] !== 0
     ) {
         return null
@@ -90,7 +90,7 @@ export function calculateCountdown(state: State): Countdown | null {
     if (piecePowerCountdown) {
         return {
             // fromMove: state.moveNumber,
-            countColor: state.activeColor, // which side want to count
+            countColor: state.turn, // which side want to count
             countType: CountType.PIECE_POWER_COUNTDOWN, // count type
             count: piecePowerCountdown.countFrom, // current count
             ...piecePowerCountdown,
@@ -100,7 +100,7 @@ export function calculateCountdown(state: State): Countdown | null {
     if (boardPowerCountdown) {
         return {
             // fromMove: state.moveNumber,
-            countColor: state.activeColor,
+            countColor: state.turn,
             countType: CountType.BOARD_POWER_COUNTDOWN,
             count: boardPowerCountdown.countFrom,
             ...boardPowerCountdown,
@@ -191,7 +191,6 @@ export function stepCountdown(state: State, flags: StepCountdownFlags = {}) {
                     state.countdown.countType === CountType.BOARD_POWER_COUNTDOWN) ||
                 stopCountdown
             ) {
-                // state.countdownHistory.push(state.countdown)
                 state.countdown = null
             } else {
                 throw { code: "WRONG_STOP_COUNTDOWN_FLAG" }
@@ -201,7 +200,7 @@ export function stepCountdown(state: State, flags: StepCountdownFlags = {}) {
         // continue counting the same type
         else if (
             state.countdown.countType === countdown.countType &&
-            state.activeColor === state.countdown.countColor
+            state.turn === state.countdown.countColor
         ) {
             state.countdown.count++
         }
@@ -272,7 +271,7 @@ export function applyStepCountdown(draft: Draft<State>, flags: StepCountdownFlag
             }
         } else if (
             draft.countdown.countType === countdown.countType &&
-            draft.activeColor === draft.countdown.countColor
+            draft.turn === draft.countdown.countColor
         ) {
             draft.countdown.count++
         } else if (

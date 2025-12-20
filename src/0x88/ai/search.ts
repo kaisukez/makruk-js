@@ -20,7 +20,7 @@ export function minimax(state: State, depth: number, alpha: number, beta: number
     }
 
     if (isCheckmate(state)) {
-        if (state.activeColor === Color.WHITE) {
+        if (state.turn === Color.WHITE) {
             return {
                 bestScore: -Infinity,
                 bestMove: null,
@@ -41,7 +41,7 @@ export function minimax(state: State, depth: number, alpha: number, beta: number
     }
 
     const moves = generateLegalMoves(state)
-    if (state.activeColor === Color.WHITE) {
+    if (state.turn === Color.WHITE) {
         // maximizing player
         let max = -Infinity
         let bestMove = null

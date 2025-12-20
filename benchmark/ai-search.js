@@ -19,8 +19,8 @@ function run() {
         const iterations = depth === 1 ? 10 : depth === 3 ? 3 : 1
 
         for (const [name, fen] of Object.entries(FENS)) {
-            const s1 = ox88.importFen(fen)
-            const s2 = bitboard.importFen(fen)
+            const s1 = ox88.createGameFromFen(fen)
+            const s2 = bitboard.createGameFromFen(fen)
 
             compare(
                 `Search ${name}`,

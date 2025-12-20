@@ -1,12 +1,12 @@
-import type { Mask64, BoardState } from "bitboard/board/board"
+import type { Mask64, Board } from "bitboard/board/board"
 import { Color, Piece } from "common/const"
 import { EMPTY_MASK, updateOccupancy } from "bitboard/board/board"
 import type { Move } from "bitboard/moves/generation"
 
 export function applyMove(
-    state: BoardState,
+    state: Board,
     move: Move
-): BoardState {
+): Board {
     if (move.from < 0 || move.from > 63) {
         throw new Error(`Invalid move.from: ${move.from}`)
     }
@@ -14,7 +14,7 @@ export function applyMove(
         throw new Error(`Invalid move.to: ${move.to}`)
     }
 
-    const getPieceMask64 = (s: BoardState, color: Color, piece: Piece): Mask64 => {
+    const getPieceMask64 = (s: Board, color: Color, piece: Piece): Mask64 => {
         if (color === Color.WHITE) {
             switch (piece) {
                 case Piece.BIA: return s.whiteBia
@@ -46,7 +46,7 @@ export function applyMove(
     const clearFromBit = ALL_BITS ^ fromBit  // XOR to flip the bit
     const finalPiece = move.promotion || move.piece
 
-    let newState: BoardState = {
+    let newState: Board = {
         whiteBia: state.whiteBia,
         whiteFlippedBia: state.whiteFlippedBia,
         whiteMa: state.whiteMa,

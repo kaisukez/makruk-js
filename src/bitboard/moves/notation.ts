@@ -5,10 +5,10 @@
 
 import { Piece } from "common/const"
 import type { Move } from "bitboard/types"
-import type { BoardState } from "bitboard/board/board"
+import type { Board } from "bitboard/board/board"
 import { generateLegalMoves } from "bitboard/moves/generation"
 import { applyMove } from "bitboard/moves/execution"
-import { isCheck } from "bitboard/rules/status"
+import { isKhunAttacked } from "bitboard/rules/status"
 import { Color } from "common/const"
 
 /**
@@ -95,7 +95,7 @@ function getDisambiguator(
  * Convert a Move to Standard Algebraic Notation (SAN)
  */
 export function moveToSan(
-    state: BoardState,
+    state: Board,
     turn: Color,
     move: Move,
 ): string {
@@ -128,7 +128,7 @@ export function moveToSan(
     // Check/checkmate notation
     const newState = applyMove(state, move)
     const newTurn = turn === Color.WHITE ? Color.BLACK : Color.WHITE
-    if (isCheck(newState, newTurn)) {
+    if (isKhunAttacked(newState, newTurn)) {
         // Simple check - not implementing full checkmate detection here
         // (would need to check if there are any legal moves)
         const nextMoves = generateLegalMoves(newState, newTurn)
@@ -156,7 +156,7 @@ export function strippedSan(san: string): string {
  * Parse SAN string and find matching legal move
  */
 export function moveFromSan(
-    state: BoardState,
+    state: Board,
     turn: Color,
     san: string,
 ): Move | null {

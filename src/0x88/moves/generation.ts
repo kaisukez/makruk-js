@@ -139,7 +139,7 @@ export function generateMovesForOneSquare(
             trackUndo: false,
             updateFen: false,
         })
-        const moverColor = swapColor(newState.activeColor)
+        const moverColor = swapColor(newState.turn)
         const legalMove = !isKhunAttacked(newState, moverColor)
 
         if (legalMove) {
@@ -163,7 +163,7 @@ export function generateMoves(
 
 export function generateLegalMoves(state: State) {
     return generateMoves(state, {
-        forColor: state.activeColor,
+        forColor: state.turn,
         legal: true,
     })
 }

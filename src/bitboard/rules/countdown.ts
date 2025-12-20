@@ -3,16 +3,11 @@
  */
 
 import { Color, CountType, Piece } from "common/const"
-import { BoardState } from "bitboard/board/board"
+import { Board } from "bitboard/board/board"
 import { popCount, getPieceMask64 } from "bitboard/board/board"
 
-export type Countdown = {
-    countColor: Color
-    countType: CountType
-    count: number
-    countFrom: number
-    countTo: number
-}
+export type { Countdown } from "common/fen"
+import type { Countdown } from "common/fen"
 
 export type CountdownFlag = {
     startPiecePowerCountdown?: boolean
@@ -36,7 +31,7 @@ export type PieceCount = {
 /**
  * Count all pieces on the board from bitboards
  */
-export function countPiecesFromMask64(state: BoardState): PieceCount {
+export function countPiecesFromMask64(state: Board): PieceCount {
     const pieceCount: PieceCount = {
         all: 0,
         color: {
@@ -97,21 +92,21 @@ function swapColor(color: Color): Color {
  * Activates when player only has Khun left and there are no Bia on the board
  */
 export function calculatePiecePowerCountdown(
-    state: BoardState,
-    activeColor: Color
+    state: Board,
+    turn: Color
 ): { countFrom: number; countTo: number } | null {
     const pieceCount = countPiecesFromMask64(state)
 
     // to activate piece power countdown
     // one must only have Khun left and there must be no Bia left on the board
     if (
-        pieceCount.color[activeColor] !== 1 ||
+        pieceCount.color[turn] !== 1 ||
         pieceCount.piece[Piece.BIA] !== 0
     ) {
         return null
     }
 
-    const opponentColor = swapColor(activeColor)
+    const opponentColor = swapColor(turn)
     const opponentPieceCount = pieceCount[opponentColor]
 
     if ([1, 2].includes(opponentPieceCount[Piece.RUA])) {
@@ -146,8 +141,8 @@ export function calculatePiecePowerCountdown(
  * Activates when player has more than 1 piece and there are no Bia on the board
  */
 export function calculateBoardPowerCountdown(
-    state: BoardState,
-    activeColor: Color
+    state: Board,
+    turn: Color
 ): { countFrom: number; countTo: number } | null {
     const pieceCount = countPiecesFromMask64(state)
 
@@ -155,7 +150,7 @@ export function calculateBoardPowerCountdown(
     // one must have more than 1 piece (including Khun)
     // and there must be no Bia left on the board
     if (
-        pieceCount.color[activeColor] === 1 ||
+        pieceCount.color[turn] === 1 ||
         pieceCount.piece[Piece.BIA] !== 0
     ) {
         return null
@@ -171,15 +166,15 @@ export function calculateBoardPowerCountdown(
  * Calculate countdown for the current position
  */
 export function calculateCountdown(
-    state: BoardState,
-    activeColor: Color
+    state: Board,
+    turn: Color
 ): Countdown | null {
-    const piecePowerCountdown = calculatePiecePowerCountdown(state, activeColor)
-    const boardPowerCountdown = calculateBoardPowerCountdown(state, activeColor)
+    const piecePowerCountdown = calculatePiecePowerCountdown(state, turn)
+    const boardPowerCountdown = calculateBoardPowerCountdown(state, turn)
 
     if (piecePowerCountdown) {
         return {
-            countColor: activeColor,
+            countColor: turn,
             countType: CountType.PIECE_POWER_COUNTDOWN,
             count: piecePowerCountdown.countFrom,
             ...piecePowerCountdown,
@@ -188,7 +183,7 @@ export function calculateCountdown(
 
     if (boardPowerCountdown) {
         return {
-            countColor: activeColor,
+            countColor: turn,
             countType: CountType.BOARD_POWER_COUNTDOWN,
             count: boardPowerCountdown.countFrom,
             ...boardPowerCountdown,
@@ -223,8 +218,8 @@ export function hasCountdownFlag(flags: CountdownFlag = {}): boolean {
  * This function mutates the countdown parameter
  */
 export function stepCountdown(
-    state: BoardState,
-    activeColor: Color,
+    state: Board,
+    turn: Color,
     countdown: Countdown | null,
     flags: StepCountdownFlags = {}
 ): Countdown | null {
@@ -247,7 +242,7 @@ export function stepCountdown(
         throw { code: "CANNOT_START_ALREADY_COUNTED_STATE" }
     }
 
-    const newCountdown = calculateCountdown(state, activeColor)
+    const newCountdown = calculateCountdown(state, turn)
 
     // if there's no countdown then return null
     if (!newCountdown) {
@@ -291,7 +286,7 @@ export function stepCountdown(
         // continue counting the same type
         else if (
             countdown.countType === newCountdown.countType &&
-            activeColor === countdown.countColor
+            turn === countdown.countColor
         ) {
             return {
                 ...countdown,

@@ -9,7 +9,7 @@ import { isKhunAttacked } from "0x88/rules/attacks"
 export { isKhunAttacked }
 
 export const isCheck = (state: State): boolean =>
-    isKhunAttacked(state, state.activeColor)
+    isKhunAttacked(state, state.turn)
 
 export const isCheckmate = (state: State): boolean =>
     isCheck(state) && generateLegalMoves(state).length === 0
@@ -21,11 +21,11 @@ export const isThreefoldRepetition = (state: State): boolean =>
     Object.values(state.fenOccurrence).some((count) => count >= 3)
 
 export const isFinishedCounting = (state: State): boolean => {
-    const { countdown, activeColor } = state
+    const { countdown, turn } = state
 
     return Boolean(
         countdown &&
-        countdown.countColor === activeColor &&
+        countdown.countColor === turn &&
         countdown.count >= countdown.countTo,
     )
 }

@@ -6,8 +6,8 @@
  */
 
 import { INITIAL_FEN } from "bitboard/fen"
-import { importFen, move } from "bitboard/index"
-import type { State } from "bitboard/index"
+import { createGameFromFen, move } from "bitboard/index"
+import type { Game } from "bitboard/index"
 
 // Import parser and exporter from common (they work with PgnGame objects, not State)
 import { exportPgn as coreExportPgn } from "common/pgn/exporter"
@@ -21,32 +21,32 @@ import type { PgnExportOptions, PgnGame, PgnParseOptions } from "common/pgn/type
  * Import a PGN string and convert it to an array of game states (bitboard)
  * Each state represents the position after each move in the main line
  */
-export function importPgn(pgnString: string, options?: PgnParseOptions): State[] {
-    const game = coreParsePgn(pgnString, options)
+export function importPgn(pgnString: string, options?: PgnParseOptions): Game[] {
+    const pgnGame = coreParsePgn(pgnString, options)
 
-    const startingFen = game.tags.FEN || INITIAL_FEN
-    let currentState = importFen(startingFen)
+    const startingFen = pgnGame.tags.FEN || INITIAL_FEN
+    let currentGame = createGameFromFen(startingFen)
 
-    const states: State[] = [currentState]
+    const games: Game[] = [currentGame]
 
-    for (const pgnMove of game.moves) {
+    for (const pgnMove of pgnGame.moves) {
         try {
-            currentState = move(currentState, pgnMove.san)
-            states.push(currentState)
+            currentGame = move(currentGame, pgnMove.san)
+            games.push(currentGame)
         } catch (error) {
             console.warn(`Failed to apply move ${pgnMove.san}:`, error)
             break
         }
     }
 
-    return states
+    return games
 }
 
 /**
  * Export a game history to PGN format
  */
 export function exportPgnFromHistory(
-    _states: State[],
+    _games: Game[],
     tags: Record<string, string> = {},
     options?: PgnExportOptions
 ): string {

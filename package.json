@@ -52,7 +52,11 @@
         "benchmark": "npm run build && node benchmark/index.js",
         "benchmark:fen": "npm run build && node benchmark/index.js fen",
         "benchmark:moves": "npm run build && node benchmark/index.js moves",
-        "benchmark:ai": "npm run build && node benchmark/index.js ai"
+        "benchmark:ai": "npm run build && node benchmark/index.js ai",
+        "benchmark:parallel": "npm run build && node benchmark/index.js parallel",
+        "web:dev": "pnpm --filter makruk-web dev",
+        "web:build": "pnpm --filter makruk-web build",
+        "web:preview": "pnpm --filter makruk-web preview"
     },
     "devDependencies": {
         "@babel/preset-env": "^7.28.5",

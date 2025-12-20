@@ -2,17 +2,12 @@
  * FEN export for bitboard representation
  */
 
-import type { Mask64, BoardState } from "bitboard/board/board"
+import type { Mask64 } from "bitboard/board/board"
+import type { Game } from "bitboard/types"
 import { Color } from "common/const"
 
-/**
- * Export BoardState to FEN string (optimized version)
- */
-export function exportFen(
-    state: BoardState,
-    turn: Color,
-    moveNumber: number
-): string {
+export function exportFen(game: Game): string {
+    const { board, turn, moveNumber } = game
     // Create a piece map for fast lookup
     const pieceMap = new Array<string | null>(64).fill(null)
 
@@ -32,22 +27,21 @@ export function exportFen(
         }
     }
 
-    // Populate piece map for all pieces (Makruk notation)
-    populatePieceMap(state.whiteBia, 'B')
-    populatePieceMap(state.whiteFlippedBia, 'F')
-    populatePieceMap(state.whiteMa, 'M')
-    populatePieceMap(state.whiteThon, 'T')
-    populatePieceMap(state.whiteMet, 'E')
-    populatePieceMap(state.whiteRua, 'R')
-    populatePieceMap(state.whiteKhun, 'K')
+    populatePieceMap(board.whiteBia, 'B')
+    populatePieceMap(board.whiteFlippedBia, 'F')
+    populatePieceMap(board.whiteMa, 'M')
+    populatePieceMap(board.whiteThon, 'T')
+    populatePieceMap(board.whiteMet, 'E')
+    populatePieceMap(board.whiteRua, 'R')
+    populatePieceMap(board.whiteKhun, 'K')
 
-    populatePieceMap(state.blackBia, 'b')
-    populatePieceMap(state.blackFlippedBia, 'f')
-    populatePieceMap(state.blackMa, 'm')
-    populatePieceMap(state.blackThon, 't')
-    populatePieceMap(state.blackMet, 'e')
-    populatePieceMap(state.blackRua, 'r')
-    populatePieceMap(state.blackKhun, 'k')
+    populatePieceMap(board.blackBia, 'b')
+    populatePieceMap(board.blackFlippedBia, 'f')
+    populatePieceMap(board.blackMa, 'm')
+    populatePieceMap(board.blackThon, 't')
+    populatePieceMap(board.blackMet, 'e')
+    populatePieceMap(board.blackRua, 'r')
+    populatePieceMap(board.blackKhun, 'k')
 
     // Build board string rank by rank (from rank 8 to rank 1)
     let boardString = ''

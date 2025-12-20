@@ -17,15 +17,15 @@ function run() {
     for (const [name, fen] of Object.entries(FENS)) {
         compare(
             `Import ${name}`,
-            () => ox88.importFen(fen),
-            () => bitboard.importFen(fen)
+            () => ox88.createGameFromFen(fen),
+            () => bitboard.createGameFromFen(fen)
         )
     }
 
     console.log('=== FEN EXPORT ===\n')
     for (const [name, fen] of Object.entries(FENS)) {
-        const s1 = ox88.importFen(fen)
-        const s2 = bitboard.importFen(fen)
+        const s1 = ox88.createGameFromFen(fen)
+        const s2 = bitboard.createGameFromFen(fen)
         compare(
             `Export ${name}`,
             () => ox88.exportFen(s1),

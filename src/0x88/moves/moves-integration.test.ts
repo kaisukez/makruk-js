@@ -1,7 +1,7 @@
 const { describe, expect, test } = globalThis as any
 
 import { BITS, Color, EMPTY_FEN, INITIAL_FEN, Piece, SquareIndex } from "common/const"
-import { importFen, exportFen } from "0x88/fen"
+import { createGameFromFen, exportFen } from "0x88/fen"
 import { put } from "0x88/board"
 import { generateLegalMoves } from "0x88/moves/generation"
 import { move } from "0x88/moves/notation"
@@ -9,7 +9,7 @@ import { applyMove, undoMove } from "0x88/moves/execution"
 
 describe("Integration: Complete game flow", () => {
     test("should play sequence of moves and undo them", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const originalFen = exportFen(state)
 
         // Make 3 moves
@@ -26,7 +26,7 @@ describe("Integration: Complete game flow", () => {
     })
 
     test("should maintain immutability throughout move sequence", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const fen0 = exportFen(state)
 
         const state1 = move(state, "a4")
@@ -40,14 +40,14 @@ describe("Integration: Complete game flow", () => {
     })
 
     test("should correctly track FEN occurrences for repetition", () => {
-        let state = importFen(EMPTY_FEN)
+        let state = createGameFromFen(EMPTY_FEN)
         state = put(state, Color.WHITE, Piece.MA, SquareIndex.b1)
 
-        // Move knight back and forth
+        // Move knight back and forth (black king is at e8 in EMPTY_FEN)
         const { newState: s1 } = applyMove(state, { color: Color.WHITE, piece: Piece.MA, from: SquareIndex.b1, to: SquareIndex.c3, flags: BITS.NORMAL }, { updateFen: true })
-        const { newState: s2 } = applyMove(s1, { color: Color.BLACK, piece: Piece.KHUN, from: SquareIndex.a8, to: SquareIndex.b8, flags: BITS.NORMAL }, { updateFen: true })
+        const { newState: s2 } = applyMove(s1, { color: Color.BLACK, piece: Piece.KHUN, from: SquareIndex.e8, to: SquareIndex.d8, flags: BITS.NORMAL }, { updateFen: true })
         const { newState: s3 } = applyMove(s2, { color: Color.WHITE, piece: Piece.MA, from: SquareIndex.c3, to: SquareIndex.b1, flags: BITS.NORMAL }, { updateFen: true })
-        const { newState: s4 } = applyMove(s3, { color: Color.BLACK, piece: Piece.KHUN, from: SquareIndex.b8, to: SquareIndex.a8, flags: BITS.NORMAL }, { updateFen: true })
+        const { newState: s4 } = applyMove(s3, { color: Color.BLACK, piece: Piece.KHUN, from: SquareIndex.d8, to: SquareIndex.e8, flags: BITS.NORMAL }, { updateFen: true })
 
         // Position should repeat
         const finalFen = exportFen(s4)

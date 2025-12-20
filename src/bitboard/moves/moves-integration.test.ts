@@ -1,14 +1,14 @@
 const { describe, expect, test } = globalThis as any
 
 import { Color, Piece } from "common/const"
-import { importFen, INITIAL_FEN } from "bitboard/fen"
+import { createGameFromFen, INITIAL_FEN } from "bitboard/fen"
 import { generateLegalMoves } from "bitboard/moves/generation"
 import { applyMove } from "bitboard/moves/execution"
 import { getPieceAt } from "bitboard/board/board"
 
 describe("moves integration", () => {
     test("should generate moves, apply them, and verify board state", () => {
-        const { state } = importFen(INITIAL_FEN)
+        const { board: state } = createGameFromFen(INITIAL_FEN)
         const moves = generateLegalMoves(state, Color.WHITE)
 
         expect(moves.length).toBe(23)
@@ -27,7 +27,7 @@ describe("moves integration", () => {
     })
 
     test("should handle a sequence of moves", () => {
-        let { state } = importFen(INITIAL_FEN)
+        let { board: state } = createGameFromFen(INITIAL_FEN)
         let currentColor = Color.WHITE
 
         // Play 4 moves
@@ -49,7 +49,7 @@ describe("moves integration", () => {
 
     test("should handle captures correctly in sequence", () => {
         // Set up position where captures are possible
-        const { state: initialState } = importFen("k7/8/8/8/8/3b4/3R4/K7 w 1")
+        const { board: initialState } = createGameFromFen("k7/8/8/8/8/3b4/3R4/K7 w 1")
 
         const whiteMoves = generateLegalMoves(initialState, Color.WHITE)
         const captureMove = whiteMoves.find(m => m.captured === Piece.BIA)
@@ -68,7 +68,7 @@ describe("moves integration", () => {
 
     test("should not generate moves when in checkmate", () => {
         // Checkmate position: Black king on a8, white rooks on a7 and b7, white king on a6
-        const { state } = importFen("k7/RR6/K7/8/8/8/8/8 b 1")
+        const { board: state } = createGameFromFen("k7/RR6/K7/8/8/8/8/8 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
 
         // In checkmate, should have no legal moves
@@ -76,7 +76,7 @@ describe("moves integration", () => {
     })
 
     test("should properly alternate colors through move sequence", () => {
-        let { state } = importFen(INITIAL_FEN)
+        let { board: state } = createGameFromFen(INITIAL_FEN)
 
         // White's turn
         const whiteMoves = generateLegalMoves(state, Color.WHITE)
@@ -91,7 +91,7 @@ describe("moves integration", () => {
     })
 
     test("should maintain board integrity after multiple moves", () => {
-        let { state } = importFen(INITIAL_FEN)
+        let { board: state } = createGameFromFen(INITIAL_FEN)
         let currentColor = Color.WHITE
 
         // Play 10 random moves
