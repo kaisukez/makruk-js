@@ -9,6 +9,13 @@ import { popCount, getPieceMask64 } from "bitboard/board/board"
 export type { Countdown } from "common/fen"
 import type { Countdown } from "common/fen"
 
+export const CountdownErrorCode = {
+    CANNOT_STOP_UNCOUNTED_STATE: 'CANNOT_STOP_UNCOUNTED_STATE',
+    CANNOT_START_ALREADY_COUNTED_STATE: 'CANNOT_START_ALREADY_COUNTED_STATE',
+    WRONG_COUNTDOWN_TYPE: 'WRONG_COUNTDOWN_TYPE',
+    WRONG_STOP_COUNTDOWN_FLAG: 'WRONG_STOP_COUNTDOWN_FLAG',
+} as const
+
 export type CountdownFlag = {
     startPiecePowerCountdown?: boolean
     startBoardPowerCountdown?: boolean
@@ -234,12 +241,12 @@ export function stepCountdown(
 
     // if we didn't count yet but you give countdown flag then throw error
     if (!countdown && hasStopCountdownFlag(flags)) {
-        throw { code: "CANNOT_STOP_UNCOUNTED_STATE" }
+        throw { code: CountdownErrorCode.CANNOT_STOP_UNCOUNTED_STATE }
     }
 
     // if we already count but you give countdown flag again then throw error
     if (countdown && hasStartCountdownFlag(flags)) {
-        throw { code: "CANNOT_START_ALREADY_COUNTED_STATE" }
+        throw { code: CountdownErrorCode.CANNOT_START_ALREADY_COUNTED_STATE }
     }
 
     const newCountdown = calculateCountdown(state, turn)
@@ -261,7 +268,7 @@ export function stepCountdown(
         ) {
             return newCountdown
         } else if (hasStartCountdownFlag(flags)) {
-            throw { code: "WRONG_COUNTDOWN_TYPE" }
+            throw { code: CountdownErrorCode.WRONG_COUNTDOWN_TYPE }
         }
         return null
     }
@@ -279,7 +286,7 @@ export function stepCountdown(
             ) {
                 return null
             } else {
-                throw { code: "WRONG_STOP_COUNTDOWN_FLAG" }
+                throw { code: CountdownErrorCode.WRONG_STOP_COUNTDOWN_FLAG }
             }
         }
 

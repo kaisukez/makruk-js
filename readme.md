@@ -1,9 +1,12 @@
 # Makruk JS
 
-A high-performance TypeScript library for Makruk (Thai Chess).
+A headless Makruk (Thai chess) library. No UI included - this is a pure game logic engine.
+
+**Live Demo with UI: [makruk-js.com](https://makruk-js.com)**
 
 ## Features
 
+- **Headless** - Pure game logic, no UI dependencies
 - **Fast** - Bitboard representation with bitwise operations
 - **Immutable** - All functions return new state objects
 - **TypeScript** - Full type definitions included
