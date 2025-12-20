@@ -61,13 +61,13 @@ isGameOver(state)    // Game ended?
 ### FEN Support
 
 ```ts
-import { createInitialState, importFen, exportFen, INITIAL_FEN, EMPTY_FEN } from '@kaisukez/makruk-js'
+import { createInitialState, createGameFromFen, exportFen, INITIAL_FEN, EMPTY_FEN } from '@kaisukez/makruk-js'
 
 // Create initial state (preferred)
 const state = createInitialState()
 
-// Or import from FEN string
-const customState = importFen('4k3/8/8/8/8/8/8/4K3 w 1')
+// Or create from FEN string
+const customState = createGameFromFen('4k3/8/8/8/8/8/8/4K3 w 1')
 const fen = exportFen(customState)
 ```
 
@@ -118,7 +118,9 @@ import {
     distributeMoves,
     combineResults,
     generateLegalMoves,
-    getRecommendedWorkers
+    getRecommendedWorkers,
+    createTranspositionTable,
+    Color
 } from '@kaisukez/makruk-js'
 
 // Get number of workers based on CPU cores
@@ -129,8 +131,9 @@ const numWorkers = getRecommendedWorkers() // Node.js only
 const moves = generateLegalMoves(state)
 const moveBuckets = distributeMoves(moves, numWorkers)
 
-// Each worker searches its assigned moves
-const result = searchMoves(state.board, state.turn, moveBuckets[workerIndex], depth)
+// Each worker creates its own transposition table and searches its assigned moves
+const tt = createTranspositionTable()
+const result = searchMoves(state, moveBuckets[workerIndex], depth, tt)
 
 // Combine results from all workers
 const combined = combineResults(workerResults, state.turn === Color.WHITE)
@@ -148,15 +151,15 @@ state = remove(state, SquareIndex.d4)
 ## Types
 
 ```ts
-import type { State, MoveObject, MinimaxOutput, PgnGame, PgnMove } from '@kaisukez/makruk-js'
-import { Color, Piece, SquareIndex, PIECE_POWER } from '@kaisukez/makruk-js'
+import type { Game, Move, MinimaxOutput, PgnGame, PgnMove } from '@kaisukez/makruk-js'
+import { Color, Piece, PIECE_POWER } from '@kaisukez/makruk-js'
 ```
 
-### State
+### Game
 
 ```ts
-interface State {
-    board: BoardState      // Internal board representation
+interface Game {
+    board: Board           // Internal board representation
     turn: Color            // Current player
     moveNumber: number     // Current move number
     fen: string            // Current FEN
@@ -165,12 +168,12 @@ interface State {
 }
 ```
 
-### MoveObject
+### Move
 
 ```ts
-interface MoveObject {
-    from: SquareIndex
-    to: SquareIndex
+interface Move {
+    from: number           // Source square (0-63)
+    to: number             // Target square (0-63)
     piece: Piece
     color: Color
     captured?: Piece

@@ -147,129 +147,7 @@ See [benchmark/README.md](../../../benchmark/README.md) for performance comparis
 
 ## Parallel Search
 
-Two parallel search strategies are available:
-
-1. **Root Parallelization** - Simple, distribute root moves across workers
-2. **Lazy SMP** - State-of-the-art, all threads search same tree with shared TT
-
-### Lazy SMP (Recommended)
-
-Lazy SMP is used by top chess engines like Stockfish. All threads search the same tree
-with a shared transposition table via SharedArrayBuffer.
-
-**How It Works:**
-
-```
-               ┌────────────────────────────────┐
-               │   Shared Transposition Table   │
-               │      (SharedArrayBuffer)       │
-               └────────────────────────────────┘
-                    ▲      ▲      ▲      ▲
-                    │      │      │      │
-              ┌─────┴──┬───┴───┬──┴────┬─┴─────┐
-              │Thread 1│Thread 2│Thread 3│Thread 4│
-              │depth=6 │depth=7 │depth=5 │depth=6 │
-              └────────┴────────┴────────┴────────┘
-                     All search the same tree
-```
-
-**Benefits over Root Parallelization:**
-- Better scaling to many cores
-- Threads help each other via TT sharing
-- Natural load balancing
-- No wasted work on already-pruned subtrees
-
-**Browser (Web Workers):**
-
-```typescript
-import {
-    createLazySmpTT,
-    wrapLazySmpTT,
-    lazySmpNewSearch,
-    runLazySmpSearch,
-    combineLazySmpResults,
-    isLazySmpAvailable,
-    Color,
-} from '@kaisukez/makruk-js'
-
-// Check availability (requires SharedArrayBuffer)
-if (!isLazySmpAvailable()) {
-    console.warn('Lazy SMP requires SharedArrayBuffer')
-}
-
-// Create shared TT (64MB)
-const sharedTT = createLazySmpTT(64)
-
-// Increment TT age before each search
-lazySmpNewSearch(sharedTT)
-
-// Create workers and run parallel search
-const numWorkers = navigator.hardwareConcurrency - 1
-const workers = Array.from({ length: numWorkers }, () =>
-    new Worker('./lazy-smp-worker.js')
-)
-
-const promises = workers.map((worker, threadId) =>
-    new Promise(resolve => {
-        worker.onmessage = (e) => resolve(e.data.result)
-        worker.postMessage({
-            type: 'SEARCH',
-            state,
-            turn: state.turn,
-            maxDepth: 8,
-            timeLimitMs: 3000,
-            threadId,
-            sharedTTBuffer: sharedTT.buffer,
-            ttAge: sharedTT.currentAge,
-        })
-    })
-)
-
-const results = await Promise.all(promises)
-const best = combineLazySmpResults(results, state.turn === Color.WHITE)
-```
-
-**Worker file (lazy-smp-worker.js):**
-
-```typescript
-import { wrapLazySmpTT, runLazySmpSearch } from '@kaisukez/makruk-js'
-
-const stopFlag = { stopped: false }
-
-self.onmessage = (e) => {
-    if (e.data.type === 'STOP') {
-        stopFlag.stopped = true
-        return
-    }
-
-    const { state, turn, maxDepth, timeLimitMs, threadId, sharedTTBuffer, ttAge } = e.data
-
-    stopFlag.stopped = false
-    const sharedTT = wrapLazySmpTT(sharedTTBuffer, ttAge)
-
-    const result = runLazySmpSearch(
-        state.board,
-        turn,
-        maxDepth,
-        sharedTT,
-        threadId,
-        stopFlag,
-        timeLimitMs
-    )
-
-    self.postMessage({ type: 'RESULT', result, threadId })
-}
-```
-
-**Note:** SharedArrayBuffer requires COOP/COEP headers in browsers:
-```
-Cross-Origin-Opener-Policy: same-origin
-Cross-Origin-Embedder-Policy: require-corp
-```
-
-### Root Parallelization (Simple)
-
-For environments without SharedArrayBuffer support:
+Root parallelization distributes root moves across workers for parallel search.
 
 ### How It Works
 
@@ -397,88 +275,81 @@ interface Move {
 
 ### Search Functions
 
-#### `findBestMove(state, turn, depth, options?)`
+#### `findBestMove(game, depth, tt?)`
 
 Find the best move at a fixed search depth.
 
 ```typescript
 function findBestMove(
-    state: BoardState,
-    turn: Color,
+    game: Game,
     depth: number,
-    options?: {
-        useTranspositionTable?: boolean  // Default: true
-        clearCache?: boolean             // Default: false
-    }
+    tt?: TranspositionTable | null
 ): MinimaxOutput
 ```
 
 **Parameters:**
-- `state` - Current board position
-- `turn` - Side to move (`Color.WHITE` or `Color.BLACK`)
+- `game` - Current game state
 - `depth` - Search depth (1-7 recommended, higher = slower but stronger)
-- `options.useTranspositionTable` - Enable position caching (recommended)
-- `options.clearCache` - Clear cache before search (use for new games)
+- `tt` - Optional transposition table. Creates a new one if not provided.
 
 **Returns:** `MinimaxOutput` with best move and score
 
 **Example:**
 ```typescript
-const result = findBestMove(state, Color.WHITE, 5)
+const result = findBestMove(game, 5)
 if (result.bestMove) {
-    state = applyMove(state, result.bestMove)
+    game = move(game, result.bestMove)
 }
 ```
 
 ---
 
-#### `iterativeDeepening(state, turn, maxDepth, timeLimitMs?)`
+#### `iterativeDeepening(game, maxDepth, timeLimitMs?, tt?)`
 
 Search with increasing depth until time limit or max depth reached. Recommended for game play.
 
 ```typescript
 function iterativeDeepening(
-    state: BoardState,
-    turn: Color,
+    game: Game,
     maxDepth: number,
-    timeLimitMs?: number  // Optional time limit in milliseconds
+    timeLimitMs?: number,
+    tt?: TranspositionTable | null
 ): MinimaxOutput
 ```
 
 **Parameters:**
-- `state` - Current board position
-- `turn` - Side to move
+- `game` - Current game state
 - `maxDepth` - Maximum search depth
 - `timeLimitMs` - Stop searching after this many milliseconds
+- `tt` - Optional transposition table
 
 **Returns:** `MinimaxOutput` from the deepest completed search
 
 **Example:**
 ```typescript
 // Search up to depth 8, but stop after 3 seconds
-const result = iterativeDeepening(state, Color.WHITE, 8, 3000)
+const result = iterativeDeepening(game, 8, 3000)
 ```
 
 ---
 
-#### `minimax(state, turn, depth, alpha, beta, useTranspositionTable?)`
+#### `minimax(game, depth, alpha, beta, tt?)`
 
 Low-level alpha-beta search. Use `findBestMove` or `iterativeDeepening` instead for normal use.
 
 ```typescript
 function minimax(
-    state: BoardState,
-    turn: Color,
+    game: Game,
     depth: number,
-    alpha: number,           // Lower bound (-Infinity initially)
-    beta: number,            // Upper bound (Infinity initially)
-    useTranspositionTable?: boolean  // Default: true
+    alpha: number,
+    beta: number,
+    tt?: TranspositionTable | null
 ): MinimaxOutput
 ```
 
 **Example:**
 ```typescript
-const result = minimax(state, Color.WHITE, 5, -Infinity, Infinity, true)
+const result = minimax(game, 5, -Infinity, Infinity)
 ```
 
 ---
@@ -501,7 +372,7 @@ function distributeMoves<T>(items: T[], numWorkers: number): T[][]
 
 **Example:**
 ```typescript
-const moves = generateLegalMoves(state, turn)
+const moves = generateLegalMoves(game)
 const buckets = distributeMoves(moves, 4)
 // buckets[0] = [move0, move4, move8, ...]
 // buckets[1] = [move1, move5, move9, ...]
@@ -511,35 +382,61 @@ const buckets = distributeMoves(moves, 4)
 
 ---
 
-#### `searchMoves(state, turn, moves, depth)`
+#### `searchMoves(game, moves, depth, tt?)`
 
 Search a specific subset of moves. Designed to be called from a worker.
 
 ```typescript
 function searchMoves(
-    state: BoardState,
-    turn: Color,
+    game: Game,
     moves: Move[],
-    depth: number
+    depth: number,
+    tt?: TranspositionTable | null
 ): MinimaxOutput
 ```
 
 **Parameters:**
-- `state` - Current board position
-- `turn` - Side to move
+- `game` - Current game state
 - `moves` - Subset of legal moves to search
 - `depth` - Search depth
+- `tt` - Optional transposition table. Creates a new one if not provided.
 
 **Returns:** `MinimaxOutput` with best move from the given subset
 
 **Example (in worker):**
 ```typescript
 self.onmessage = (e) => {
-    const { state, turn, moves, depth } = e.data
-    const result = searchMoves(state, turn, moves, depth)
+    const { game, moves, depth } = e.data
+    const tt = createTranspositionTable()
+    const result = searchMoves(game, moves, depth, tt)
     self.postMessage(result)
 }
 ```
+
+---
+
+#### `searchMovesWithSharedBounds(game, moves, depth, sharedBounds, tt?)`
+
+Search a specific subset of moves with shared alpha-beta bounds for better pruning.
+
+```typescript
+function searchMovesWithSharedBounds(
+    game: Game,
+    moves: Move[],
+    depth: number,
+    sharedBounds: SharedBounds,
+    tt?: TranspositionTable | null
+): MinimaxOutput
+```
+
+**Parameters:**
+- `game` - Current game state
+- `moves` - Subset of legal moves to search
+- `depth` - Search depth
+- `sharedBounds` - Shared bounds from `createSharedBounds` or `wrapSharedBounds`
+- `tt` - Optional transposition table
+
+**Returns:** `MinimaxOutput` with best move from the given subset
 
 ---
 
@@ -614,19 +511,19 @@ function orderMoves(moves: Move[], ttBestMove?: Move | null): void
 
 ### Evaluation Functions
 
-#### `evaluateFast(state)`
+#### `evaluateFast(board)`
 
-Fast position evaluation using material and piece-square tables.
+Fast position evaluation using material, piece-square tables, and mobility.
 
 ```typescript
-function evaluateFast(state: BoardState): number
+function evaluateFast(board: Board): number
 ```
 
-**Returns:** Score in centipawns. Positive = white advantage, negative = black advantage.
+**Returns:** Score in pawn units. Positive = white advantage, negative = black advantage.
 
 **Example:**
 ```typescript
-const score = evaluateFast(state)
+const score = evaluateFast(game.board)
 // score = 2.5 means white is up ~2.5 pawns worth of material/position
 ```
 
@@ -634,20 +531,60 @@ const score = evaluateFast(state)
 
 ### Transposition Table Functions
 
-#### `getTranspositionTableStats()`
+#### `createTranspositionTable(maxSize?)`
 
-Get current transposition table statistics.
+Create a new transposition table.
 
 ```typescript
-function getTranspositionTableStats(): { size: number }
+function createTranspositionTable(maxSize?: number): TranspositionTable
+```
+
+**Parameters:**
+- `maxSize` - Maximum entries before clearing (default: 1,000,000)
+
+**Returns:** A new `TranspositionTable` instance
+
+**Example:**
+```typescript
+const tt = createTranspositionTable()
+const result = findBestMove(game, 5, tt)
+
+// Reuse for subsequent searches
+const result2 = findBestMove(nextGame, 5, tt)
+
+// Clear when starting a new game
+tt.clear()
 ```
 
 ---
 
-#### `clearTranspositionTable()`
+### Shared Bounds Functions
 
-Clear all cached positions. Call when starting a new game.
+#### `createSharedBounds(isWhite)`
+
+Create shared bounds for parallel search. Use on the main thread.
 
 ```typescript
-function clearTranspositionTable(): void
+function createSharedBounds(isWhite: boolean): SharedBounds
 ```
+
+**Parameters:**
+- `isWhite` - True if white to move (maximizing)
+
+**Returns:** `SharedBounds` object with buffer to pass to workers
+
+---
+
+#### `wrapSharedBounds(buffer, isWhite)`
+
+Wrap an existing SharedArrayBuffer as bounds. Use in workers.
+
+```typescript
+function wrapSharedBounds(buffer: SharedArrayBuffer, isWhite: boolean): SharedBounds
+```
+
+**Parameters:**
+- `buffer` - SharedArrayBuffer from main thread
+- `isWhite` - True if white to move
+
+**Returns:** `SharedBounds` object for use with `searchMovesWithSharedBounds`
