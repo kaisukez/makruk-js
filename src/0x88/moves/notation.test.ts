@@ -1,7 +1,7 @@
 const { describe, expect, test } = globalThis as any
 
 import { BITS, Color, EMPTY_FEN, INITIAL_FEN, Piece, SquareIndex } from "common/const"
-import { importFen, exportFen } from "0x88/fen"
+import { createGameFromFen, exportFen } from "0x88/fen"
 import { put } from "0x88/board"
 import { generateLegalMoves } from "0x88/moves/generation"
 import {
@@ -16,7 +16,7 @@ import { MoveObject } from "0x88/types"
 
 describe("getDisambiguator", () => {
     test("should return empty string when no ambiguity", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const moves = generateLegalMoves(state)
         const biaMove = moves.find(m => m.piece === Piece.BIA && m.from === SquareIndex.a3)!
         const disambiguator = getDisambiguator(moves, biaMove)
@@ -25,7 +25,7 @@ describe("getDisambiguator", () => {
 
     test("should return file when pieces on same rank", () => {
         // Two rooks on same rank, different files
-        let state = importFen(EMPTY_FEN)
+        let state = createGameFromFen(EMPTY_FEN)
         state = put(state, Color.WHITE, Piece.RUA, SquareIndex.a4)
         state = put(state, Color.WHITE, Piece.RUA, SquareIndex.h4)
         const moves = generateLegalMoves(state)
@@ -36,7 +36,7 @@ describe("getDisambiguator", () => {
 
     test("should return rank when pieces on same file", () => {
         // Two rooks on same file, different ranks
-        let state = importFen(EMPTY_FEN)
+        let state = createGameFromFen(EMPTY_FEN)
         state = put(state, Color.WHITE, Piece.RUA, SquareIndex.d1)
         state = put(state, Color.WHITE, Piece.RUA, SquareIndex.d8)
         const moves = generateLegalMoves(state)
@@ -47,7 +47,7 @@ describe("getDisambiguator", () => {
 
     test("should return rank when pieces on same file", () => {
         // Rooks at d1 and d7 can both move to d4 (same file), need rank disambiguation
-        let state = importFen(EMPTY_FEN)
+        let state = createGameFromFen(EMPTY_FEN)
         state = put(state, Color.WHITE, Piece.RUA, SquareIndex.d1)
         state = put(state, Color.WHITE, Piece.RUA, SquareIndex.d7)
         const moves = generateLegalMoves(state)
@@ -59,7 +59,7 @@ describe("getDisambiguator", () => {
 
 describe("moveToSan", () => {
     test("should convert simple bia move to SAN", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const move: MoveObject = {
             color: Color.WHITE,
             piece: Piece.BIA,
@@ -72,7 +72,7 @@ describe("moveToSan", () => {
     })
 
     test("should convert piece move with piece letter", () => {
-        let state = importFen(EMPTY_FEN)
+        let state = createGameFromFen(EMPTY_FEN)
         state = put(state, Color.WHITE, Piece.MA, SquareIndex.b1)
         const move: MoveObject = {
             color: Color.WHITE,
@@ -86,7 +86,7 @@ describe("moveToSan", () => {
     })
 
     test("should include capture symbol for captures", () => {
-        let state = importFen(EMPTY_FEN)
+        let state = createGameFromFen(EMPTY_FEN)
         state = put(state, Color.WHITE, Piece.BIA, SquareIndex.d4)
         state = put(state, Color.BLACK, Piece.BIA, SquareIndex.e5)
         const move: MoveObject = {
@@ -102,7 +102,7 @@ describe("moveToSan", () => {
     })
 
     test("should include promotion symbol", () => {
-        let state = importFen(EMPTY_FEN)
+        let state = createGameFromFen(EMPTY_FEN)
         state = put(state, Color.WHITE, Piece.BIA, SquareIndex.d5)
         const move: MoveObject = {
             color: Color.WHITE,
@@ -118,7 +118,7 @@ describe("moveToSan", () => {
 
     test("should include check symbol", () => {
         // Setup position where move gives check
-        let state = importFen(EMPTY_FEN)
+        let state = createGameFromFen(EMPTY_FEN)
         state = put(state, Color.WHITE, Piece.RUA, SquareIndex.a1)
         state = put(state, Color.BLACK, Piece.KHUN, SquareIndex.h1)
         // This would be capturing the king, which shouldn't happen
@@ -128,7 +128,7 @@ describe("moveToSan", () => {
 
     test("should include checkmate symbol", () => {
         // Setup checkmate position
-        let state = importFen(EMPTY_FEN)
+        let state = createGameFromFen(EMPTY_FEN)
         state = put(state, Color.WHITE, Piece.RUA, SquareIndex.e7)
         state = put(state, Color.BLACK, Piece.KHUN, SquareIndex.e8)
         // Can't capture king, this is theoretical
@@ -136,7 +136,7 @@ describe("moveToSan", () => {
     })
 
     test("should include disambiguator for ambiguous moves", () => {
-        let state = importFen(EMPTY_FEN)
+        let state = createGameFromFen(EMPTY_FEN)
         state = put(state, Color.WHITE, Piece.RUA, SquareIndex.a4)
         state = put(state, Color.WHITE, Piece.RUA, SquareIndex.h4)
         const move: MoveObject = {
@@ -191,7 +191,7 @@ describe("strippedSan", () => {
 
 describe("moveFromSan", () => {
     test("should parse simple bia move", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const move = moveFromSan(state, "a4")
         expect(move).toBeDefined()
         expect(move?.from).toBe(SquareIndex.a3)
@@ -199,14 +199,14 @@ describe("moveFromSan", () => {
     })
 
     test("should parse piece move", () => {
-        let state = importFen(EMPTY_FEN)
+        let state = createGameFromFen(EMPTY_FEN)
         state = put(state, Color.WHITE, Piece.MA, SquareIndex.b1)
         const move = moveFromSan(state, "Mc3")
         expect(move?.piece).toBe(Piece.MA)
     })
 
     test("should parse capture move", () => {
-        let state = importFen(EMPTY_FEN)
+        let state = createGameFromFen(EMPTY_FEN)
         state = put(state, Color.WHITE, Piece.BIA, SquareIndex.d4)
         state = put(state, Color.BLACK, Piece.BIA, SquareIndex.e5)
         const move = moveFromSan(state, "dxe5")
@@ -215,20 +215,20 @@ describe("moveFromSan", () => {
     })
 
     test("should parse move with check decoration", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const move = moveFromSan(state, "a4+")
         // Will parse even if it doesn't actually give check
         expect(move?.to).toBe(SquareIndex.a4)
     })
 
     test("should return undefined for illegal move", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const move = moveFromSan(state, "a5")
         expect(move).toBeUndefined()
     })
 
     test("should parse disambiguated move", () => {
-        let state = importFen(EMPTY_FEN)
+        let state = createGameFromFen(EMPTY_FEN)
         state = put(state, Color.WHITE, Piece.RUA, SquareIndex.a4)
         state = put(state, Color.WHITE, Piece.RUA, SquareIndex.h4)
         const move = moveFromSan(state, "Rad4")
@@ -239,7 +239,7 @@ describe("moveFromSan", () => {
 
 describe("moveFromMoveObject", () => {
     test("should validate move object with numeric coordinates", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const moveObj = {
             from: SquareIndex.a3,
             to: SquareIndex.a4,
@@ -250,7 +250,7 @@ describe("moveFromMoveObject", () => {
     })
 
     test("should validate move object with algebraic coordinates", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const moveObj = {
             from: "a3",
             to: "a4",
@@ -260,7 +260,7 @@ describe("moveFromMoveObject", () => {
     })
 
     test("should return undefined for illegal move object", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const moveObj = {
             from: SquareIndex.a2,
             to: SquareIndex.a5,
@@ -272,20 +272,20 @@ describe("moveFromMoveObject", () => {
 
 describe("move", () => {
     test("should execute move from SAN string", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const newState = move(state, "a4")
         expect(newState.boardState[SquareIndex.a3]).toBeNull()
         expect(newState.boardState[SquareIndex.a4]).toEqual([Color.WHITE, Piece.BIA])
     })
 
     test("should execute move from move object", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const newState = move(state, { from: SquareIndex.a3, to: SquareIndex.a4 } as any)
         expect(newState.boardState[SquareIndex.a4]).toEqual([Color.WHITE, Piece.BIA])
     })
 
     test("should throw error for invalid SAN", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         try {
             move(state, "a8")
             fail("Should have thrown error")
@@ -295,7 +295,7 @@ describe("move", () => {
     })
 
     test("should throw error for invalid move object", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         try {
             move(state, { from: SquareIndex.a3, to: SquareIndex.a8 } as any)
             fail("Should have thrown error")
@@ -305,13 +305,13 @@ describe("move", () => {
     })
 
     test("should update active color after move", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const newState = move(state, "a4")
-        expect(newState.activeColor).toBe(Color.BLACK)
+        expect(newState.turn).toBe(Color.BLACK)
     })
 
     test("should increment move number after black moves", () => {
-        let state = importFen(INITIAL_FEN)
+        let state = createGameFromFen(INITIAL_FEN)
         state = move(state, "a4") // White
         expect(state.moveNumber).toBe(1)
         state = move(state, "a5") // Black (bia on a6 moves to a5)
@@ -319,7 +319,7 @@ describe("move", () => {
     })
 
     test("should not mutate original state", () => {
-        const state = importFen(INITIAL_FEN)
+        const state = createGameFromFen(INITIAL_FEN)
         const originalFen = exportFen(state)
         const newState = move(state, "a4")
         expect(exportFen(state)).toBe(originalFen)

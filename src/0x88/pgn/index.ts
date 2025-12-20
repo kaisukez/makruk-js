@@ -1,4 +1,4 @@
-import { INITIAL_FEN, importFen } from "0x88/fen"
+import { INITIAL_FEN, createGameFromFen } from "0x88/fen"
 import { move as makeMove } from "0x88/moves/notation"
 
 import type { State } from "0x88/types"
@@ -15,7 +15,7 @@ export function importPgn(pgnString: string, options?: PgnParseOptions): State[]
     const game = coreParsePgn(pgnString, options)
 
     const startingFen = game.tags.FEN || INITIAL_FEN
-    let currentState = importFen(startingFen)
+    let currentState = createGameFromFen(startingFen)
 
     const states: State[] = [currentState]
 

@@ -1,5 +1,5 @@
 import { Color } from "common/const"
-import { importFen, INITIAL_FEN } from "bitboard/fen"
+import { createGameFromFen, INITIAL_FEN } from "bitboard/fen"
 
 import { printBoard, swapColor } from "bitboard/utils/board-utils"
 
@@ -21,7 +21,7 @@ describe("board-utils", () => {
 
     describe("printBoard", () => {
         it("should print initial position", () => {
-            const { state } = importFen(INITIAL_FEN)
+            const { board: state } = createGameFromFen(INITIAL_FEN)
             const output = printBoard(state)
             expect(output).toContain("+------------------------+")
             expect(output).toContain("a  b  c  d  e  f  g  h")
@@ -32,7 +32,7 @@ describe("board-utils", () => {
         })
 
         it("should print mostly empty board", () => {
-            const { state } = importFen("k7/8/8/8/8/8/8/7K w 1")
+            const { board: state } = createGameFromFen("k7/8/8/8/8/8/8/7K w 1")
             const output = printBoard(state)
             expect(output).toContain("+------------------------+")
             expect(output).toContain(".")
@@ -41,19 +41,19 @@ describe("board-utils", () => {
         })
 
         it("should show white pieces in uppercase", () => {
-            const { state } = importFen("4k3/8/8/8/8/8/8/4K3 w 1")
+            const { board: state } = createGameFromFen("4k3/8/8/8/8/8/8/4K3 w 1")
             const output = printBoard(state)
             expect(output).toContain("K")
         })
 
         it("should show black pieces in lowercase", () => {
-            const { state } = importFen("4k3/8/8/8/8/8/8/4K3 w 1")
+            const { board: state } = createGameFromFen("4k3/8/8/8/8/8/8/4K3 w 1")
             const output = printBoard(state)
             expect(output).toContain("k")
         })
 
         it("should display all piece types", () => {
-            const { state } = importFen("rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1")
+            const { board: state } = createGameFromFen("rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1")
             const output = printBoard(state)
             expect(output).toContain("r")
             expect(output).toContain("m")
@@ -70,14 +70,14 @@ describe("board-utils", () => {
         })
 
         it("should display rank numbers", () => {
-            const { state } = importFen("4k3/8/8/8/8/8/8/4K3 w 1")
+            const { board: state } = createGameFromFen("4k3/8/8/8/8/8/8/4K3 w 1")
             const output = printBoard(state)
             expect(output).toContain("1 |")
             expect(output).toContain("8 |")
         })
 
         it("should use dots for empty squares", () => {
-            const { state } = importFen("4k3/8/8/8/8/8/8/4K3 w 1")
+            const { board: state } = createGameFromFen("4k3/8/8/8/8/8/8/4K3 w 1")
             const output = printBoard(state)
             expect(output).toContain(".")
         })

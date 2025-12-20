@@ -33,7 +33,7 @@ export const FILE_G = 6
 export const FILE_H = 7
 
 export const INITIAL_FEN = "rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1"
-export const EMPTY_FEN = "k7/8/8/8/8/8/8/7K w 1"
+export const EMPTY_FEN = "4k3/8/8/8/8/8/8/4K3 w 1"
 
 export enum CountType {
     PIECE_POWER_COUNTDOWN = "pp",

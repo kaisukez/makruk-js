@@ -1,11 +1,11 @@
 import { Color } from "common/const"
-import { BoardState, getPieceAt } from "bitboard/board/board"
+import { Board, getPieceAt } from "bitboard/board/board"
 
 export function swapColor(color: Color): Color {
     return color === Color.WHITE ? Color.BLACK : Color.WHITE
 }
 
-export function printBoard(bitboard: BoardState): string {
+export function printBoard(bitboard: Board): string {
     let s = "     +------------------------+\n"
 
     for (let rank = 7; rank >= 0; rank--) {

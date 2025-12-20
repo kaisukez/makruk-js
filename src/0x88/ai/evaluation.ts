@@ -27,7 +27,7 @@ export function evaluate(state: State): number {
         return 0
     }
     if (isCheckmate(state)) {
-        if (state.activeColor === Color.WHITE) {
+        if (state.turn === Color.WHITE) {
             return -Infinity
         } else {
             return Infinity

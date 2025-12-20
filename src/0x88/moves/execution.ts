@@ -38,11 +38,11 @@ export function changePiecePosition(
  *
  */
 export function step(state: State) {
-    if (state.activeColor === Color.BLACK) {
+    if (state.turn === Color.BLACK) {
         state.moveNumber++
     }
 
-    state.activeColor = swapColor(state.activeColor)
+    state.turn = swapColor(state.turn)
 }
 
 export type BoardDelta = {
@@ -56,7 +56,7 @@ export type MoveUndo = {
     board?: BoardDelta;
     piecePositions?: PiecePositionDelta;
     moveNumber: number;
-    activeColor: Color;
+    turn: Color;
     countdown: Countdown | null;
     fenAfter?: string;
     fenUpdated: boolean;
@@ -89,7 +89,7 @@ export function applyMove(
                   toPiece: cloneSquareData(state.boardState[moveObject.to]),
               },
               moveNumber: state.moveNumber,
-              activeColor: state.activeColor,
+              turn: state.turn,
               countdown: cloneCountdown(state.countdown),
               fenUpdated: updateFen,
           }
@@ -113,10 +113,10 @@ export function applyMove(
         applyStepCountdown(draft, optional)
 
         // Update move counter and active color
-        if (draft.activeColor === Color.BLACK) {
+        if (draft.turn === Color.BLACK) {
             draft.moveNumber++
         }
-        draft.activeColor = swapColor(draft.activeColor)
+        draft.turn = swapColor(draft.turn)
 
         // Update piece positions (this mutates draft AND returns delta)
         pieceDelta = updatePiecePositionDictionary(draft.piecePositions, moveObject)
@@ -154,7 +154,7 @@ export function undoMove(state: State, undo?: MoveUndo): State {
             }
         }
 
-        draft.activeColor = undo.activeColor
+        draft.turn = undo.turn
         draft.moveNumber = undo.moveNumber
         draft.countdown = cloneCountdown(undo.countdown)
 

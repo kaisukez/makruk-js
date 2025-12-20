@@ -87,18 +87,50 @@ const pgnOutput = exportPgn(game)
 ### AI
 
 ```ts
-import { findBestMove, minimax, evaluate } from '@kaisukez/makruk-js'
+import { findBestMove, iterativeDeepening, minimax, evaluate } from '@kaisukez/makruk-js'
 
+// Find best move at fixed depth
 const { bestMove, bestScore } = findBestMove(state, 3)
 if (bestMove) {
     state = move(state, bestMove)
 }
+
+// Iterative deepening with time limit (recommended)
+const result = iterativeDeepening(state, 5, 3000) // max depth 5, 3 seconds
 
 // Direct minimax with alpha-beta
 const result = minimax(state, depth, -Infinity, Infinity)
 
 // Position evaluation
 const score = evaluate(state)
+```
+
+### Parallel Search (Multi-core)
+
+For web workers or Node.js worker threads:
+
+```ts
+import {
+    searchMoves,
+    distributeMoves,
+    combineResults,
+    generateLegalMoves,
+    getRecommendedWorkers
+} from '@kaisukez/makruk-js'
+
+// Get number of workers based on CPU cores
+const numWorkers = getRecommendedWorkers() // Node.js only
+// For browser: navigator.hardwareConcurrency - 1
+
+// Distribute moves across workers
+const moves = generateLegalMoves(state)
+const moveBuckets = distributeMoves(moves, numWorkers)
+
+// Each worker searches its assigned moves
+const result = searchMoves(state.board, state.turn, moveBuckets[workerIndex], depth)
+
+// Combine results from all workers
+const combined = combineResults(workerResults, state.turn === Color.WHITE)
 ```
 
 ### Board Manipulation

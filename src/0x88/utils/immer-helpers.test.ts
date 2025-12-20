@@ -1,12 +1,12 @@
 import { Color, CountType, Piece, SquareIndex } from "common/const"
-import { importFen, INITIAL_FEN } from "0x88/fen/importer"
+import { createGameFromFen, INITIAL_FEN } from "0x88/fen/importer"
 
 import { cloneCountdown, cloneSquareData, produceState } from "0x88/utils/immer-helpers"
 
 describe("immer-helpers", () => {
     describe("produceState", () => {
         it("should return new state object", () => {
-            const state = importFen(INITIAL_FEN)
+            const state = createGameFromFen(INITIAL_FEN)
             const newState = produceState(state, (draft) => {
                 draft.moveNumber = 10
             })
@@ -14,7 +14,7 @@ describe("immer-helpers", () => {
         })
 
         it("should preserve original state", () => {
-            const state = importFen(INITIAL_FEN)
+            const state = createGameFromFen(INITIAL_FEN)
             const originalMoveNumber = state.moveNumber
             produceState(state, (draft) => {
                 draft.moveNumber = 10
@@ -23,7 +23,7 @@ describe("immer-helpers", () => {
         })
 
         it("should apply simple field updates", () => {
-            const state = importFen(INITIAL_FEN)
+            const state = createGameFromFen(INITIAL_FEN)
             const newState = produceState(state, (draft) => {
                 draft.moveNumber = 10
             })
@@ -31,16 +31,16 @@ describe("immer-helpers", () => {
         })
 
         it("should apply color changes", () => {
-            const state = importFen(INITIAL_FEN)
+            const state = createGameFromFen(INITIAL_FEN)
             const newState = produceState(state, (draft) => {
-                draft.activeColor = Color.BLACK
+                draft.turn = Color.BLACK
             })
-            expect(newState.activeColor).toBe(Color.BLACK)
-            expect(state.activeColor).toBe(Color.WHITE)
+            expect(newState.turn).toBe(Color.BLACK)
+            expect(state.turn).toBe(Color.WHITE)
         })
 
         it("should update nested boardState", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K3 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K3 w 1")
             const newState = produceState(state, (draft) => {
                 draft.boardState[SquareIndex.e4] = [Color.WHITE, Piece.KHUN]
             })
@@ -49,7 +49,7 @@ describe("immer-helpers", () => {
         })
 
         it("should update countdown object", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             const newState = produceState(state, (draft) => {
                 draft.countdown = {
                     countColor: Color.WHITE,
@@ -70,7 +70,7 @@ describe("immer-helpers", () => {
         })
 
         it("should update fenOccurrence", () => {
-            const state = importFen(INITIAL_FEN)
+            const state = createGameFromFen(INITIAL_FEN)
             const fen = "test-fen"
             const newState = produceState(state, (draft) => {
                 draft.fenOccurrence[fen] = 3
@@ -80,18 +80,18 @@ describe("immer-helpers", () => {
         })
 
         it("should handle multiple updates", () => {
-            const state = importFen(INITIAL_FEN)
+            const state = createGameFromFen(INITIAL_FEN)
             const newState = produceState(state, (draft) => {
                 draft.moveNumber = 10
-                draft.activeColor = Color.BLACK
+                draft.turn = Color.BLACK
             })
             expect(newState.moveNumber).toBe(10)
-            expect(newState.activeColor).toBe(Color.BLACK)
+            expect(newState.turn).toBe(Color.BLACK)
             expect(state.moveNumber).not.toBe(10)
         })
 
         it("should use structural sharing for unchanged parts", () => {
-            const state = importFen(INITIAL_FEN)
+            const state = createGameFromFen(INITIAL_FEN)
             const newState = produceState(state, (draft) => {
                 draft.moveNumber = 10
             })
@@ -99,7 +99,7 @@ describe("immer-helpers", () => {
         })
 
         it("should handle removing pieces", () => {
-            const state = importFen(INITIAL_FEN)
+            const state = createGameFromFen(INITIAL_FEN)
             const newState = produceState(state, (draft) => {
                 draft.boardState[SquareIndex.a1] = null
             })
@@ -108,7 +108,7 @@ describe("immer-helpers", () => {
         })
 
         it("should allow chained updates", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K3 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K3 w 1")
             const state2 = produceState(state, (draft) => {
                 draft.moveNumber = 2
             })

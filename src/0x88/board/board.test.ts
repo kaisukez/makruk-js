@@ -2,7 +2,7 @@ const { describe, expect, test } = globalThis as any
 
 import { Color, Piece, SquareIndex } from "common/const"
 import { getBoardStateFromBoardString, forEachPieceFromBoardState, put, remove } from "0x88/board/board"
-import { importFen } from "0x88/fen/importer"
+import { createGameFromFen } from "0x88/fen/importer"
 
 describe("getBoardStateFromBoardString", () => {
     test("should convert initial position board string correctly", () => {
@@ -145,7 +145,7 @@ describe("forEachPieceFromBoardState", () => {
 
 describe("put", () => {
     test("should place a piece on an empty square", () => {
-        const state = importFen("4k3/8/8/8/8/8/8/4K3 w 1")
+        const state = createGameFromFen("4k3/8/8/8/8/8/8/4K3 w 1")
         const newState = put(state, Color.WHITE, Piece.RUA, SquareIndex.a1)
 
         expect(newState.boardState[SquareIndex.a1]).toEqual([Color.WHITE, Piece.RUA])
@@ -153,7 +153,7 @@ describe("put", () => {
     })
 
     test("should not mutate original state", () => {
-        const state = importFen("4k3/8/8/8/8/8/8/4K3 w 1")
+        const state = createGameFromFen("4k3/8/8/8/8/8/8/4K3 w 1")
         const originalBoardState = state.boardState[SquareIndex.a1]
         const originalPositions = [...state.piecePositions[Color.WHITE][Piece.RUA]]
 
@@ -164,7 +164,7 @@ describe("put", () => {
     })
 
     test("should replace existing piece on square", () => {
-        const state = importFen("4k3/8/8/8/8/8/8/R3K3 w 1")
+        const state = createGameFromFen("4k3/8/8/8/8/8/8/R3K3 w 1")
         const newState = put(state, Color.WHITE, Piece.MA, SquareIndex.a1)
 
         expect(newState.boardState[SquareIndex.a1]).toEqual([Color.WHITE, Piece.MA])
@@ -173,7 +173,7 @@ describe("put", () => {
     })
 
     test("should handle replacing piece of different color", () => {
-        const state = importFen("4k3/8/8/8/8/8/8/r3K3 w 1")
+        const state = createGameFromFen("4k3/8/8/8/8/8/8/r3K3 w 1")
         const newState = put(state, Color.WHITE, Piece.RUA, SquareIndex.a1)
 
         expect(newState.boardState[SquareIndex.a1]).toEqual([Color.WHITE, Piece.RUA])
@@ -182,7 +182,7 @@ describe("put", () => {
     })
 
     test("should not add duplicate positions", () => {
-        const state = importFen("4k3/8/8/8/8/8/8/R3K3 w 1")
+        const state = createGameFromFen("4k3/8/8/8/8/8/8/R3K3 w 1")
         const newState = put(state, Color.WHITE, Piece.RUA, SquareIndex.a1)
 
         const ruaPositions = newState.piecePositions[Color.WHITE][Piece.RUA]
@@ -191,7 +191,7 @@ describe("put", () => {
     })
 
     test("should place multiple pieces of same type", () => {
-        let state = importFen("4k3/8/8/8/8/8/8/4K3 w 1")
+        let state = createGameFromFen("4k3/8/8/8/8/8/8/4K3 w 1")
         state = put(state, Color.WHITE, Piece.RUA, SquareIndex.a1)
         state = put(state, Color.WHITE, Piece.RUA, SquareIndex.h1)
 
@@ -203,7 +203,7 @@ describe("put", () => {
 
 describe("remove", () => {
     test("should remove a piece from a square", () => {
-        const state = importFen("4k3/8/8/8/8/8/8/R3K3 w 1")
+        const state = createGameFromFen("4k3/8/8/8/8/8/8/R3K3 w 1")
         const newState = remove(state, SquareIndex.a1)
 
         expect(newState.boardState[SquareIndex.a1]).toEqual(null)
@@ -211,7 +211,7 @@ describe("remove", () => {
     })
 
     test("should not mutate original state", () => {
-        const state = importFen("4k3/8/8/8/8/8/8/R3K3 w 1")
+        const state = createGameFromFen("4k3/8/8/8/8/8/8/R3K3 w 1")
         const originalBoardState = state.boardState[SquareIndex.a1]
         const originalPositions = [...state.piecePositions[Color.WHITE][Piece.RUA]]
 
@@ -222,14 +222,14 @@ describe("remove", () => {
     })
 
     test("should handle removing from empty square gracefully", () => {
-        const state = importFen("4k3/8/8/8/8/8/8/4K3 w 1")
+        const state = createGameFromFen("4k3/8/8/8/8/8/8/4K3 w 1")
         const newState = remove(state, SquareIndex.a1)
 
         expect(newState.boardState[SquareIndex.a1]).toEqual(null)
     })
 
     test("should remove black piece correctly", () => {
-        const state = importFen("r3k3/8/8/8/8/8/8/4K3 w 1")
+        const state = createGameFromFen("r3k3/8/8/8/8/8/8/4K3 w 1")
         const newState = remove(state, SquareIndex.a8)
 
         expect(newState.boardState[SquareIndex.a8]).toEqual(null)
@@ -237,7 +237,7 @@ describe("remove", () => {
     })
 
     test("should only remove piece at specified position from position list", () => {
-        let state = importFen("4k3/8/8/8/8/8/8/4K3 w 1")
+        let state = createGameFromFen("4k3/8/8/8/8/8/8/4K3 w 1")
         state = put(state, Color.WHITE, Piece.RUA, SquareIndex.a1)
         state = put(state, Color.WHITE, Piece.RUA, SquareIndex.h1)
 

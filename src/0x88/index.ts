@@ -21,7 +21,7 @@ export {
 } from "0x88/rules/status"
 
 // FEN support
-export { EMPTY_FEN, INITIAL_FEN, importFen, createInitialState } from "0x88/fen/importer"
+export { EMPTY_FEN, INITIAL_FEN, createGameFromFen, createInitialState } from "0x88/fen/importer"
 export { exportFen } from "0x88/fen/exporter"
 
 // PGN support

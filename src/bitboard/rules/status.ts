@@ -1,131 +1,100 @@
-/**
- * Game status checking for bitboard representation
- */
-
-import type { BoardState, Mask64 } from "bitboard/board/board"
-import { Color, Piece } from "common/const"
+import type { Board, Mask64 } from "bitboard/board/board"
+import type { Game } from "bitboard/types"
+import { Color } from "common/const"
 import { generateLegalMoves, isSquareAttacked } from "bitboard/moves/generation"
 import { EMPTY_MASK, popLSB } from "bitboard/board/board"
+import { isCountdownExpired } from "bitboard/rules/countdown"
 
-/**
- * Check if the king of the given color is under attack
- */
-export function isKhunAttacked(
-    state: BoardState,
-    color: Color
-): boolean {
-    const isWhite = color === Color.WHITE
-    const kingMask = isWhite ? state.whiteKhun : state.blackKhun
+export function isKhunAttacked(board: Board, turn: Color): boolean {
+    const isWhite = turn === Color.WHITE
+    const kingMask = isWhite ? board.whiteKhun : board.blackKhun
 
-    // Find king position
     if (kingMask === EMPTY_MASK) {
-        return false // No king on board
+        return false
     }
 
     const { square: kingSquare } = popLSB(kingMask)
     const enemyColor = isWhite ? Color.BLACK : Color.WHITE
 
-    return isSquareAttacked(state, kingSquare, enemyColor)
+    return isSquareAttacked(board, kingSquare, enemyColor)
 }
 
-/**
- * Check if current player is in check
- */
-export function isCheck(state: BoardState, color: Color): boolean {
-    return isKhunAttacked(state, color)
+export function isCheck(game: Game): boolean {
+    return isKhunAttacked(game.board, game.turn)
 }
 
-/**
- * Check if current player is in checkmate
- */
-export function isCheckmate(state: BoardState, color: Color): boolean {
-    return isCheck(state, color) && generateLegalMoves(state, color).length === 0
+export function isCheckmate(game: Game): boolean {
+    return isCheck(game) && generateLegalMoves(game.board, game.turn).length === 0
 }
 
-/**
- * Check if current player is in stalemate
- */
-export function isStalemate(state: BoardState, color: Color): boolean {
-    return !isCheck(state, color) && generateLegalMoves(state, color).length === 0
+export function isStalemate(game: Game): boolean {
+    return !isCheck(game) && generateLegalMoves(game.board, game.turn).length === 0
 }
 
-/**
- * Check if position has insufficient material for checkmate
- */
-export function isInsufficientMaterial(state: BoardState): boolean {
-    // Count all pieces
+export function isInsufficientMaterial(game: Game): boolean {
+    const board = game.board
     let pieceCount = 0
     let hasPawn = false
     let hasFlippedBia = false
     let hasMet = false
     let hasMa = false
-    let hasRua = false
-    let hasThon = false
 
-    // Count white pieces
-    if (state.whiteBia !== EMPTY_MASK) {
+    if (board.whiteBia !== EMPTY_MASK) {
         hasPawn = true
-        pieceCount += countBits(state.whiteBia)
+        pieceCount += countBits(board.whiteBia)
     }
-    if (state.whiteFlippedBia !== EMPTY_MASK) {
+    if (board.whiteFlippedBia !== EMPTY_MASK) {
         hasFlippedBia = true
-        pieceCount += countBits(state.whiteFlippedBia)
+        pieceCount += countBits(board.whiteFlippedBia)
     }
-    if (state.whiteMa !== EMPTY_MASK) {
+    if (board.whiteMa !== EMPTY_MASK) {
         hasMa = true
-        pieceCount += countBits(state.whiteMa)
+        pieceCount += countBits(board.whiteMa)
     }
-    if (state.whiteThon !== EMPTY_MASK) {
-        hasThon = true
-        pieceCount += countBits(state.whiteThon)
+    if (board.whiteThon !== EMPTY_MASK) {
+        pieceCount += countBits(board.whiteThon)
     }
-    if (state.whiteMet !== EMPTY_MASK) {
+    if (board.whiteMet !== EMPTY_MASK) {
         hasMet = true
-        pieceCount += countBits(state.whiteMet)
+        pieceCount += countBits(board.whiteMet)
     }
-    if (state.whiteRua !== EMPTY_MASK) {
-        hasRua = true
-        pieceCount += countBits(state.whiteRua)
+    if (board.whiteRua !== EMPTY_MASK) {
+        pieceCount += countBits(board.whiteRua)
     }
-    if (state.whiteKhun !== EMPTY_MASK) {
-        pieceCount += countBits(state.whiteKhun)
+    if (board.whiteKhun !== EMPTY_MASK) {
+        pieceCount += countBits(board.whiteKhun)
     }
 
-    // Count black pieces
-    if (state.blackBia !== EMPTY_MASK) {
+    if (board.blackBia !== EMPTY_MASK) {
         hasPawn = true
-        pieceCount += countBits(state.blackBia)
+        pieceCount += countBits(board.blackBia)
     }
-    if (state.blackFlippedBia !== EMPTY_MASK) {
+    if (board.blackFlippedBia !== EMPTY_MASK) {
         hasFlippedBia = true
-        pieceCount += countBits(state.blackFlippedBia)
+        pieceCount += countBits(board.blackFlippedBia)
     }
-    if (state.blackMa !== EMPTY_MASK) {
+    if (board.blackMa !== EMPTY_MASK) {
         hasMa = true
-        pieceCount += countBits(state.blackMa)
+        pieceCount += countBits(board.blackMa)
     }
-    if (state.blackThon !== EMPTY_MASK) {
-        hasThon = true
-        pieceCount += countBits(state.blackThon)
+    if (board.blackThon !== EMPTY_MASK) {
+        pieceCount += countBits(board.blackThon)
     }
-    if (state.blackMet !== EMPTY_MASK) {
+    if (board.blackMet !== EMPTY_MASK) {
         hasMet = true
-        pieceCount += countBits(state.blackMet)
+        pieceCount += countBits(board.blackMet)
     }
-    if (state.blackRua !== EMPTY_MASK) {
-        hasRua = true
-        pieceCount += countBits(state.blackRua)
+    if (board.blackRua !== EMPTY_MASK) {
+        pieceCount += countBits(board.blackRua)
     }
-    if (state.blackKhun !== EMPTY_MASK) {
-        pieceCount += countBits(state.blackKhun)
+    if (board.blackKhun !== EMPTY_MASK) {
+        pieceCount += countBits(board.blackKhun)
     }
 
-    // Two kings only
     if (pieceCount === 2) {
         return true
     }
 
-    // Two kings + one minor piece (Bia, FlippedBia, Met, or Ma)
     if (pieceCount === 3) {
         if (hasPawn || hasFlippedBia || hasMet || hasMa) {
             return true
@@ -135,9 +104,6 @@ export function isInsufficientMaterial(state: BoardState): boolean {
     return false
 }
 
-/**
- * Count number of set bits in a bitboard
- */
 function countBits(bb: Mask64): number {
     let count = 0
     let temp = bb
@@ -148,16 +114,20 @@ function countBits(bb: Mask64): number {
     return count
 }
 
-/**
- * Check if game is over (checkmate or draw)
- */
-export function isGameOver(state: BoardState, color: Color): boolean {
-    return isCheckmate(state, color) || isStalemate(state, color) || isInsufficientMaterial(state)
+export function isGameOver(game: Game): boolean {
+    return isCheckmate(game) || isDraw(game)
 }
 
-/**
- * Check if position is a draw
- */
-export function isDraw(state: BoardState, color: Color): boolean {
-    return isStalemate(state, color) || isInsufficientMaterial(state)
+export function isThreefoldRepetition(game: Game): boolean {
+    for (const count of game.positionOccurrence.values()) {
+        if (count >= 3) return true
+    }
+    return false
+}
+
+export function isDraw(game: Game): boolean {
+    return isStalemate(game) ||
+        isInsufficientMaterial(game) ||
+        isThreefoldRepetition(game) ||
+        isCountdownExpired(game.countdown)
 }

@@ -1,5 +1,5 @@
 import { moveToSan, moveFromSan, squareToAlgebraic } from "bitboard/moves/notation"
-import { importFen, INITIAL_FEN } from "bitboard/fen"
+import { createGameFromFen, INITIAL_FEN } from "bitboard/fen"
 import { generateLegalMoves } from "bitboard/moves/generation"
 import { Color } from "common/const"
 
@@ -16,7 +16,7 @@ describe("Mask64 SAN Notation Tests", () => {
     })
 
     test("moveToSan generates SAN for initial position moves", () => {
-        const { state } = importFen(INITIAL_FEN)
+        const { board: state } = createGameFromFen(INITIAL_FEN)
         const moves = generateLegalMoves(state, Color.WHITE)
         expect(moves.length).toBeGreaterThan(0)
 
@@ -29,7 +29,7 @@ describe("Mask64 SAN Notation Tests", () => {
     })
 
     test("round-trip: moveToSan then moveFromSan", () => {
-        const { state } = importFen(INITIAL_FEN)
+        const { board: state } = createGameFromFen(INITIAL_FEN)
         const moves = generateLegalMoves(state, Color.WHITE)
 
         // Take first 10 moves and ensure round-trip works

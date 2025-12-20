@@ -1,14 +1,14 @@
 const { describe, expect, test } = globalThis as any
 
 import { Color, Piece } from "common/const"
-import { importFen, INITIAL_FEN } from "bitboard/fen"
+import { createGameFromFen, INITIAL_FEN } from "bitboard/fen"
 import { generateLegalMoves } from "bitboard/moves/generation"
 import { applyMove } from "bitboard/moves/execution"
 import { getPieceAt } from "bitboard/board/board"
 
 describe("applyMove", () => {
     test("should apply a pawn move", () => {
-        const { state } = importFen(INITIAL_FEN)
+        const { board: state } = createGameFromFen(INITIAL_FEN)
         const moves = generateLegalMoves(state, Color.WHITE)
         const pawnMove = moves.find(m => m.piece === Piece.BIA && m.from === 16) // a3->a4
 
@@ -25,7 +25,7 @@ describe("applyMove", () => {
     test("should apply a capture move", () => {
         // Set up position with white king and rook, black king and bia
         // White rook can capture black bia
-        const { state } = importFen("k7/8/8/3b4/3R4/8/8/K7 w 1")
+        const { board: state } = createGameFromFen("k7/8/8/3b4/3R4/8/8/K7 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
         const captureMove = moves.find(m => m.captured && m.piece === Piece.RUA)
 
@@ -41,7 +41,7 @@ describe("applyMove", () => {
     })
 
     test("should not mutate original state", () => {
-        const { state } = importFen(INITIAL_FEN)
+        const { board: state } = createGameFromFen(INITIAL_FEN)
         const moves = generateLegalMoves(state, Color.WHITE)
         const move = moves[0]
 
@@ -54,7 +54,7 @@ describe("applyMove", () => {
     })
 
     test("should apply knight moves correctly", () => {
-        const { state } = importFen(INITIAL_FEN)
+        const { board: state } = createGameFromFen(INITIAL_FEN)
         const moves = generateLegalMoves(state, Color.WHITE)
         const knightMove = moves.find(m => m.piece === Piece.MA)
 
@@ -67,7 +67,7 @@ describe("applyMove", () => {
     })
 
     test("should throw error for invalid move.from", () => {
-        const { state } = importFen(INITIAL_FEN)
+        const { board: state } = createGameFromFen(INITIAL_FEN)
         const invalidMove = {
             from: -1,
             to: 24,
@@ -79,7 +79,7 @@ describe("applyMove", () => {
     })
 
     test("should throw error for invalid move.to", () => {
-        const { state } = importFen(INITIAL_FEN)
+        const { board: state } = createGameFromFen(INITIAL_FEN)
         const invalidMove = {
             from: 16,
             to: 100,
@@ -91,7 +91,7 @@ describe("applyMove", () => {
     })
 
     test("should apply black piece moves", () => {
-        const { state } = importFen("k7/8/8/8/8/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/8/8/8/8/K7 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
         const kingMove = moves[0]
 
@@ -102,7 +102,7 @@ describe("applyMove", () => {
     })
 
     test("should apply black BIA move", () => {
-        const { state } = importFen("k7/b7/8/8/8/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/b7/8/8/8/8/8/K7 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
         const biaMove = moves.find(m => m.piece === Piece.BIA)
 
@@ -114,7 +114,7 @@ describe("applyMove", () => {
     })
 
     test("should apply black FLIPPED_BIA move", () => {
-        const { state } = importFen("k7/8/8/8/2s5/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/8/2f5/8/8/K7 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
         const flippedBiaMove = moves.find(m => m.piece === Piece.FLIPPED_BIA)
 
@@ -126,7 +126,7 @@ describe("applyMove", () => {
     })
 
     test("should apply black MA move", () => {
-        const { state } = importFen("k7/8/8/2n5/8/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/2m5/8/8/8/K7 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
         const maMove = moves.find(m => m.piece === Piece.MA)
 
@@ -138,7 +138,7 @@ describe("applyMove", () => {
     })
 
     test("should apply black THON move", () => {
-        const { state } = importFen("k7/8/8/2t5/8/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/2t5/8/8/8/K7 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
         const thonMove = moves.find(m => m.piece === Piece.THON)
 
@@ -150,7 +150,7 @@ describe("applyMove", () => {
     })
 
     test("should apply black MET move", () => {
-        const { state } = importFen("k7/8/8/2m5/8/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/2e5/8/8/8/K7 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
         const metMove = moves.find(m => m.piece === Piece.MET)
 
@@ -162,7 +162,7 @@ describe("applyMove", () => {
     })
 
     test("should apply black RUA move", () => {
-        const { state } = importFen("k7/8/8/2r5/8/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/2r5/8/8/8/K7 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
         const ruaMove = moves.find(m => m.piece === Piece.RUA)
 
@@ -174,7 +174,7 @@ describe("applyMove", () => {
     })
 
     test("should apply white FLIPPED_BIA move", () => {
-        const { state } = importFen("k7/8/8/8/2S5/8/8/K7 w 1")
+        const { board: state } = createGameFromFen("k7/8/8/8/2F5/8/8/K7 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
         const flippedBiaMove = moves.find(m => m.piece === Piece.FLIPPED_BIA)
 
@@ -187,7 +187,7 @@ describe("applyMove", () => {
 
     test("should capture white FLIPPED_BIA by black", () => {
         // Black rook captures white FLIPPED_BIA
-        const { state } = importFen("k7/8/8/3S4/3r4/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/3F4/3r4/8/8/K7 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
         const captureMove = moves.find(m => m.captured === Piece.FLIPPED_BIA)
 
@@ -201,7 +201,7 @@ describe("applyMove", () => {
     })
 
     test("should capture white MA", () => {
-        const { state } = importFen("k7/8/8/3N4/3r4/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/3M4/3r4/8/8/K7 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
         const captureMove = moves.find(m => m.captured === Piece.MA)
 
@@ -212,7 +212,7 @@ describe("applyMove", () => {
     })
 
     test("should capture white THON by black", () => {
-        const { state } = importFen("k7/8/8/3T4/3r4/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/3T4/3r4/8/8/K7 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
         const captureMove = moves.find(m => m.captured === Piece.THON)
 
@@ -222,7 +222,7 @@ describe("applyMove", () => {
     })
 
     test("should capture white MET", () => {
-        const { state } = importFen("k7/8/8/3M4/3r4/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/3E4/3r4/8/8/K7 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
         const captureMove = moves.find(m => m.captured === Piece.MET)
 
@@ -233,7 +233,7 @@ describe("applyMove", () => {
     })
 
     test("should capture white RUA", () => {
-        const { state } = importFen("k7/8/8/3R4/3r4/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/3R4/3r4/8/8/K7 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
         const captureMove = moves.find(m => m.captured === Piece.RUA)
 
@@ -244,7 +244,7 @@ describe("applyMove", () => {
     })
 
     test("should capture black FLIPPED_BIA by white", () => {
-        const { state } = importFen("k7/8/8/3s4/3R4/8/8/K7 w 1")
+        const { board: state } = createGameFromFen("k7/8/8/3f4/3R4/8/8/K7 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
         const captureMove = moves.find(m => m.captured === Piece.FLIPPED_BIA)
 
@@ -258,7 +258,7 @@ describe("applyMove", () => {
     })
 
     test("should capture black MA", () => {
-        const { state } = importFen("k7/8/8/3n4/3R4/8/8/K7 w 1")
+        const { board: state } = createGameFromFen("k7/8/8/3m4/3R4/8/8/K7 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
         const captureMove = moves.find(m => m.captured === Piece.MA)
 
@@ -269,7 +269,7 @@ describe("applyMove", () => {
     })
 
     test("should capture black THON by white", () => {
-        const { state } = importFen("k7/8/8/3t4/3R4/8/8/K7 w 1")
+        const { board: state } = createGameFromFen("k7/8/8/3t4/3R4/8/8/K7 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
         const captureMove = moves.find(m => m.captured === Piece.THON)
 
@@ -279,7 +279,7 @@ describe("applyMove", () => {
     })
 
     test("should capture black MET", () => {
-        const { state } = importFen("k7/8/8/3m4/3R4/8/8/K7 w 1")
+        const { board: state } = createGameFromFen("k7/8/8/3e4/3R4/8/8/K7 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
         const captureMove = moves.find(m => m.captured === Piece.MET)
 
@@ -290,7 +290,7 @@ describe("applyMove", () => {
     })
 
     test("should capture black RUA", () => {
-        const { state } = importFen("k7/8/8/3r4/3R4/8/8/K7 w 1")
+        const { board: state } = createGameFromFen("k7/8/8/3r4/3R4/8/8/K7 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
         const captureMove = moves.find(m => m.captured === Piece.RUA)
 
@@ -302,7 +302,7 @@ describe("applyMove", () => {
 
     test("should apply pawn promotion", () => {
         // White pawn on rank 5 (index 40-47) moves to rank 6 and promotes
-        const { state } = importFen("k7/8/B7/8/8/8/8/K7 w 1")
+        const { board: state } = createGameFromFen("k7/8/B7/8/8/8/8/K7 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
         const promotionMove = moves.find(m => m.promotion === Piece.FLIPPED_BIA)
 
@@ -314,7 +314,7 @@ describe("applyMove", () => {
     })
 
     test("should capture white BIA", () => {
-        const { state } = importFen("k7/8/8/3B4/3r4/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/3B4/3r4/8/8/K7 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
         const captureMove = moves.find(m => m.captured === Piece.BIA)
 
@@ -325,7 +325,7 @@ describe("applyMove", () => {
     })
 
     test("should capture white KHUN", () => {
-        const { state } = importFen("8/k7/3K4/3r4/8/8/8/8 b 1")
+        const { board: state } = createGameFromFen("8/k7/3K4/3r4/8/8/8/8 b 1")
         const moves = generateLegalMoves(state, Color.BLACK)
         const captureMove = moves.find(m => m.captured === Piece.KHUN)
 
@@ -336,7 +336,7 @@ describe("applyMove", () => {
     })
 
     test("should capture black KHUN", () => {
-        const { state } = importFen("8/8/8/8/3R4/3k4/8/K7 w 1")
+        const { board: state } = createGameFromFen("8/8/8/8/3R4/3k4/8/K7 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
         const captureMove = moves.find(m => m.captured === Piece.KHUN)
 
@@ -347,7 +347,7 @@ describe("applyMove", () => {
     })
 
     test("should apply white THON move", () => {
-        const { state } = importFen("k7/8/8/8/2T5/8/8/K7 w 1")
+        const { board: state } = createGameFromFen("k7/8/8/8/2T5/8/8/K7 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
         const thonMove = moves.find(m => m.piece === Piece.THON)
 
@@ -359,7 +359,7 @@ describe("applyMove", () => {
     })
 
     test("should apply white MET move", () => {
-        const { state } = importFen("k7/8/8/8/2M5/8/8/K7 w 1")
+        const { board: state } = createGameFromFen("k7/8/8/8/2E5/8/8/K7 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
         const metMove = moves.find(m => m.piece === Piece.MET)
 
@@ -371,7 +371,7 @@ describe("applyMove", () => {
     })
 
     test("should apply white RUA move", () => {
-        const { state } = importFen("k7/8/8/8/2R5/8/8/K7 w 1")
+        const { board: state } = createGameFromFen("k7/8/8/8/2R5/8/8/K7 w 1")
         const moves = generateLegalMoves(state, Color.WHITE)
         const ruaMove = moves.find(m => m.piece === Piece.RUA)
 
@@ -384,7 +384,7 @@ describe("applyMove", () => {
 
     test("should apply white FLIPPED_BIA capture directly", () => {
         // Manually test white FLIPPED_BIA capturing black piece
-        const { state } = importFen("k7/8/8/3S4/2b5/8/8/K7 w 1")
+        const { board: state } = createGameFromFen("k7/8/8/3F4/2b5/8/8/K7 w 1")
         const move = {
             from: 35, // S at d5
             to: 34,   // b at c5
@@ -398,7 +398,7 @@ describe("applyMove", () => {
 
     test("should apply black FLIPPED_BIA capture directly", () => {
         // Manually test black FLIPPED_BIA capturing white piece
-        const { state } = importFen("k7/8/8/2s5/3B4/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/2f5/3B4/8/8/K7 b 1")
         const move = {
             from: 34, // s at c5
             to: 27,   // B at d4
@@ -411,7 +411,7 @@ describe("applyMove", () => {
     })
 
     test("should apply black RUA move directly", () => {
-        const { state } = importFen("k7/8/8/2r5/8/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/2r5/8/8/8/K7 b 1")
         const move = {
             from: 34, // r at c5
             to: 35,   // d5
@@ -424,7 +424,7 @@ describe("applyMove", () => {
     })
 
     test("should capture white THON with direct move", () => {
-        const { state } = importFen("k7/8/8/3T4/3r4/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/3T4/3r4/8/8/K7 b 1")
         const move = {
             from: 27, // r at d4
             to: 35,   // T at d5
@@ -437,7 +437,7 @@ describe("applyMove", () => {
     })
 
     test("should capture black THON with direct move", () => {
-        const { state } = importFen("k7/8/8/3t4/3R4/8/8/K7 w 1")
+        const { board: state } = createGameFromFen("k7/8/8/3t4/3R4/8/8/K7 w 1")
         const move = {
             from: 27, // R at d4
             to: 35,   // t at d5
@@ -450,7 +450,7 @@ describe("applyMove", () => {
     })
 
     test("should handle white FLIPPED_BIA source removal", () => {
-        const { state } = importFen("k7/8/8/3S4/8/8/8/K7 w 1")
+        const { board: state } = createGameFromFen("k7/8/8/3F4/8/8/8/K7 w 1")
         const move = {
             from: 35, // S at d5
             to: 36,   // e5
@@ -463,7 +463,7 @@ describe("applyMove", () => {
     })
 
     test("should capture white FLIPPED_BIA with direct capture", () => {
-        const { state } = importFen("k7/8/8/3S4/3r4/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/3F4/3r4/8/8/K7 b 1")
         const move = {
             from: 27, // r at d4
             to: 35,   // S at d5
@@ -476,7 +476,7 @@ describe("applyMove", () => {
     })
 
     test("should capture black FLIPPED_BIA with direct capture", () => {
-        const { state } = importFen("k7/8/8/3s4/3R4/8/8/K7 w 1")
+        const { board: state } = createGameFromFen("k7/8/8/3f4/3R4/8/8/K7 w 1")
         const move = {
             from: 27, // R at d4
             to: 35,   // s at d5
@@ -490,7 +490,7 @@ describe("applyMove", () => {
 
     test("should handle black FLIPPED_BIA to black RUA conversion", () => {
         // Test getBB for black THON and default case
-        const { state } = importFen("k7/8/8/2s2t3/8/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/2f2t2/8/8/8/K7 b 1")
         const move1 = {
             from: 34, // s at c5
             to: 35,   // d5
@@ -511,7 +511,7 @@ describe("applyMove", () => {
 
     test("should handle invalid piece type in getBB", () => {
         // Test default case in getBB
-        const { state } = importFen("k7/8/8/8/8/8/8/K7 w 1")
+        const { board: state } = createGameFromFen("k7/8/8/8/8/8/8/K7 w 1")
         const move = {
             from: 0,
             to: 8,
@@ -525,7 +525,7 @@ describe("applyMove", () => {
 
     test("should handle black THON in getBB helper", () => {
         // Test black THON case in getBB
-        const { state } = importFen("k7/8/8/3t4/8/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/3t4/8/8/8/K7 b 1")
         const move = {
             from: 35, // t at d5
             to: 36,   // e5
@@ -539,7 +539,7 @@ describe("applyMove", () => {
 
     test("should handle black RUA removal and addition", () => {
         // Explicitly test lines 126 and 150
-        const { state } = importFen("k7/8/8/3r4/8/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/3r4/8/8/8/K7 b 1")
         const move = {
             from: 35, // r at d5
             to: 27,   // d4
@@ -553,7 +553,7 @@ describe("applyMove", () => {
 
     test("should capture white THON by black directly", () => {
         // Explicitly test line 91
-        const { state } = importFen("k7/8/8/3T4/2r5/8/8/K7 b 1")
+        const { board: state } = createGameFromFen("k7/8/8/3T4/2r5/8/8/K7 b 1")
         const move = {
             from: 26, // r at c4
             to: 35,   // T at d5
@@ -567,7 +567,7 @@ describe("applyMove", () => {
 
     test("should capture black THON by white directly", () => {
         // Explicitly test line 101
-        const { state } = importFen("k7/8/8/3t4/2R5/8/8/K7 w 1")
+        const { board: state } = createGameFromFen("k7/8/8/3t4/2R5/8/8/K7 w 1")
         const move = {
             from: 26, // R at c4
             to: 35,   // t at d5

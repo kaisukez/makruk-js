@@ -2,9 +2,13 @@
  * FEN import for bitboard representation
  */
 
-import type { BoardState } from "bitboard/board/board"
-import { createEmptyBoardState, setPiece } from "bitboard/board/board"
-import { Color, Piece } from "common/const"
+import type { Game } from "bitboard/types"
+import { createEmptyBoard, setPiece } from "bitboard/board/board"
+import { Color, Piece, INITIAL_FEN, EMPTY_FEN } from "common/const"
+import { parseFen } from "common/fen"
+import { computeHash } from "bitboard/hash"
+
+export { INITIAL_FEN, EMPTY_FEN } from "common/const"
 
 /**
  * Piece symbol to Piece enum mapping (Makruk notation)
@@ -26,57 +30,53 @@ const PIECE_SYMBOLS: Record<string, [Color, Piece]> = {
     'k': [Color.BLACK, Piece.KHUN],
 }
 
-/**
- * Import FEN string to BoardState
- */
-export function importFen(fen: string): {
-    state: BoardState
-    turn: Color
-    moveNumber: number
-} {
-    const parts = fen.split(' ')
-    const boardString = parts[0]
-    const turn = parts[1] === 'w' ? Color.WHITE : Color.BLACK
-    const moveNumber = parseInt(parts[2] || '1', 10)
+export function createGameFromFen(fen: string): Game {
+    const fenInfo = parseFen(fen)
+    const { boardString, turn, moveNumber, countdown } = fenInfo
 
-    const state = createEmptyBoardState()
+    const board = createEmptyBoard()
 
-    // Parse board string
     const ranks = boardString.split('/')
-    let square = 56 // Start at a8 (rank 8, file a)
+    let square = 56
 
     for (const rank of ranks) {
         let file = 0
 
         for (const char of rank) {
             if (char >= '1' && char <= '8') {
-                // Empty squares
                 const emptyCount = parseInt(char, 10)
                 file += emptyCount
             } else {
-                // Piece
                 const pieceInfo = PIECE_SYMBOLS[char]
                 if (pieceInfo) {
                     const [color, piece] = pieceInfo
                     const boardSquare = square + file
-                    setPiece(state, color, piece, boardSquare)
+                    setPiece(board, color, piece, boardSquare)
                 }
                 file++
             }
         }
 
-        square -= 8 // Move to next rank down
+        square -= 8
     }
 
-    return { state, turn, moveNumber }
+    const hash = computeHash(board, turn)
+    const positionOccurrence = new Map<bigint, number>()
+    positionOccurrence.set(hash, 1)
+
+    return {
+        board,
+        turn,
+        moveNumber,
+        countdown,
+        hash,
+        positionOccurrence,
+    }
 }
 
 /**
- * Initial position FEN for Makruk
+ * Create initial game state
  */
-export const INITIAL_FEN = 'rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTEKTMR w 1'
-
-/**
- * Empty board FEN
- */
-export const EMPTY_FEN = '8/8/8/8/8/8/8/8 w 1'
+export function createInitialState(): Game {
+    return createGameFromFen(INITIAL_FEN)
+}

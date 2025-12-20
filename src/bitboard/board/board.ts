@@ -15,7 +15,7 @@ import { Color, Piece, SquareIndex } from "common/const"
 export type Mask64 = bigint
 
 // Mask64 representation of the board state
-export interface BoardState {
+export interface Board {
     // Individual piece bitboards
     whiteBia: Mask64
     whiteFlippedBia: Mask64
@@ -228,7 +228,7 @@ export function shiftSouthWest(bitboard: Mask64): Mask64 {
 /**
  * Create an empty bitboard state
  */
-export function createEmptyBoardState(): BoardState {
+export function createEmptyBoard(): Board {
     return {
         whiteBia: EMPTY_MASK,
         whiteFlippedBia: EMPTY_MASK,
@@ -255,7 +255,7 @@ export function createEmptyBoardState(): BoardState {
 /**
  * Update occupancy bitboards
  */
-export function updateOccupancy(state: BoardState): void {
+export function updateOccupancy(state: Board): void {
     state.whiteOccupancy =
         state.whiteBia |
         state.whiteFlippedBia |
@@ -280,7 +280,7 @@ export function updateOccupancy(state: BoardState): void {
 /**
  * Get the bitboard for a specific piece
  */
-export function getPieceMask64(state: BoardState, color: Color, piece: Piece): Mask64 {
+export function getPieceMask64(state: Board, color: Color, piece: Piece): Mask64 {
     if (color === Color.WHITE) {
         switch (piece) {
             case Piece.BIA: return state.whiteBia
@@ -309,7 +309,7 @@ export function getPieceMask64(state: BoardState, color: Color, piece: Piece): M
 /**
  * Set a piece on the bitboard
  */
-export function setPiece(state: BoardState, color: Color, piece: Piece, square: number): void {
+export function setPiece(state: Board, color: Color, piece: Piece, square: number): void {
     const bit = 1n << BigInt(square)
 
     if (color === Color.WHITE) {
@@ -340,7 +340,7 @@ export function setPiece(state: BoardState, color: Color, piece: Piece, square: 
 /**
  * Remove a piece from the bitboard
  */
-export function removePiece(state: BoardState, color: Color, piece: Piece, square: number): void {
+export function removePiece(state: Board, color: Color, piece: Piece, square: number): void {
     const ALL_BITS = 0xFFFFFFFFFFFFFFFFn
     const mask = 1n << BigInt(square)
     const bit = ALL_BITS ^ mask
@@ -374,7 +374,7 @@ export function removePiece(state: BoardState, color: Color, piece: Piece, squar
  * Get piece at a square
  * Returns [color, piece] or null if empty
  */
-export function getPieceAt(state: BoardState, square: number): [Color, Piece] | null {
+export function getPieceAt(state: Board, square: number): [Color, Piece] | null {
     const bit = 1n << BigInt(square)
 
     // Check white pieces
@@ -422,7 +422,7 @@ export function printMask64(bitboard: Mask64): string {
 /**
  * Clone a bitboard state
  */
-export function cloneBoardState(state: BoardState): BoardState {
+export function cloneBoard(state: Board): Board {
     return { ...state }
 }
 
@@ -431,12 +431,12 @@ export function cloneBoardState(state: BoardState): BoardState {
  * If there's already a piece at the square, it will be replaced
  */
 export function put(
-    state: BoardState,
+    state: Board,
     color: Color,
     piece: Piece,
     square: number
-): BoardState {
-    const newState = cloneBoardState(state)
+): Board {
+    const newState = cloneBoard(state)
 
     // Remove existing piece if any
     const existingPiece = getPieceAt(newState, square)
@@ -454,8 +454,8 @@ export function put(
 /**
  * Remove a piece from the board (returns new state)
  */
-export function remove(state: BoardState, square: number): BoardState {
-    const newState = cloneBoardState(state)
+export function remove(state: Board, square: number): Board {
+    const newState = cloneBoard(state)
 
     // Find and remove the piece at this square
     const existingPiece = getPieceAt(newState, square)

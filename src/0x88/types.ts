@@ -1,17 +1,10 @@
-import { Color, CountType, Piece, SquareIndex } from "common/const"
-
+import { Color, Piece, SquareIndex } from "common/const"
+import type { Countdown } from "common/types"
 import { CountdownFlag } from "0x88/rules/countdown"
 
-export type SquareData = [Color, Piece];
+export type { Countdown } from "common/types"
 
-export type Countdown = {
-    // fromMove: number
-    countColor: Color;
-    countType: CountType;
-    count: number;
-    countFrom: number;
-    countTo: number;
-};
+export type SquareData = [Color, Piece];
 
 export type MoveObject = {
     color: Color;
@@ -27,14 +20,11 @@ export type MoveObject = {
 export type Move = string | MoveObject;
 
 export type State = {
-    activeColor: Color;
-    moveNumber: number;
     boardState: Array<SquareData | null>;
-    history?: MoveObject[];
-    future?: MoveObject[];
-    piecePositions: Record<Color, Record<Piece, number[]>>;
+    piecePositions: Record<Color, Record<Piece, number[]>>; // fast lookup of piece positions
+    turn: Color;
+    moveNumber: number;
     countdown: Countdown | null;
-    countdownHistory: Countdown[];
     fenOccurrence: Record<string, number>;
 };
 

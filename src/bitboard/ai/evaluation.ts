@@ -8,7 +8,7 @@
  * - Pawn advancement bonus
  */
 
-import type { Mask64, BoardState } from "bitboard/board/board"
+import type { Mask64, Board } from "bitboard/board/board"
 import { Piece, PIECE_POWER } from "common/const"
 import { EMPTY_MASK, popLSB, popCount, getLSB } from "bitboard/board/board"
 
@@ -105,7 +105,7 @@ function evaluateWithPST(bb: Mask64, pieceValue: number, pst: Float64Array, colo
  * Fast evaluation - material + piece-square tables
  * This is the main evaluation used during search
  */
-export function evaluateFast(state: BoardState): number {
+export function evaluateFast(state: Board): number {
     let score = 0
 
     // Material count (using popCount for efficiency)
@@ -177,7 +177,7 @@ export function evaluateFast(state: BoardState): number {
 /**
  * Check if position is a draw (insufficient material)
  */
-export function isDraw(state: BoardState): boolean {
+export function isDraw(state: Board): boolean {
     const totalPieces = popCount(state.allOccupancy)
 
     // Only kings remain
@@ -188,14 +188,10 @@ export function isDraw(state: BoardState): boolean {
     return false
 }
 
-/**
- * Evaluation with mobility (includes legal move generation)
- * This is slower but more accurate
- */
 import { Color } from "common/const"
-import { generateLegalMoves } from "bitboard/moves"
+import { generateLegalMoves } from "bitboard/moves/generation"
 
-export function evaluateWithMobility(state: BoardState, turn: Color): number {
+export function evaluateWithMobility(state: Board, turn: Color): number {
     let score = evaluateFast(state)
 
     // Add mobility bonus (number of legal moves)
@@ -211,7 +207,7 @@ export function evaluateWithMobility(state: BoardState, turn: Color): number {
 /**
  * Check if position is checkmate for the current player
  */
-export function isCheckmate(state: BoardState, turn: Color): boolean {
+export function isCheckmate(state: Board, turn: Color): boolean {
     const legalMoves = generateLegalMoves(state, turn)
     return legalMoves.length === 0
 }
@@ -220,7 +216,7 @@ export function isCheckmate(state: BoardState, turn: Color): boolean {
  * Full evaluation (used for leaf nodes in search)
  * Checks for terminal positions first, then evaluates
  */
-export function evaluate(state: BoardState, turn: Color, useFullEval: boolean = false): number {
+export function evaluate(state: Board, turn: Color, useFullEval: boolean = false): number {
     // Check for draw
     if (isDraw(state)) {
         return 0
@@ -260,6 +256,6 @@ export function evaluate(state: BoardState, turn: Color, useFullEval: boolean = 
  * Quiescence search evaluation (only considers captures)
  * Used to avoid horizon effect in alpha-beta search
  */
-export function evaluateQuiet(state: BoardState, turn: Color): number {
+export function evaluateQuiet(state: Board, turn: Color): number {
     return evaluateFast(state)
 }

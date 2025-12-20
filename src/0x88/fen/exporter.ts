@@ -2,7 +2,7 @@ import { Color, SquareIndex } from "common/const"
 import { State } from "0x88/types"
 
 export function exportFen(state: State): string {
-    const { boardState, activeColor, moveNumber } = state
+    const { boardState, turn, moveNumber } = state
 
     let empty = 0
     let fen = ""
@@ -34,7 +34,7 @@ export function exportFen(state: State): string {
         }
     }
 
-    const result = [fen.split("/").reverse().join("/"), activeColor, moveNumber]
+    const result = [fen.split("/").reverse().join("/"), turn, moveNumber]
 
     if (state.countdown) {
         result.push(

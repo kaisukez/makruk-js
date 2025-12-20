@@ -6,8 +6,9 @@
 const fen = require('./fen-operations')
 const moves = require('./move-generation')
 const ai = require('./ai-search')
+const parallel = require('./parallel-search')
 
-const benchmarks = { fen, moves, ai }
+const benchmarks = { fen, moves, ai, parallel }
 
 function printHeader() {
     console.log('\n' + '='.repeat(50))
@@ -25,9 +26,12 @@ if (!arg || arg === 'all') {
     fen.run()
     moves.run()
     ai.run()
+    // parallel.run() is async, run separately with 'parallel' arg
+} else if (arg === 'parallel') {
+    parallel.run()
 } else if (benchmarks[arg]) {
     benchmarks[arg].run()
 } else {
-    console.log(`Usage: node benchmark/index.js [all|fen|moves|ai]`)
+    console.log(`Usage: node benchmark/index.js [all|fen|moves|ai|parallel]`)
     process.exit(1)
 }

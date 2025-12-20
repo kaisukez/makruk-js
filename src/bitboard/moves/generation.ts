@@ -1,4 +1,4 @@
-import type { Mask64, BoardState } from "bitboard/board/board"
+import type { Mask64, Board } from "bitboard/board/board"
 import { Color, Piece } from "common/const"
 import {
     EMPTY_MASK,
@@ -8,7 +8,7 @@ import {
     removePiece,
     getPieceAt,
     updateOccupancy,
-    createEmptyBoardState,
+    createEmptyBoard,
     RANK_6,
     RANK_3,
 } from "bitboard/board/board"
@@ -32,7 +32,7 @@ export interface Move {
 }
 
 export function generatePseudoLegalMoves(
-    state: BoardState,
+    state: Board,
     color: Color
 ): Move[] {
     const moves: Move[] = []
@@ -53,7 +53,7 @@ export function generatePseudoLegalMoves(
 }
 
 function generateBiaMoves(
-    state: BoardState,
+    state: Board,
     color: Color,
     friendly: Mask64,
     enemy: Mask64,
@@ -135,7 +135,7 @@ function generateBiaMoves(
  * Moves one square diagonally (like Ferz)
  */
 function generateFlippedBiaMoves(
-    state: BoardState,
+    state: Board,
     color: Color,
     friendly: Mask64,
     enemy: Mask64,
@@ -172,7 +172,7 @@ function generateFlippedBiaMoves(
  * Generate Ma (Knight) moves
  */
 function generateMaMoves(
-    state: BoardState,
+    state: Board,
     color: Color,
     friendly: Mask64,
     enemy: Mask64,
@@ -209,7 +209,7 @@ function generateMaMoves(
  * Moves one square diagonally (like Ferz)
  */
 function generateThonMoves(
-    state: BoardState,
+    state: Board,
     color: Color,
     friendly: Mask64,
     enemy: Mask64,
@@ -258,7 +258,7 @@ function generateThonMoves(
  * Moves one square diagonally (like Ferz)
  */
 function generateMetMoves(
-    state: BoardState,
+    state: Board,
     color: Color,
     friendly: Mask64,
     enemy: Mask64,
@@ -295,7 +295,7 @@ function generateMetMoves(
  * Generate Rua (Rook) moves
  */
 function generateRuaMoves(
-    state: BoardState,
+    state: Board,
     color: Color,
     friendly: Mask64,
     enemy: Mask64,
@@ -331,7 +331,7 @@ function generateRuaMoves(
  * Generate Khun (King) moves
  */
 function generateKhunMoves(
-    state: BoardState,
+    state: Board,
     color: Color,
     friendly: Mask64,
     enemy: Mask64,
@@ -368,7 +368,7 @@ function generateKhunMoves(
  * Returns a new state (immutable)
  */
 export function isSquareAttacked(
-    state: BoardState,
+    state: Board,
     square: number,
     attackerColor: Color
 ): boolean {
@@ -395,9 +395,18 @@ export function isSquareAttacked(
     const knights = isWhite ? state.whiteMa : state.blackMa
     if ((knights & knightAttackers) !== EMPTY_MASK) return true
 
-    // Check Thon attacks (one square diagonal)
+    // Check Thon attacks (one square diagonal + one square forward)
     const thons = isWhite ? state.whiteThon : state.blackThon
     if ((thons & diagAttacks) !== EMPTY_MASK) return true
+
+    // Thon can also attack one square forward
+    // White Thon at square-8 can attack square, Black Thon at square+8 can attack square
+    const thonForwardOffset = isWhite ? -8 : 8
+    const thonAttackerSquare = square + thonForwardOffset
+    if (thonAttackerSquare >= 0 && thonAttackerSquare < 64) {
+        const thonAttackerBit = 1n << BigInt(thonAttackerSquare)
+        if ((thons & thonAttackerBit) !== EMPTY_MASK) return true
+    }
 
     // Check Met attacks (one square diagonal)
     const mets = isWhite ? state.whiteMet : state.blackMet
@@ -420,7 +429,7 @@ export function isSquareAttacked(
  * Generate all legal moves (filters out moves that leave king in check)
  */
 export function generateLegalMoves(
-    state: BoardState,
+    state: Board,
     color: Color
 ): Move[] {
     const pseudoLegalMoves = generatePseudoLegalMoves(state, color)

@@ -1,5 +1,5 @@
 import { Color, CountType } from "common/const"
-import { importFen } from "0x88/fen/importer"
+import { createGameFromFen } from "0x88/fen/importer"
 
 import { produceState } from "0x88/utils/immer-helpers"
 import {
@@ -16,17 +16,17 @@ import {
 describe("countdown", () => {
     describe("calculatePiecePowerCountdown", () => {
         it("should return null when active player has more than just Khun", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4KR2 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4KR2 w 1")
             expect(calculatePiecePowerCountdown(state)).toBeNull()
         })
 
         it("should return null when there are Bia on board", () => {
-            const state = importFen("4k3/8/8/8/8/8/3B4/4K3 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/3B4/4K3 w 1")
             expect(calculatePiecePowerCountdown(state)).toBeNull()
         })
 
         it("should calculate countdown for 1 Rua", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             const result = calculatePiecePowerCountdown(state)
             expect(result).toEqual({
                 countFrom: 1,
@@ -35,7 +35,7 @@ describe("countdown", () => {
         })
 
         it("should calculate countdown for 2 Rua", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/r3K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/r3K2r w 1")
             const result = calculatePiecePowerCountdown(state)
             expect(result).toEqual({
                 countFrom: 1,
@@ -44,7 +44,7 @@ describe("countdown", () => {
         })
 
         it("should calculate countdown for 1 Thon", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2t w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2t w 1")
             const result = calculatePiecePowerCountdown(state)
             expect(result).toEqual({
                 countFrom: 1,
@@ -53,7 +53,7 @@ describe("countdown", () => {
         })
 
         it("should calculate countdown for 2 Thon", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/t3K2t w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/t3K2t w 1")
             const result = calculatePiecePowerCountdown(state)
             expect(result).toEqual({
                 countFrom: 1,
@@ -62,7 +62,7 @@ describe("countdown", () => {
         })
 
         it("should calculate countdown for 1 Ma", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2m w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2m w 1")
             const result = calculatePiecePowerCountdown(state)
             expect(result).toEqual({
                 countFrom: 1,
@@ -71,7 +71,7 @@ describe("countdown", () => {
         })
 
         it("should calculate countdown for 2 Ma", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/m3K2m w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/m3K2m w 1")
             const result = calculatePiecePowerCountdown(state)
             expect(result).toEqual({
                 countFrom: 1,
@@ -80,7 +80,7 @@ describe("countdown", () => {
         })
 
         it("should calculate countdown for other pieces", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2e w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2e w 1")
             const result = calculatePiecePowerCountdown(state)
             expect(result).toEqual({
                 countFrom: 1,
@@ -91,17 +91,17 @@ describe("countdown", () => {
 
     describe("calculateBoardPowerCountdown", () => {
         it("should return null when active player has only Khun", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K3 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K3 w 1")
             expect(calculateBoardPowerCountdown(state)).toBeNull()
         })
 
         it("should return null when there are Bia on board", () => {
-            const state = importFen("4k3/8/8/8/8/8/3B4/4KR2 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/3B4/4KR2 w 1")
             expect(calculateBoardPowerCountdown(state)).toBeNull()
         })
 
         it("should calculate countdown when active player has more than Khun", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4KR2 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4KR2 w 1")
             const result = calculateBoardPowerCountdown(state)
             expect(result).toEqual({
                 countFrom: 3,
@@ -110,7 +110,7 @@ describe("countdown", () => {
         })
 
         it("should count all pieces on board", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/rmt1KRM1 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/rmt1KRM1 w 1")
             const result = calculateBoardPowerCountdown(state)
             expect(result).toEqual({
                 countFrom: 7,
@@ -121,12 +121,12 @@ describe("countdown", () => {
 
     describe("calculateCountdown", () => {
         it("should return null when neither countdown condition met", () => {
-            const state = importFen("rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1")
+            const state = createGameFromFen("rmtektmr/8/bbbbbbbb/8/8/BBBBBBBB/8/RMTKETMR w 1")
             expect(calculateCountdown(state)).toBeNull()
         })
 
         it("should prioritize piece power countdown", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             const result = calculateCountdown(state)
             expect(result).toEqual({
                 countColor: Color.WHITE,
@@ -138,7 +138,7 @@ describe("countdown", () => {
         })
 
         it("should return board power countdown when piece power not available", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4KR2 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4KR2 w 1")
             const result = calculateCountdown(state)
             expect(result).toEqual({
                 countColor: Color.WHITE,
@@ -150,7 +150,7 @@ describe("countdown", () => {
         })
 
         it("should set correct countColor for black", () => {
-            const state = importFen("4k2R/8/8/8/8/8/8/4K3 b 1")
+            const state = createGameFromFen("4k2R/8/8/8/8/8/8/4K3 b 1")
             const result = calculateCountdown(state)
             expect(result?.countColor).toBe(Color.BLACK)
         })
@@ -220,14 +220,14 @@ describe("countdown", () => {
 
     describe("stepCountdown (mutation tests)", () => {
         it("should throw when trying to stop countdown that hasn't started", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             expect(() => {
                 stepCountdown(state, { stopCountdown: true })
             }).toThrow()
         })
 
         it("should throw when trying to start already-started countdown", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             stepCountdown(state, { startCountdown: true })
             expect(() => {
                 stepCountdown(state, { startCountdown: true })
@@ -235,14 +235,14 @@ describe("countdown", () => {
         })
 
         it("should return state unchanged when no countdown available", () => {
-            const state = importFen("4k3/8/8/8/8/8/3B4/4K3 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/3B4/4K3 w 1")
             const before = state.countdown
             stepCountdown(state, {})
             expect(state.countdown).toBe(before)
         })
 
         it("should start piece power countdown with correct flag", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             stepCountdown(state, { startPiecePowerCountdown: true })
 
             expect(state.countdown).not.toBeNull()
@@ -252,7 +252,7 @@ describe("countdown", () => {
         })
 
         it("should start board power countdown with correct flag", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4KR2 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4KR2 w 1")
             stepCountdown(state, { startBoardPowerCountdown: true })
 
             expect(state.countdown).not.toBeNull()
@@ -260,28 +260,28 @@ describe("countdown", () => {
         })
 
         it("should start countdown with generic flag", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             stepCountdown(state, { startCountdown: true })
 
             expect(state.countdown).not.toBeNull()
         })
 
         it("should throw WRONG_COUNTDOWN_TYPE when starting with wrong flag type", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4KR2 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4KR2 w 1")
             expect(() => {
                 stepCountdown(state, { startPiecePowerCountdown: true })
             }).toThrow()
         })
 
         it("should not start countdown without flags", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             const before = state.countdown
             stepCountdown(state, {})
             expect(state.countdown).toBe(before)
         })
 
         it("should increment count when continuing same countdown type", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             stepCountdown(state, { startCountdown: true })
             const initialCount = state.countdown?.count
 
@@ -290,7 +290,7 @@ describe("countdown", () => {
         })
 
         it("should stop countdown with stopPiecePowerCountdown flag", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             stepCountdown(state, { startPiecePowerCountdown: true })
             expect(state.countdown).not.toBeNull()
 
@@ -299,7 +299,7 @@ describe("countdown", () => {
         })
 
         it("should stop countdown with stopBoardPowerCountdown flag", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4KR2 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4KR2 w 1")
             stepCountdown(state, { startBoardPowerCountdown: true })
             expect(state.countdown).not.toBeNull()
 
@@ -308,7 +308,7 @@ describe("countdown", () => {
         })
 
         it("should stop countdown with generic stopCountdown flag", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             stepCountdown(state, { startCountdown: true })
             expect(state.countdown).not.toBeNull()
 
@@ -317,7 +317,7 @@ describe("countdown", () => {
         })
 
         it("should throw WRONG_STOP_COUNTDOWN_FLAG when stopping with wrong flag type", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             stepCountdown(state, { startPiecePowerCountdown: true })
 
             expect(() => {
@@ -327,12 +327,12 @@ describe("countdown", () => {
 
         it("should transition from board power to piece power countdown", () => {
             // Start with board power position
-            const state = importFen("4k3/8/8/8/8/8/8/4KR2 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4KR2 w 1")
             stepCountdown(state, { startCountdown: true })
             expect(state.countdown?.countType).toBe(CountType.BOARD_POWER_COUNTDOWN)
 
             // Simulate changing to piece power position (remove rook, white left with only king)
-            const state2 = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state2 = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             state2.countdown = state.countdown
             stepCountdown(state2, {})
 
@@ -340,12 +340,12 @@ describe("countdown", () => {
         })
 
         it("should not transition from piece power to board power", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             stepCountdown(state, { startPiecePowerCountdown: true })
             const countdownBefore = { ...state.countdown }
 
             // Try to transition to board power (shouldn't happen)
-            const state2 = importFen("4k3/8/8/8/8/8/8/4KR2 w 1")
+            const state2 = createGameFromFen("4k3/8/8/8/8/8/8/4KR2 w 1")
             state2.countdown = state.countdown
             stepCountdown(state2, {})
 
@@ -354,12 +354,12 @@ describe("countdown", () => {
         })
 
         it("should not count when color doesn't match", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             stepCountdown(state, { startCountdown: true })
             const initialCount = state.countdown?.count
 
             // Change active color
-            state.activeColor = Color.BLACK
+            state.turn = Color.BLACK
             stepCountdown(state, {})
 
             // Count should not increment
@@ -369,7 +369,7 @@ describe("countdown", () => {
 
     describe("applyStepCountdown (Immer tests)", () => {
         it("should throw when trying to stop countdown that hasn't started", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             expect(() => {
                 produceState(state, draft => {
                     applyStepCountdown(draft, { stopCountdown: true })
@@ -378,7 +378,7 @@ describe("countdown", () => {
         })
 
         it("should throw when trying to start already-started countdown", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             const newState = produceState(state, draft => {
                 applyStepCountdown(draft, { startCountdown: true })
             })
@@ -391,7 +391,7 @@ describe("countdown", () => {
         })
 
         it("should start piece power countdown with correct flag", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             const newState = produceState(state, draft => {
                 applyStepCountdown(draft, { startPiecePowerCountdown: true })
             })
@@ -403,7 +403,7 @@ describe("countdown", () => {
         })
 
         it("should start board power countdown with correct flag", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4KR2 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4KR2 w 1")
             const newState = produceState(state, draft => {
                 applyStepCountdown(draft, { startBoardPowerCountdown: true })
             })
@@ -413,7 +413,7 @@ describe("countdown", () => {
         })
 
         it("should throw WRONG_COUNTDOWN_TYPE when starting with wrong flag type", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4KR2 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4KR2 w 1")
             expect(() => {
                 produceState(state, draft => {
                     applyStepCountdown(draft, { startPiecePowerCountdown: true })
@@ -422,7 +422,7 @@ describe("countdown", () => {
         })
 
         it("should not start countdown without flags", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             const newState = produceState(state, draft => {
                 applyStepCountdown(draft, {})
             })
@@ -430,7 +430,7 @@ describe("countdown", () => {
         })
 
         it("should increment count when continuing same countdown type", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             let newState = produceState(state, draft => {
                 applyStepCountdown(draft, { startCountdown: true })
             })
@@ -443,7 +443,7 @@ describe("countdown", () => {
         })
 
         it("should stop countdown with stopPiecePowerCountdown flag", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             let newState = produceState(state, draft => {
                 applyStepCountdown(draft, { startPiecePowerCountdown: true })
             })
@@ -456,7 +456,7 @@ describe("countdown", () => {
         })
 
         it("should stop countdown with stopBoardPowerCountdown flag", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4KR2 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4KR2 w 1")
             let newState = produceState(state, draft => {
                 applyStepCountdown(draft, { startBoardPowerCountdown: true })
             })
@@ -469,7 +469,7 @@ describe("countdown", () => {
         })
 
         it("should stop countdown with generic stopCountdown flag", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             let newState = produceState(state, draft => {
                 applyStepCountdown(draft, { startCountdown: true })
             })
@@ -482,7 +482,7 @@ describe("countdown", () => {
         })
 
         it("should throw WRONG_STOP_COUNTDOWN_FLAG when stopping with wrong flag type", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             const newState = produceState(state, draft => {
                 applyStepCountdown(draft, { startPiecePowerCountdown: true })
             })
@@ -495,14 +495,14 @@ describe("countdown", () => {
         })
 
         it("should transition from board power to piece power countdown", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4KR2 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4KR2 w 1")
             let newState = produceState(state, draft => {
                 applyStepCountdown(draft, { startCountdown: true })
             })
             expect(newState.countdown?.countType).toBe(CountType.BOARD_POWER_COUNTDOWN)
 
             // Simulate changing to piece power position
-            const state2 = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state2 = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             state2.countdown = newState.countdown
 
             newState = produceState(state2, draft => {
@@ -513,7 +513,7 @@ describe("countdown", () => {
         })
 
         it("should not count when color doesn't match", () => {
-            const state = importFen("4k3/8/8/8/8/8/8/4K2r w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/8/4K2r w 1")
             let newState = produceState(state, draft => {
                 applyStepCountdown(draft, { startCountdown: true })
             })
@@ -521,7 +521,7 @@ describe("countdown", () => {
 
             // Change active color (using produceState)
             newState = produceState(newState, draft => {
-                draft.activeColor = Color.BLACK
+                draft.turn = Color.BLACK
             })
             newState = produceState(newState, draft => {
                 applyStepCountdown(draft, {})
@@ -532,7 +532,7 @@ describe("countdown", () => {
         })
 
         it("should return unchanged when no countdown available", () => {
-            const state = importFen("4k3/8/8/8/8/8/3B4/4K3 w 1")
+            const state = createGameFromFen("4k3/8/8/8/8/8/3B4/4K3 w 1")
             const newState = produceState(state, draft => {
                 applyStepCountdown(draft, {})
             })
