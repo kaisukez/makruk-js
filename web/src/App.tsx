@@ -12,7 +12,7 @@ function isMobileDevice(): boolean {
     return window.innerWidth < 1024
 }
 
-const DEFAULT_DEPTH = 4
+const DEFAULT_DEPTH = 3
 const MIN_BOARD_SIZE = 320
 const MAX_BOARD_SIZE = 800
 
@@ -262,7 +262,7 @@ export default function App() {
                                 </div>
                                 <div>
                                     <label className="text-sm text-gray-400 block mb-1">
-                                        Speed (CPU Cores = {effectiveWorkers})
+                                        Speed (CPU Threads = {effectiveWorkers})
                                     </label>
                                     <input
                                         type="range"
@@ -304,7 +304,7 @@ export default function App() {
                                 <div className="text-sm text-gray-400 space-y-1">
                                     <div>Time: {formatTime(lastStats.thinkingTimeMs)}</div>
                                     <div>Nodes: {formatNodes(lastStats.nodesSearched)}</div>
-                                    <div>Workers: {lastStats.workersUsed}</div>
+                                    <div>CPU Threads: {lastStats.workersUsed}</div>
                                 </div>
                             </CollapsibleSection>
                         )}
