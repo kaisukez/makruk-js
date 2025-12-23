@@ -44,7 +44,7 @@ export const Square = memo(function Square({
       {piece && <PieceComponent color={piece.color} piece={piece.piece} size={size * 0.85} />}
       {isLegalMove && (
         <div
-          className={`absolute rounded-full ${
+          className={`absolute rounded-full pointer-events-none ${
             piece
               ? 'border-4 border-green-500 opacity-50'
               : 'bg-green-500 opacity-50'

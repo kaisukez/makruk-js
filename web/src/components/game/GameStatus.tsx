@@ -78,8 +78,20 @@ export function GameStatus({
         <span className={`font-medium ${statusClass}`}>{statusText}</span>
       </div>
       {countdown && !status.isGameOver && (
-        <div className="mt-1 text-sm text-amber-400">
-          Counting ({getCountTypeLabel(countdown.countType)}): {countdown.count}/{countdown.countTo}
+        <div className="mt-2 px-3 py-1.5 rounded-lg bg-amber-900/40 border border-amber-600/50 inline-block">
+          <div className="flex items-center justify-center gap-2 text-amber-400">
+            <div
+              className={`w-3 h-3 rounded-full ${
+                countdown.countColor === Color.WHITE ? 'bg-white' : 'bg-gray-800 border border-gray-500'
+              }`}
+            />
+            <span className="text-sm font-medium">
+              {countdown.countColor === Color.WHITE ? 'White' : 'Black'} counting ({getCountTypeLabel(countdown.countType)})
+            </span>
+          </div>
+          <div className="text-center text-lg font-bold text-amber-300 mt-1">
+            {countdown.count} / {countdown.countTo}
+          </div>
         </div>
       )}
     </div>
