@@ -3,8 +3,10 @@
  * Used for repetition detection and transposition table
  */
 
-import { Color, Piece } from "common/const"
+import { Color, Piece, CountType } from "common/const"
+import type { Countdown } from "common/types"
 import type { Board, Move } from "bitboard/types"
+import { getLSB } from "bitboard/board/board"
 
 const PIECE_INDEX: Record<Piece, number> = {
     [Piece.BIA]: 0,
@@ -25,7 +27,11 @@ function xorshift64(state: bigint): bigint {
 }
 
 /** Generate all Zobrist keys with a fixed seed for reproducibility */
-function generateZobristKeys(): { pieces: bigint[][], side: bigint } {
+function generateZobristKeys(): {
+    pieces: bigint[][]
+    side: bigint
+    countdown: bigint[][][]
+} {
     let state = 0x12345678ABCDEFn
     const pieces: bigint[][] = []
 
@@ -41,24 +47,45 @@ function generateZobristKeys(): { pieces: bigint[][], side: bigint } {
     state = xorshift64(state)
     const side = state & 0xFFFFFFFFFFFFFFFFn
 
-    return { pieces, side }
+    // Countdown keys: [colorIdx 0/1][typeIdx 0/1][count 0..63] (count is 1-indexed so idx = count-1)
+    const countdown: bigint[][][] = Array.from({ length: 2 }, () =>
+        Array.from({ length: 2 }, () => new Array<bigint>(64))
+    )
+    for (let c = 0; c < 2; c++) {
+        for (let t = 0; t < 2; t++) {
+            for (let cnt = 0; cnt < 64; cnt++) {
+                state = xorshift64(state)
+                countdown[c][t][cnt] = state & 0xFFFFFFFFFFFFFFFFn
+            }
+        }
+    }
+
+    return { pieces, side, countdown }
 }
 
-const { pieces: ZOBRIST_PIECES, side: ZOBRIST_SIDE } = generateZobristKeys()
+const { pieces: ZOBRIST_PIECES, side: ZOBRIST_SIDE, countdown: ZOBRIST_COUNTDOWN } = generateZobristKeys()
 
 function getPieceColorIndex(color: Color, piece: Piece): number {
     const colorOffset = color === Color.WHITE ? 0 : 1
     return PIECE_INDEX[piece] * 2 + colorOffset
 }
 
+function getCountdownHash(countdown: Countdown): bigint {
+    const colorIdx = countdown.countColor === Color.WHITE ? 0 : 1
+    const typeIdx = countdown.countType === CountType.PIECE_POWER_COUNTDOWN ? 0 : 1
+    // count is 1-based; clamp to 64 and convert to 0-indexed
+    const countIdx = Math.min(countdown.count, 64) - 1
+    return ZOBRIST_COUNTDOWN[colorIdx][typeIdx][countIdx]
+}
+
 /** Compute the full Zobrist hash for a board position */
-export function computeHash(board: Board, turn: Color): bigint {
+export function computeHash(board: Board, turn: Color, countdown: Countdown | null = null): bigint {
     let hash = 0n
 
     const hashPieces = (bitboard: bigint, pieceColorIndex: number) => {
         let bb = bitboard
         while (bb !== 0n) {
-            const square = countTrailingZeros(bb)
+            const square = getLSB(bb)
             hash ^= ZOBRIST_PIECES[pieceColorIndex][square]
             bb &= bb - 1n
         }
@@ -84,11 +111,20 @@ export function computeHash(board: Board, turn: Color): bigint {
         hash ^= ZOBRIST_SIDE
     }
 
+    if (countdown) {
+        hash ^= getCountdownHash(countdown)
+    }
+
     return hash
 }
 
-/** Update hash for a complete move (handles captures and promotions) */
-export function updateHashForMove(hash: bigint, move: Move): bigint {
+/** Update hash for a move, optionally reflecting countdown state changes */
+export function updateHashForMove(
+    hash: bigint,
+    move: Move,
+    oldCountdown: Countdown | null = null,
+    newCountdown: Countdown | null = null
+): bigint {
     let newHash = hash
 
     // Remove piece from source square
@@ -107,15 +143,13 @@ export function updateHashForMove(hash: bigint, move: Move): bigint {
     // Toggle side to move
     newHash ^= ZOBRIST_SIDE
 
-    return newHash
-}
-
-function countTrailingZeros(n: bigint): number {
-    if (n === 0n) return 64
-    let count = 0
-    while ((n & 1n) === 0n) {
-        count++
-        n >>= 1n
+    // XOR out old countdown, XOR in new countdown
+    if (oldCountdown) {
+        newHash ^= getCountdownHash(oldCountdown)
     }
-    return count
+    if (newCountdown) {
+        newHash ^= getCountdownHash(newCountdown)
+    }
+
+    return newHash
 }

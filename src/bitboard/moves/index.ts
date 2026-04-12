@@ -4,6 +4,8 @@ import { generateLegalMoves as genMoves } from "bitboard/moves/generation"
 import { applyMove as execMove } from "bitboard/moves/execution"
 import { moveFromSan } from "bitboard/moves/notation"
 import { updateHashForMove } from "bitboard/hash"
+import { stepCountdown } from "bitboard/rules/countdown"
+import { swapColor } from "common/utils"
 
 export { isSquareAttacked } from "bitboard/moves/generation"
 export { moveToSan, moveFromSan } from "bitboard/moves/notation"
@@ -26,13 +28,18 @@ export function move(game: Game, input: Move | string): Game {
     }
 
     const newBoard = execMove(game.board, m)
-    const newTurn = game.turn === Color.WHITE ? Color.BLACK : Color.WHITE
+    const newTurn = swapColor(game.turn)
     const newMoveNumber = game.moveNumber + (newTurn === Color.WHITE ? 1 : 0)
 
-    const newHash = updateHashForMove(game.hash, m)
+    let newCountdown = game.countdown
+    if (game.countdown && game.countdown.countColor === game.turn) {
+        newCountdown = stepCountdown(newBoard, newTurn, game.countdown)
+    }
+
+    const newHash = updateHashForMove(game.hash, m, game.countdown, newCountdown)
 
     const newOccurrence = new Map(game.positionOccurrence)
-    newOccurrence.set(newHash, (newOccurrence.get(newHash) || 0) + 1)
+    newOccurrence.set(newHash, (newOccurrence.get(newHash) ?? 0) + 1)
 
     return {
         board: newBoard,
@@ -40,6 +47,6 @@ export function move(game: Game, input: Move | string): Game {
         moveNumber: newMoveNumber,
         hash: newHash,
         positionOccurrence: newOccurrence,
-        countdown: game.countdown,
+        countdown: newCountdown,
     }
 }

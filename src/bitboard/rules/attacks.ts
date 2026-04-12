@@ -92,19 +92,11 @@ function initializeAttackTables(): void {
         blackPawnAtk |= shiftSouthWest(bb)
         blackPawnAttacks[square] = blackPawnAtk
 
-        // White pawn moves (one square forward, or two from rank 2)
-        let whitePawnMove = shiftNorth(bb)
-        if (rank === 1) { // rank 2 in chess notation
-            whitePawnMove |= shiftNorth(shiftNorth(bb))
-        }
-        whitePawnMoves[square] = whitePawnMove
+        // White pawn moves (one square forward only — Makruk has no double push)
+        whitePawnMoves[square] = shiftNorth(bb)
 
-        // Black pawn moves (one square forward, or two from rank 7)
-        let blackPawnMove = shiftSouth(bb)
-        if (rank === 6) { // rank 7 in chess notation
-            blackPawnMove |= shiftSouth(shiftSouth(bb))
-        }
-        blackPawnMoves[square] = blackPawnMove
+        // Black pawn moves (one square forward only — Makruk has no double push)
+        blackPawnMoves[square] = shiftSouth(bb)
     }
 }
 
@@ -190,54 +182,3 @@ export function getRookAttacks(square: number, occupancy: Mask64): Mask64 {
     return attacks
 }
 
-/**
- * Generate bishop attacks from a square with given occupancy
- * Uses classical approach (not magic bitboards)
- */
-export function getBishopAttacks(square: number, occupancy: Mask64): Mask64 {
-    let attacks = EMPTY_MASK
-    const rank = Math.floor(square / 8)
-    const file = square % 8
-
-    // Northeast
-    for (let r = rank + 1, f = file + 1; r <= 7 && f <= 7; r++, f++) {
-        const sq = r * 8 + f
-        const bit = 1n << BigInt(sq)
-        attacks |= bit
-        if (occupancy & bit) break
-    }
-
-    // Northwest
-    for (let r = rank + 1, f = file - 1; r <= 7 && f >= 0; r++, f--) {
-        const sq = r * 8 + f
-        const bit = 1n << BigInt(sq)
-        attacks |= bit
-        if (occupancy & bit) break
-    }
-
-    // Southeast
-    for (let r = rank - 1, f = file + 1; r >= 0 && f <= 7; r--, f++) {
-        const sq = r * 8 + f
-        const bit = 1n << BigInt(sq)
-        attacks |= bit
-        if (occupancy & bit) break
-    }
-
-    // Southwest
-    for (let r = rank - 1, f = file - 1; r >= 0 && f >= 0; r--, f--) {
-        const sq = r * 8 + f
-        const bit = 1n << BigInt(sq)
-        attacks |= bit
-        if (occupancy & bit) break
-    }
-
-    return attacks
-}
-
-/**
- * Generate queen attacks (combination of rook and bishop)
- * Note: In standard chess. In Makruk, "Met" only moves one square diagonally.
- */
-export function getQueenAttacks(square: number, occupancy: Mask64): Mask64 {
-    return getRookAttacks(square, occupancy) | getBishopAttacks(square, occupancy)
-}

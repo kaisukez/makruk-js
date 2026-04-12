@@ -1,50 +1,64 @@
 import type { Board } from "bitboard/board/board"
 import type { Move, Game } from "bitboard/types"
 import { Color, PIECE_POWER } from "common/const"
-import { generateLegalMoves } from "bitboard/moves/generation"
+import { generateLegalMoves, generateLegalCaptures } from "bitboard/moves/generation"
 import { applyMove } from "bitboard/moves/execution"
 import { evaluateFast } from "bitboard/ai/evaluation"
 import { updateHashForMove } from "bitboard/hash"
-import { isDraw } from "bitboard/rules/status"
-import { stepCountdown, CountdownErrorCode } from "bitboard/rules/countdown"
+import { isInsufficientMaterial, isKhunAttacked } from "bitboard/rules/status"
+import { stepCountdown, isCountdownExpired } from "bitboard/rules/countdown"
+import { swapColor } from "common/utils"
 
-/**
- * Apply a move during search, updating countdown and position occurrence
- */
+// ---------------------------------------------------------------------------
+// Search context — shared mutable state threaded through the recursive search
+// ---------------------------------------------------------------------------
+
+interface SearchContext {
+    tt: TranspositionTable | null
+    /**
+     * Frequency map of hashes on the current search path (root-to-current, inclusive).
+     * O(1) repetition check vs the old O(depth) linear scan.
+     */
+    pathFreq: Map<bigint, number>
+    /** Shared node counter — avoids accumulating per-call counts up the stack. */
+    nodes: number
+    /** Optional wall-clock deadline (ms). Search aborts when Date.now() > stopTime. */
+    stopTime?: number
+    /** Set to true when stopTime is exceeded — callers check this to discard partial results. */
+    aborted: boolean
+}
+
+// ---------------------------------------------------------------------------
+// Apply move for search — does NOT clone positionOccurrence (use path instead)
+// ---------------------------------------------------------------------------
+
 export function applyMoveForSearch(game: Game, move: Move): Game {
     const newBoard = applyMove(game.board, move)
-    const newTurn = game.turn === Color.WHITE ? Color.BLACK : Color.WHITE
-    const newHash = updateHashForMove(game.hash, move)
+    const newTurn = swapColor(game.turn)
 
-    // Update position occurrence for threefold repetition
-    const newOccurrence = new Map(game.positionOccurrence)
-    newOccurrence.set(newHash, (newOccurrence.get(newHash) || 0) + 1)
-
-    // Update countdown - step it for the player who just moved
-    // Countdown ticks when the counting player makes a move
+    // Update countdown before hash so the new hash reflects the updated countdown.
+    // stepCountdown only throws when flags conflict; we pass no flags so it never throws.
     let newCountdown = game.countdown
     if (game.countdown && game.countdown.countColor === game.turn) {
-        try {
-            newCountdown = stepCountdown(newBoard, newTurn, game.countdown)
-        } catch (e) {
-            const knownCodes: string[] = Object.values(CountdownErrorCode)
-            const isKnownError = e && typeof e === 'object' && 'code' in e &&
-                knownCodes.includes((e as { code: string }).code)
-            if (!isKnownError) {
-                throw e
-            }
-        }
+        newCountdown = stepCountdown(newBoard, newTurn, game.countdown)
     }
+
+    const newHash = updateHashForMove(game.hash, move, game.countdown, newCountdown)
 
     return {
         board: newBoard,
         turn: newTurn,
         moveNumber: game.moveNumber,
+        // Share the positionOccurrence by reference — repetition is tracked via the search path
+        positionOccurrence: game.positionOccurrence,
         hash: newHash,
-        positionOccurrence: newOccurrence,
         countdown: newCountdown,
     }
 }
+
+// ---------------------------------------------------------------------------
+// Public types
+// ---------------------------------------------------------------------------
 
 export interface MinimaxOutput {
     bestScore: number
@@ -66,10 +80,11 @@ export interface TranspositionTable {
     size(): number
 }
 
-/**
- * Create a new transposition table
- */
-export function createTranspositionTable(maxSize: number = 1000000): TranspositionTable {
+// ---------------------------------------------------------------------------
+// Transposition table — always-replace strategy
+// ---------------------------------------------------------------------------
+
+export function createTranspositionTable(maxSize: number = 1_000_000): TranspositionTable {
     const table = new Map<bigint, TranspositionEntry>()
 
     return {
@@ -77,8 +92,11 @@ export function createTranspositionTable(maxSize: number = 1000000): Transpositi
             return table.get(hash)
         },
         set(hash: bigint, entry: TranspositionEntry): void {
+            // Always-replace: just overwrite without nuking the entire table
             if (table.size >= maxSize) {
-                table.clear()
+                // Delete the oldest entry by clearing the first key in iteration order
+                const firstKey = table.keys().next().value
+                if (firstKey !== undefined) table.delete(firstKey)
             }
             table.set(hash, entry)
         },
@@ -87,70 +105,102 @@ export function createTranspositionTable(maxSize: number = 1000000): Transpositi
         },
         size(): number {
             return table.size
-        }
+        },
     }
 }
 
+// ---------------------------------------------------------------------------
+// Move ordering
+// ---------------------------------------------------------------------------
 
 /**
- * MVV-LVA (Most Valuable Victim - Least Valuable Attacker) score for move ordering
- * Higher score = search first
+ * MVV-LVA score for a single move.
  */
 export function getMoveScore(move: Move, ttBestMove?: Move | null): number {
-    // Transposition table best move gets highest priority
     if (ttBestMove && move.from === ttBestMove.from && move.to === ttBestMove.to) {
         return 10000
     }
-
-    // Captures: score by victim value - attacker value / 10
     if (move.captured) {
         const victimValue = PIECE_POWER[move.captured] * 100
         const attackerValue = PIECE_POWER[move.piece]
         return 1000 + victimValue - attackerValue
     }
-
-    // Promotions
     if (move.promotion) {
         return 900
     }
-
-    // Quiet moves
     return 0
 }
 
 /**
- * Sort moves for better alpha-beta pruning (mutates array in place)
- * Order: TT best move > captures (MVV-LVA) > promotions > quiet moves
+ * Sort moves in-place by MVV-LVA score (descending).
  */
 export function orderMoves(moves: Move[], ttBestMove?: Move | null): void {
     moves.sort((a, b) => getMoveScore(b, ttBestMove) - getMoveScore(a, ttBestMove))
 }
 
-/**
- * Generate only capture moves for quiescence search
- */
-function generateCaptures(state: Board, turn: Color): Move[] {
-    const moves = generateLegalMoves(state, turn)
-    return moves.filter(m => m.captured)
+// ---------------------------------------------------------------------------
+// Repetition detection via search path frequency map
+// ---------------------------------------------------------------------------
+
+function pathFreqIncrement(pathFreq: Map<bigint, number>, hash: bigint): void {
+    pathFreq.set(hash, (pathFreq.get(hash) ?? 0) + 1)
 }
 
-/**
- * Quiescence search - search captures until position is quiet
- * Avoids horizon effect where evaluation at depth 0 misses obvious captures
- */
+function pathFreqDecrement(pathFreq: Map<bigint, number>, hash: bigint): void {
+    const n = pathFreq.get(hash)! - 1
+    if (n === 0) { pathFreq.delete(hash) } else { pathFreq.set(hash, n) }
+}
+
+// ---------------------------------------------------------------------------
+// Quiescence search
+// ---------------------------------------------------------------------------
+
 function quiescence(
     state: Board,
     turn: Color,
     alpha: number,
     beta: number,
-    nodesSearched: { count: number }
+    ctx: SearchContext
 ): number {
-    nodesSearched.count++
+    ctx.nodes++
 
-    // Stand pat - evaluate current position
+    // Time check every 2048 nodes
+    if (ctx.stopTime && (ctx.nodes & 2047) === 0 && Date.now() > ctx.stopTime) {
+        ctx.aborted = true
+        return evaluateFast(state)
+    }
+
+    const inCheck = isKhunAttacked(state, turn)
+
+    if (inCheck) {
+        // Must search all moves to escape check — captures alone are insufficient
+        const allMoves = generateLegalMoves(state, turn)
+        if (allMoves.length === 0) {
+            // Checkmate
+            return turn === Color.WHITE ? -Infinity : Infinity
+        }
+        orderMoves(allMoves, null)
+        const isMaximizing = turn === Color.WHITE
+        let best = isMaximizing ? -Infinity : Infinity
+
+        for (const move of allMoves) {
+            const newState = applyMove(state, move)
+            const score = quiescence(newState, swapColor(turn), alpha, beta, ctx)
+            if (isMaximizing) {
+                if (score > best) best = score
+                if (score > alpha) alpha = score
+                if (alpha >= beta) return beta
+            } else {
+                if (score < best) best = score
+                if (score < beta) beta = score
+                if (beta <= alpha) return alpha
+            }
+        }
+        return best
+    }
+
+    // Stand-pat evaluation
     const standPat = evaluateFast(state)
-
-    // Beta cutoff
     if (turn === Color.WHITE) {
         if (standPat >= beta) return beta
         if (standPat > alpha) alpha = standPat
@@ -159,119 +209,112 @@ function quiescence(
         if (standPat < beta) beta = standPat
     }
 
-    // Search captures only
-    const captures = generateCaptures(state, turn)
-    if (captures.length === 0) {
-        return standPat
-    }
+    // Search legal captures only (no quiet moves — position is already "quiet" here)
+    const captures = generateLegalCaptures(state, turn)
+    if (captures.length === 0) return standPat
 
-    // Order captures by MVV-LVA
     orderMoves(captures, null)
-
     const isMaximizing = turn === Color.WHITE
 
     for (const move of captures) {
         const newState = applyMove(state, move)
-        const newTurn = turn === Color.WHITE ? Color.BLACK : Color.WHITE
-        const score = quiescence(newState, newTurn, alpha, beta, nodesSearched)
+        const score = quiescence(newState, swapColor(turn), alpha, beta, ctx)
 
         if (isMaximizing) {
-            if (score > alpha) {
-                alpha = score
-            }
-            if (alpha >= beta) {
-                return beta
-            }
+            if (score > alpha) alpha = score
+            if (alpha >= beta) return beta
         } else {
-            if (score < beta) {
-                beta = score
-            }
-            if (beta <= alpha) {
-                return alpha
-            }
+            if (score < beta) beta = score
+            if (beta <= alpha) return alpha
         }
     }
 
     return isMaximizing ? alpha : beta
 }
 
-/**
- * Internal minimax with TT parameter - works with full Game state
- * to properly track countdown and position occurrence for draw detection
- */
-function minimaxWithTT(
+// ---------------------------------------------------------------------------
+// Core alpha-beta minimax
+// ---------------------------------------------------------------------------
+
+function minimaxInternal(
     game: Game,
     depth: number,
     alpha: number,
     beta: number,
-    tt: TranspositionTable | null
-): MinimaxOutput {
-    const nodesCounter = { count: 1 }
+    ctx: SearchContext
+): { score: number; move: Move | null } {
+    ctx.nodes++
 
+    // Time check every 2048 nodes
+    if (ctx.stopTime && (ctx.nodes & 2047) === 0 && Date.now() > ctx.stopTime) {
+        ctx.aborted = true
+        return { score: 0, move: null }
+    }
+
+    // -------------------------------------------------------------------
     // Transposition table lookup
-    const hash = tt ? game.hash : 0n
+    // -------------------------------------------------------------------
+    const hash = ctx.tt ? game.hash : 0n
     let ttBestMove: Move | null = null
 
-    if (tt) {
-        const cachedEntry = tt.get(hash)
-        if (cachedEntry) {
-            ttBestMove = cachedEntry.bestMove
-
-            if (cachedEntry.depth >= depth) {
-                if (cachedEntry.flag === 'exact') {
-                    return {
-                        bestScore: cachedEntry.score,
-                        bestMove: cachedEntry.bestMove,
-                        nodesSearched: 1,
-                    }
-                } else if (cachedEntry.flag === 'lowerbound') {
-                    alpha = Math.max(alpha, cachedEntry.score)
-                } else if (cachedEntry.flag === 'upperbound') {
-                    beta = Math.min(beta, cachedEntry.score)
+    if (ctx.tt) {
+        const cached = ctx.tt.get(hash)
+        if (cached) {
+            ttBestMove = cached.bestMove
+            if (cached.depth >= depth) {
+                if (cached.flag === 'exact') {
+                    return { score: cached.score, move: cached.bestMove }
+                } else if (cached.flag === 'lowerbound') {
+                    alpha = Math.max(alpha, cached.score)
+                } else if (cached.flag === 'upperbound') {
+                    beta = Math.min(beta, cached.score)
                 }
-
                 if (alpha >= beta) {
-                    return {
-                        bestScore: cachedEntry.score,
-                        bestMove: cachedEntry.bestMove,
-                        nodesSearched: 1,
-                    }
+                    return { score: cached.score, move: cached.bestMove }
                 }
             }
         }
     }
 
-    // Check for draw (uses full Game state - checks countdown, repetition, etc.)
-    if (isDraw(game)) {
-        return {
-            bestScore: 0,
-            bestMove: null,
-            nodesSearched: nodesCounter.count,
-        }
+    // -------------------------------------------------------------------
+    // Draw detection
+    // -------------------------------------------------------------------
+
+    // Threefold repetition: count occurrences in actual game history + search path
+    const historyCount = game.positionOccurrence.get(game.hash) ?? 0
+    const pathCount = ctx.pathFreq.get(game.hash) ?? 0
+    if (historyCount + pathCount >= 3) {
+        return { score: 0, move: null }
     }
 
-    // Generate and check for no legal moves (checkmate/stalemate)
+    if (isInsufficientMaterial(game) || isCountdownExpired(game.countdown)) {
+        return { score: 0, move: null }
+    }
+
+    // -------------------------------------------------------------------
+    // Terminal / depth-0 node
+    // -------------------------------------------------------------------
+
     const moves = generateLegalMoves(game.board, game.turn)
+
     if (moves.length === 0) {
-        const score = game.turn === Color.WHITE ? -Infinity : Infinity
-        return {
-            bestScore: score,
-            bestMove: null,
-            nodesSearched: nodesCounter.count,
+        if (isKhunAttacked(game.board, game.turn)) {
+            // Checkmate — the side to move loses
+            return { score: game.turn === Color.WHITE ? -Infinity : Infinity, move: null }
         }
+        // Stalemate
+        return { score: 0, move: null }
     }
 
-    // At depth 0, use quiescence search instead of static eval
     if (depth === 0) {
-        const score = quiescence(game.board, game.turn, alpha, beta, nodesCounter)
-        return {
-            bestScore: score,
-            bestMove: null,
-            nodesSearched: nodesCounter.count,
-        }
+        const score = quiescence(game.board, game.turn, alpha, beta, ctx)
+        return { score, move: null }
     }
 
-    // Order moves for better pruning
+    // -------------------------------------------------------------------
+    // Recursive search
+    // -------------------------------------------------------------------
+
     orderMoves(moves, ttBestMove)
 
     const isMaximizing = game.turn === Color.WHITE
@@ -280,33 +323,33 @@ function minimaxWithTT(
     const originalAlpha = alpha
 
     for (const move of moves) {
-        // Apply move with proper countdown and occurrence tracking
         const newGame = applyMoveForSearch(game, move)
-        const result = minimaxWithTT(newGame, depth - 1, alpha, beta, tt)
 
-        nodesCounter.count += result.nodesSearched
+        pathFreqIncrement(ctx.pathFreq, newGame.hash)
+        const result = minimaxInternal(newGame, depth - 1, alpha, beta, ctx)
+        pathFreqDecrement(ctx.pathFreq, newGame.hash)
+
+        if (ctx.aborted) break
 
         if (isMaximizing) {
-            if (result.bestScore > bestScore) {
-                bestScore = result.bestScore
+            if (result.score > bestScore) {
+                bestScore = result.score
                 bestMove = move
             }
-            alpha = Math.max(alpha, bestScore)
+            if (bestScore > alpha) alpha = bestScore
         } else {
-            if (result.bestScore < bestScore) {
-                bestScore = result.bestScore
+            if (result.score < bestScore) {
+                bestScore = result.score
                 bestMove = move
             }
-            beta = Math.min(beta, bestScore)
+            if (bestScore < beta) beta = bestScore
         }
 
-        if (beta <= alpha) {
-            break
-        }
+        if (beta <= alpha) break
     }
 
     // Store in transposition table
-    if (tt) {
+    if (ctx.tt && !ctx.aborted) {
         let flag: 'exact' | 'lowerbound' | 'upperbound'
         if (bestScore <= originalAlpha) {
             flag = 'upperbound'
@@ -315,20 +358,20 @@ function minimaxWithTT(
         } else {
             flag = 'exact'
         }
-
-        tt.set(hash, {
-            depth,
-            score: bestScore,
-            flag,
-            bestMove,
-        })
+        ctx.tt.set(hash, { depth, score: bestScore, flag, bestMove })
     }
 
-    return {
-        bestScore,
-        bestMove,
-        nodesSearched: nodesCounter.count,
-    }
+    return { score: bestScore, move: bestMove }
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+function makePathFreq(initialHash: bigint): Map<bigint, number> {
+    const m = new Map<bigint, number>()
+    m.set(initialHash, 1)
+    return m
 }
 
 export function minimax(
@@ -338,7 +381,9 @@ export function minimax(
     beta: number,
     tt: TranspositionTable | null = null
 ): MinimaxOutput {
-    return minimaxWithTT(game, depth, alpha, beta, tt)
+    const ctx: SearchContext = { tt, pathFreq: makePathFreq(game.hash), nodes: 0, aborted: false }
+    const result = minimaxInternal(game, depth, alpha, beta, ctx)
+    return { bestScore: result.score, bestMove: result.move, nodesSearched: ctx.nodes }
 }
 
 export function findBestMove(
@@ -347,7 +392,9 @@ export function findBestMove(
     tt: TranspositionTable | null = null
 ): MinimaxOutput {
     const table = tt ?? createTranspositionTable()
-    return minimaxWithTT(game, depth, -Infinity, Infinity, table)
+    const ctx: SearchContext = { tt: table, pathFreq: makePathFreq(game.hash), nodes: 0, aborted: false }
+    const result = minimaxInternal(game, depth, -Infinity, Infinity, ctx)
+    return { bestScore: result.score, bestMove: result.move, nodesSearched: ctx.nodes }
 }
 
 export function iterativeDeepening(
@@ -356,27 +403,31 @@ export function iterativeDeepening(
     timeLimitMs?: number,
     tt: TranspositionTable | null = null
 ): MinimaxOutput {
-    let bestResult: MinimaxOutput = {
-        bestScore: 0,
-        bestMove: null,
-        nodesSearched: 0,
-    }
-
     const table = tt ?? createTranspositionTable()
     const startTime = Date.now()
+    const stopTime = timeLimitMs ? startTime + timeLimitMs : undefined
+
+    let bestResult: MinimaxOutput = { bestScore: 0, bestMove: null, nodesSearched: 0 }
+    let totalNodes = 0
 
     for (let depth = 1; depth <= maxDepth; depth++) {
-        const result = findBestMove(game, depth, table)
-
-        bestResult = result
-
-        if (timeLimitMs && Date.now() - startTime >= timeLimitMs) {
-            break
+        const ctx: SearchContext = {
+            tt: table,
+            pathFreq: makePathFreq(game.hash),
+            nodes: 0,
+            aborted: false,
+            stopTime,
         }
 
-        if (Math.abs(result.bestScore) === Infinity) {
-            break
-        }
+        const result = minimaxInternal(game, depth, -Infinity, Infinity, ctx)
+        totalNodes += ctx.nodes
+
+        // Discard results from an aborted (time-exceeded) search
+        if (ctx.aborted) break
+
+        bestResult = { bestScore: result.score, bestMove: result.move, nodesSearched: totalNodes }
+
+        if (Math.abs(result.score) === Infinity) break
     }
 
     return bestResult

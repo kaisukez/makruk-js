@@ -92,9 +92,7 @@ export function setBit(bitboard: Mask64, square: number): Mask64 {
  * Clear a bit at the given square
  */
 export function clearBit(bitboard: Mask64, square: number): Mask64 {
-    const ALL_BITS = 0xFFFFFFFFFFFFFFFFn
-    const mask = 1n << BigInt(square)
-    return bitboard & (ALL_BITS ^ mask)
+    return bitboard & (FULL_MASK ^ (1n << BigInt(square)))
 }
 
 /**
@@ -125,20 +123,8 @@ export function popCount(bitboard: Mask64): number {
  */
 export function getLSB(bitboard: Mask64): number {
     if (bitboard === 0n) return -1
-
-    let square = 0
-    let bb = bitboard
-
-    // Find the position of the LSB
-    while ((bb & 1n) === 0n) {
-        bb >>= 1n
-        square++
-        if (square > 63) {
-            throw new Error(`getLSB: square ${square} exceeds 63, bitboard=${bitboard.toString(16)}`)
-        }
-    }
-
-    return square
+    // n & -n isolates the LSB; its binary string length minus one is the bit index
+    return (bitboard & -bitboard).toString(2).length - 1
 }
 
 /**
@@ -157,23 +143,14 @@ export function popLSB(bitboard: Mask64): { bb: Mask64; square: number } {
  */
 export function getMSB(bitboard: Mask64): number {
     if (bitboard === 0n) return -1
-
-    let square = 0
-    let bb = bitboard
-
-    while (bb > 1n) {
-        bb >>= 1n
-        square++
-    }
-
-    return square
+    return bitboard.toString(2).length - 1
 }
 
 /**
  * Shift bitboard north (up one rank)
  */
 export function shiftNorth(bitboard: Mask64): Mask64 {
-    return bitboard << 8n
+    return (bitboard << 8n) & FULL_MASK
 }
 
 /**
@@ -201,14 +178,14 @@ export function shiftWest(bitboard: Mask64): Mask64 {
  * Shift bitboard north-east
  */
 export function shiftNorthEast(bitboard: Mask64): Mask64 {
-    return (bitboard & (FULL_MASK ^ FILE_H)) << 9n
+    return ((bitboard & (FULL_MASK ^ FILE_H)) << 9n) & FULL_MASK
 }
 
 /**
  * Shift bitboard north-west
  */
 export function shiftNorthWest(bitboard: Mask64): Mask64 {
-    return (bitboard & (FULL_MASK ^ FILE_A)) << 7n
+    return ((bitboard & (FULL_MASK ^ FILE_A)) << 7n) & FULL_MASK
 }
 
 /**
@@ -341,9 +318,7 @@ export function setPiece(state: Board, color: Color, piece: Piece, square: numbe
  * Remove a piece from the bitboard
  */
 export function removePiece(state: Board, color: Color, piece: Piece, square: number): void {
-    const ALL_BITS = 0xFFFFFFFFFFFFFFFFn
-    const mask = 1n << BigInt(square)
-    const bit = ALL_BITS ^ mask
+    const bit = FULL_MASK ^ (1n << BigInt(square))
 
     if (color === Color.WHITE) {
         switch (piece) {

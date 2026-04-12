@@ -59,15 +59,15 @@
         "web:preview": "pnpm --filter makruk-web preview"
     },
     "devDependencies": {
-        "@babel/preset-env": "^7.28.5",
+        "@babel/preset-env": "^7.29.2",
         "@babel/preset-typescript": "^7.28.5",
         "@types/jest": "^30.0.0",
-        "@types/node": "^20.0.0",
-        "jest": "^30.2.0",
-        "ts-jest": "^29.4.6",
+        "@types/node": "^25.6.0",
+        "jest": "^30.3.0",
+        "ts-jest": "^29.4.9",
         "ts-node": "^10.9.2",
         "tsup": "^8.5.1",
-        "typescript": "^5.9.3"
+        "typescript": "^6.0.2"
     },
     "dependencies": {
         "immer": "^11.0.1"

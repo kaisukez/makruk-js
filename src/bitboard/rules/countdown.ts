@@ -5,6 +5,7 @@
 import { Color, CountType, Piece } from "common/const"
 import { Board } from "bitboard/board/board"
 import { popCount, getPieceMask64 } from "bitboard/board/board"
+import { swapColor } from "common/utils"
 
 export type { Countdown } from "common/fen"
 import type { Countdown } from "common/fen"
@@ -90,10 +91,6 @@ export function countPiecesFromMask64(state: Board): PieceCount {
     return pieceCount
 }
 
-function swapColor(color: Color): Color {
-    return color === Color.WHITE ? Color.BLACK : Color.WHITE
-}
-
 /**
  * Calculate piece power countdown
  * Activates when player only has Khun left and there are no Bia on the board
@@ -116,25 +113,19 @@ export function calculatePiecePowerCountdown(
     const opponentColor = swapColor(turn)
     const opponentPieceCount = pieceCount[opponentColor]
 
-    if ([1, 2].includes(opponentPieceCount[Piece.RUA])) {
-        return {
-            countFrom: 1,
-            countTo: 16 / opponentPieceCount[Piece.RUA],
-        }
+    const ruaCount = opponentPieceCount[Piece.RUA]
+    if (ruaCount === 1 || ruaCount === 2) {
+        return { countFrom: 1, countTo: 16 / ruaCount }
     }
 
-    if ([1, 2].includes(opponentPieceCount[Piece.THON])) {
-        return {
-            countFrom: 1,
-            countTo: 44 / opponentPieceCount[Piece.THON],
-        }
+    const thonCount = opponentPieceCount[Piece.THON]
+    if (thonCount === 1 || thonCount === 2) {
+        return { countFrom: 1, countTo: 44 / thonCount }
     }
 
-    if ([1, 2].includes(opponentPieceCount[Piece.MA])) {
-        return {
-            countFrom: 1,
-            countTo: 64 / opponentPieceCount[Piece.MA],
-        }
+    const maCount = opponentPieceCount[Piece.MA]
+    if (maCount === 1 || maCount === 2) {
+        return { countFrom: 1, countTo: 64 / maCount }
     }
 
     return {
@@ -221,8 +212,9 @@ export function hasCountdownFlag(flags: CountdownFlag = {}): boolean {
 }
 
 /**
- * Step countdown - updates countdown state based on flags and position
- * This function mutates the countdown parameter
+ * Step countdown - returns a new countdown state based on current board and flags.
+ * Returns null when counting should stop, or a new Countdown otherwise.
+ * This function is pure — it does not mutate its inputs.
  */
 export function stepCountdown(
     state: Board,

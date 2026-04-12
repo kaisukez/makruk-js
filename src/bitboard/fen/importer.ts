@@ -60,7 +60,7 @@ export function createGameFromFen(fen: string): Game {
         square -= 8
     }
 
-    const hash = computeHash(board, turn)
+    const hash = computeHash(board, turn, countdown)
     const positionOccurrence = new Map<bigint, number>()
     positionOccurrence.set(hash, 1)
 

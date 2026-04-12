@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Benchmark runner - compares 0x88 vs Bitboard implementations
+ * Benchmark runner - Bitboard implementation
  */
 
 const fen = require('./fen-operations')
@@ -12,7 +12,7 @@ const benchmarks = { fen, moves, ai, parallel }
 
 function printHeader() {
     console.log('\n' + '='.repeat(50))
-    console.log('MAKRUK-JS BENCHMARKS: 0x88 vs Bitboard')
+    console.log('MAKRUK-JS BENCHMARKS')
     console.log('='.repeat(50))
     console.log(`Node ${process.version} | ${process.platform} ${process.arch}`)
     console.log('='.repeat(50) + '\n')

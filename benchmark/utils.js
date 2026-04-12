@@ -18,18 +18,12 @@ function measure(fn, iterations = 100) {
     }
 }
 
-function compare(name, fn1, fn2, iterations = 100) {
-    const r1 = measure(fn1, iterations)
-    const r2 = measure(fn2, iterations)
-    const ratio = r1.avg / r2.avg
-
+function bench(name, fn, iterations = 100) {
+    const r = measure(fn, iterations)
     console.log(`${name}`)
-    console.log(`  0x88:     ${r1.avg.toFixed(3)} ms  (${r1.ops.toFixed(0)} ops/s)`)
-    console.log(`  Bitboard: ${r2.avg.toFixed(3)} ms  (${r2.ops.toFixed(0)} ops/s)`)
-    console.log(`  ${ratio > 1 ? `Bitboard ${ratio.toFixed(1)}x faster` : ratio < 1 ? `0x88 ${(1/ratio).toFixed(1)}x faster` : 'Equal'}`)
+    console.log(`  ${r.avg.toFixed(3)} ms  (${r.ops.toFixed(0)} ops/s)`)
     console.log()
-
-    return { r1, r2, ratio }
+    return r
 }
 
-module.exports = { measure, compare }
+module.exports = { measure, bench }

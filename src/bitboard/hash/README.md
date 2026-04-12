@@ -8,7 +8,7 @@ Zobrist hashing is the standard technique used by chess engines to compute a uni
 
 In Makruk, a position occurring three times is a draw (threefold repetition). Without Zobrist hashing, you'd need to compare the entire board state for every previous position — O(n × board_size) per move.
 
-With Zobrist hashing, each position has a 64-bit hash. Checking for repetition becomes a simple hash table lookup — O(1).
+With Zobrist hashing, each position has a 64-bit hash. During actual game play, repetition checking is a simple `Map<bigint, number>` lookup. During search, a `pathFreq: Map<bigint, number>` frequency counter on the search context gives O(1) repetition detection per node.
 
 ### Transposition Tables
 
@@ -36,10 +36,12 @@ This means **adding and removing a piece use the exact same operation**. To add 
 At initialization, we generate random 64-bit numbers for every possible (piece, color, square) combination:
 
 ```
-7 piece types × 2 colors × 64 squares = 896 random keys
+7 piece types × 2 colors × 64 squares = 896 piece keys
+2 colors × 2 countdown types × 64 count values = 256 countdown keys
+1 side-to-move key
 ```
 
-Plus one additional key for "side to move" (XORed when it's black's turn).
+Total: 1153 random keys. The countdown keys ensure two positions that are identical in piece placement but differ in countdown state get different hashes, preventing false draw claims.
 
 These are generated with a **fixed seed** (`0x12345678ABCDEFn`) so the same keys are produced every time the program runs. This ensures hash consistency across sessions.
 
@@ -79,9 +81,13 @@ hash ^= KEYS[color][destPiece][to]
 
 // 4. Toggle side to move
 hash ^= SIDE_KEY
+
+// 5. Update countdown hash (if countdown state changed)
+if (oldCountdown) hash ^= COUNTDOWN_KEYS[oldCountdown.countColor][oldCountdown.countType][oldCountdown.count - 1]
+if (newCountdown) hash ^= COUNTDOWN_KEYS[newCountdown.countColor][newCountdown.countType][newCountdown.count - 1]
 ```
 
-This is **O(1)** regardless of how many pieces are on the board. Each move requires only 2-4 XOR operations.
+This is **O(1)** regardless of how many pieces are on the board. Each move requires only 2-6 XOR operations.
 
 ## Implementation Details
 
@@ -124,17 +130,19 @@ For 10 million positions, this is about 1 in 10 billion — negligible in practi
 ```typescript
 import { computeHash, updateHashForMove } from 'bitboard/hash'
 
-// Compute initial hash when creating game from FEN
-const hash = computeHash(board, turn)
+// Compute initial hash when creating game from FEN (countdown is optional)
+const hash = computeHash(board, turn, countdown)
 
 // Update hash incrementally after each move
-const newHash = updateHashForMove(hash, move)
+// Pass old and new countdown so the hash reflects countdown state changes
+const newHash = updateHashForMove(hash, move, oldCountdown, newCountdown)
 ```
 
 The `updateHashForMove` function handles all cases internally:
 - Normal moves
 - Captures
 - Promotions (Bia → Flipped Bia)
+- Countdown state transitions
 
 ## Performance Comparison
 

@@ -190,14 +190,14 @@ bitboard |= (1n << 28n)
 ### Clearing a Bit (Remove a Piece)
 
 ```ts
-// In JavaScript BigInt, ~ creates negative numbers, so we use XOR with full mask
-const ALL_BITS = 0xFFFF_FFFF_FFFF_FFFFn
+// In JavaScript BigInt, ~ produces a negative number, so we XOR with FULL_MASK instead
+const FULL_MASK = 0xFFFF_FFFF_FFFF_FFFFn
 const mask = 1n << 28n
-bitboard &= (ALL_BITS ^ mask)
+bitboard &= (FULL_MASK ^ mask)
 
-// Alternative using helper:
+// Helper:
 function clearBit(bb: Mask64, square: number): Mask64 {
-    return bb & (ALL_BITS ^ (1n << BigInt(square)))
+    return bb & (FULL_MASK ^ (1n << BigInt(square)))
 }
 ```
 
@@ -293,9 +293,9 @@ const isOnHFile = (piece & FILE_H) !== 0n
 Shifting moves all bits in a direction simultaneously:
 
 ```ts
-// NORTH: Up one rank (+8 squares)
+// NORTH: Up one rank (+8 squares). Mask with FULL_MASK to keep result in 64 bits.
 function shiftNorth(bb: Mask64): Mask64 {
-    return bb << 8n
+    return (bb << 8n) & FULL_MASK
 }
 
 // SOUTH: Down one rank (-8 squares)
@@ -304,32 +304,33 @@ function shiftSouth(bb: Mask64): Mask64 {
 }
 
 // EAST: Right one file (+1 square)
-// Must mask off H-file to prevent wrapping to next rank
+// Must mask off H-file to prevent wrapping to next rank.
+// BigInt has no ~ operator that works like C, so use FULL_MASK ^ FILE_H.
 function shiftEast(bb: Mask64): Mask64 {
-    return (bb & ~FILE_H) << 1n
+    return (bb & (FULL_MASK ^ FILE_H)) << 1n
 }
 
 // WEST: Left one file (-1 square)
 // Must mask off A-file to prevent wrapping to previous rank
 function shiftWest(bb: Mask64): Mask64 {
-    return (bb & ~FILE_A) >> 1n
+    return (bb & (FULL_MASK ^ FILE_A)) >> 1n
 }
 
 // Diagonal shifts combine horizontal and vertical
 function shiftNorthEast(bb: Mask64): Mask64 {
-    return (bb & ~FILE_H) << 9n  // +8 (north) + 1 (east) = +9
+    return ((bb & (FULL_MASK ^ FILE_H)) << 9n) & FULL_MASK
 }
 
 function shiftNorthWest(bb: Mask64): Mask64 {
-    return (bb & ~FILE_A) << 7n  // +8 (north) - 1 (west) = +7
+    return ((bb & (FULL_MASK ^ FILE_A)) << 7n) & FULL_MASK
 }
 
 function shiftSouthEast(bb: Mask64): Mask64 {
-    return (bb & ~FILE_H) >> 7n  // -8 (south) + 1 (east) = -7
+    return (bb & (FULL_MASK ^ FILE_H)) >> 7n
 }
 
 function shiftSouthWest(bb: Mask64): Mask64 {
-    return (bb & ~FILE_A) >> 9n  // -8 (south) - 1 (west) = -9
+    return (bb & (FULL_MASK ^ FILE_A)) >> 9n
 }
 ```
 
@@ -342,11 +343,13 @@ Before shift east (h1 piece):      After (WRONG without mask):
 . . . . . . . .                    . . . . . . . .
 ```
 
-With mask `& ~FILE_H`:
+With mask `& (FULL_MASK ^ FILE_H)`:
 ```
-(bb & ~FILE_H):                    After shift:
+Masked:                            After shift:
 . . . . . . . 0  ← h1 bit cleared  . . . . . . . .  ← Correctly gone
 ```
+
+**Note on BigInt and `~`:** In JavaScript, `~bigint` is not supported — it throws a TypeError. Use `FULL_MASK ^ bb` to invert all 64 bits.
 
 ---
 
@@ -379,34 +382,29 @@ Repeat until bb = 0, counting iterations.
 ```ts
 function getLSB(bb: Mask64): number {
     if (bb === 0n) return -1
-
-    let square = 0
-    while ((bb & 1n) === 0n) {
-        bb >>= 1n
-        square++
-    }
-    return square
+    // Isolate the lowest set bit with (bb & -bb), then count its position
+    // via binary string length. Fast for BigInt since no loop is needed.
+    return (bb & -bb).toString(2).length - 1
 }
 ```
 
 ### Pop LSB (Get and Remove)
 
 ```ts
-function popLSB(bb: Mask64): { newBb: Mask64; square: number } {
-    const square = getLSB(bb)
-    const newBb = bb & (bb - 1n)  // Clear LSB
-    return { newBb, square }
+function popLSB(bb: Mask64): { bb: Mask64; square: number } {
+    const lsb = bb & -bb          // Isolate lowest set bit
+    const square = lsb.toString(2).length - 1
+    return { bb: bb ^ lsb, square }  // Clear the bit and return
 }
 ```
 
 **Usage for iterating over all pieces:**
 ```ts
-function forEachPiece(bb: Mask64, callback: (square: number) => void): void {
-    while (bb !== 0n) {
-        const { newBb, square } = popLSB(bb)
-        callback(square)
-        bb = newBb
-    }
+let pieces = state.whiteRua
+while (pieces !== EMPTY_MASK) {
+    const { bb, square } = popLSB(pieces)
+    pieces = bb
+    // use square...
 }
 ```
 
@@ -416,110 +414,84 @@ function forEachPiece(bb: Mask64, callback: (square: number) => void): void {
 
 ### Pawn Moves (Bia)
 
-Bitboards enable parallel pawn move generation:
+Each pawn's forward move and diagonal attacks are pre-computed into lookup tables (`whitePawnMoves[sq]`, `blackPawnMoves[sq]`, `whitePawnAttacks[sq]`, `blackPawnAttacks[sq]`) at module load time. Move generation then just looks up and masks:
 
 ```ts
-function generateBiaMoves(state: BoardState, color: Color): Move[] {
-    const moves: Move[] = []
-    const pawns = color === Color.WHITE ? state.whiteBia : state.blackBia
-    const enemies = color === Color.WHITE ? state.blackOccupancy : state.whiteOccupancy
-    const empty = ~state.allOccupancy
+function generateBiaMoves(
+    state: Board,
+    color: Color,
+    enemy: Mask64,
+    moves: Move[],
+    capturesOnly: boolean
+): void {
+    const isWhite = color === Color.WHITE
+    let pawns = isWhite ? state.whiteBia : state.blackBia
+    const promotionRank = isWhite ? RANK_6 : RANK_3
 
-    if (color === Color.WHITE) {
-        // Forward moves: shift north, mask with empty squares
-        let pushes = shiftNorth(pawns) & empty
+    while (pawns !== EMPTY_MASK) {
+        const { bb, square } = popLSB(pawns)
+        pawns = bb
 
-        // Iterate over each push destination
-        while (pushes !== 0n) {
-            const { newBb, square: to } = popLSB(pushes)
-            const from = to - 8  // Source is one rank below
-            moves.push(createMove(from, to, Piece.BIA, color))
-            pushes = newBb
+        if (!capturesOnly) {
+            // Forward non-capture moves (blocked by any piece)
+            let pawnMoves = getPawnMoves(square, isWhite) & (FULL_MASK ^ state.allOccupancy)
+            while (pawnMoves !== EMPTY_MASK) {
+                // emit forward move, check promotion rank...
+            }
         }
 
-        // Captures: diagonal shifts, mask with enemy pieces
-        let capturesNE = shiftNorthEast(pawns) & enemies
-        let capturesNW = shiftNorthWest(pawns) & enemies
-
-        while (capturesNE !== 0n) {
-            const { newBb, square: to } = popLSB(capturesNE)
-            const from = to - 9
-            const captured = findCapturedPiece(state, to)
-            moves.push(createMove(from, to, Piece.BIA, color, captured))
-            capturesNE = newBb
+        // Diagonal captures onto enemy squares only
+        let pawnAttacks = getPawnAttacks(square, isWhite) & enemy
+        while (pawnAttacks !== EMPTY_MASK) {
+            // emit capture move, check promotion rank...
         }
-        // Similar for NW captures...
     }
-    // Similar for black (shift south instead)...
-
-    return moves
 }
 ```
 
-### Stepping Pieces (Khun, Met, Thon)
+**Note**: Makruk has no double-pawn-push rule. Bia always moves exactly one square forward.
 
-Pre-compute attack patterns for each square:
+### Stepping Pieces (Khun, Met, Thon, Ma)
+
+Attack patterns are pre-computed at module load time into lookup tables. Move generation uses a `targetMask` — passing `FULL_MASK ^ friendly` generates all moves; passing just `enemy` generates captures only:
 
 ```ts
-// King attacks from each square (pre-computed)
-const KING_ATTACKS: Mask64[] = new Array(64)
+function generateKhunMoves(
+    state: Board,
+    color: Color,
+    targetMask: Mask64,
+    moves: Move[]
+): void {
+    const isWhite = color === Color.WHITE
+    let kings = isWhite ? state.whiteKhun : state.blackKhun
 
-function initKingAttacks(): void {
-    for (let sq = 0; sq < 64; sq++) {
-        const bb = 1n << BigInt(sq)
-        KING_ATTACKS[sq] =
-            shiftNorth(bb) |
-            shiftSouth(bb) |
-            shiftEast(bb) |
-            shiftWest(bb) |
-            shiftNorthEast(bb) |
-            shiftNorthWest(bb) |
-            shiftSouthEast(bb) |
-            shiftSouthWest(bb)
+    while (kings !== EMPTY_MASK) {
+        const { bb, square } = popLSB(kings)
+        kings = bb
+        let attacks = getKingAttacks(square) & targetMask
+
+        while (attacks !== EMPTY_MASK) {
+            const { bb: remaining, square: toSquare } = popLSB(attacks)
+            attacks = remaining
+            moves.push({ from: square, to: toSquare, piece: Piece.KHUN, color,
+                         captured: getPieceAt(state, toSquare)?.[1] })
+        }
     }
-}
-
-function generateKhunMoves(state: BoardState, color: Color): Move[] {
-    const moves: Move[] = []
-    const king = color === Color.WHITE ? state.whiteKhun : state.blackKhun
-    const friendly = color === Color.WHITE ? state.whiteOccupancy : state.blackOccupancy
-
-    const kingSquare = getLSB(king)
-    let attacks = KING_ATTACKS[kingSquare] & ~friendly  // Can't capture own pieces
-
-    while (attacks !== 0n) {
-        const { newBb, square: to } = popLSB(attacks)
-        const captured = findCapturedPiece(state, to)
-        moves.push(createMove(kingSquare, to, Piece.KHUN, color, captured))
-        attacks = newBb
-    }
-
-    return moves
 }
 ```
 
-### Knight Moves (Ma)
+All piece helpers (`generateFlippedBiaMoves`, `generateMaMoves`, `generateThonMoves`, `generateMetMoves`, `generateRuaMoves`, `generateKhunMoves`) share this same `targetMask` pattern, allowing `generatePseudoLegalMoves` and `generatePseudoLegalCaptures` to reuse them without any code duplication.
 
-Knights also use pre-computed attack tables:
+### Knight Move Table (Ma)
+
+Pre-computed at startup using file-masked shifts:
 
 ```ts
-const KNIGHT_ATTACKS: Mask64[] = new Array(64)
-
-function initKnightAttacks(): void {
-    for (let sq = 0; sq < 64; sq++) {
-        const bb = 1n << BigInt(sq)
-        KNIGHT_ATTACKS[sq] =
-            ((bb & ~FILE_A & ~FILE_B) << 6n) |   // 2 left, 1 up
-            ((bb & ~FILE_G & ~FILE_H) << 10n) |  // 2 right, 1 up
-            ((bb & ~FILE_A) << 15n) |            // 1 left, 2 up
-            ((bb & ~FILE_H) << 17n) |            // 1 right, 2 up
-            ((bb & ~FILE_A) >> 17n) |            // 1 left, 2 down
-            ((bb & ~FILE_H) >> 15n) |            // 1 right, 2 down
-            ((bb & ~FILE_A & ~FILE_B) >> 10n) |  // 2 left, 1 down
-            ((bb & ~FILE_G & ~FILE_H) >> 6n)     // 2 right, 1 down
-    }
-}
+// Example for one direction — "2 right, 1 up" = shift by +17, mask off H/G files
+((bb & (FULL_MASK ^ FILE_G) & (FULL_MASK ^ FILE_H)) << 17n) & FULL_MASK
 ```
+
+All 8 knight destinations are OR'd together for each square. The file masks prevent wrapping across the board boundary. The `FULL_MASK &` at the end keeps results within 64 bits for north shifts.
 
 ### Sliding Pieces (Rua/Rook)
 
@@ -590,85 +562,86 @@ Bitboards excel at attack detection using a "reverse attack" technique:
 
 ```ts
 function isSquareAttacked(
-    state: BoardState,
+    state: Board,
     square: number,
-    byColor: Color
+    attackerColor: Color
 ): boolean {
-    const enemies = byColor === Color.WHITE ? state : getBlackPieces(state)
+    const isWhite = attackerColor === Color.WHITE
 
-    // Knight attacks: if a knight could attack FROM this square
-    // and there's an enemy knight there, we're attacked
-    if (KNIGHT_ATTACKS[square] & enemies.ma) return true
+    // Pawn (Bia) attacks — reverse lookup:
+    // "Could an attacker's pawn reach `square` diagonally?"
+    // We ask: from `square`, what squares does the *defender's* pawn attack?
+    // If an attacker's Bia is on any of those squares, it attacks `square`.
+    const pawnAttackers = getPawnAttacks(square, !isWhite)
+    const pawns = isWhite ? state.whiteBia : state.blackBia
+    if ((pawns & pawnAttackers) !== EMPTY_MASK) return true
 
-    // King attacks (one square any direction)
-    if (KING_ATTACKS[square] & enemies.khun) return true
+    // Knight (Ma) — symmetric, same attack mask works both ways
+    const knightAttackers = getKnightAttacks(square)
+    const knights = isWhite ? state.whiteMa : state.blackMa
+    if ((knights & knightAttackers) !== EMPTY_MASK) return true
 
-    // Pawn attacks (diagonal, direction depends on attacker color)
-    const pawnAttackMask = byColor === Color.WHITE
-        ? getPawnAttacksBlack(square)  // Black pawn attacks this square if...
-        : getPawnAttacksWhite(square)
-    if (pawnAttackMask & enemies.bia) return true
+    // Diagonal pieces (FlippedBia, Thon, Met)
+    const diagAttacks = getDiagonalAttacks(square)
+    if ((isWhite ? state.whiteFlippedBia : state.blackFlippedBia) & diagAttacks) return true
+    if ((isWhite ? state.whiteThon      : state.blackThon     ) & diagAttacks) return true
+    if ((isWhite ? state.whiteMet       : state.blackMet      ) & diagAttacks) return true
 
-    // Rook attacks (rays)
-    const rookAttacks = generateRuaAttacks(square, state.allOccupancy)
-    if (rookAttacks & enemies.rua) return true
+    // Thon also attacks one square forward — check if an attacker's Thon is
+    // one square *behind* `square` (i.e. in the direction it would move FROM)
+    const thonForwardOffset = isWhite ? -8 : 8
+    const thonAttackerSquare = square + thonForwardOffset
+    if (thonAttackerSquare >= 0 && thonAttackerSquare < 64) {
+        const thons = isWhite ? state.whiteThon : state.blackThon
+        if ((thons & (1n << BigInt(thonAttackerSquare))) !== EMPTY_MASK) return true
+    }
 
-    // ... similar for other pieces
+    // Rook (Rua) — sliding rays with occupancy
+    const rookAttackers = getRookAttacks(square, state.allOccupancy)
+    if ((isWhite ? state.whiteRua : state.blackRua) & rookAttackers) return true
+
+    // King (Khun) — one square any direction
+    if ((isWhite ? state.whiteKhun : state.blackKhun) & getKingAttacks(square)) return true
 
     return false
-}
-
-// Helper: Generate rook attack rays from a square
-function generateRuaAttacks(square: number, occupancy: Mask64): Mask64 {
-    let attacks = 0n
-
-    // North
-    for (let sq = square + 8; sq < 64; sq += 8) {
-        attacks |= (1n << BigInt(sq))
-        if (occupancy & (1n << BigInt(sq))) break
-    }
-    // South, East, West...
-
-    return attacks
 }
 ```
 
 **Why "reverse attack" works:**
 
-If we want to know if square X is attacked by a knight:
-- Generate all squares a knight on X could attack
-- If any of those squares has an enemy knight, that knight attacks X!
-
-This works because knight moves are symmetric.
+If we want to know if square X is attacked by a knight, we generate all squares a knight *on X* could reach. If any of those squares contains an enemy knight, that knight attacks X. This works because knight moves are symmetric. The same principle applies to all piece types.
 
 ---
 
 ## Check and Checkmate
 
 ```ts
-function isInCheck(state: BoardState, color: Color): boolean {
+// Is the Khun (king) of the given color currently in check?
+function isKhunAttacked(state: Board, color: Color): boolean {
     const king = color === Color.WHITE ? state.whiteKhun : state.blackKhun
-    const kingSquare = getLSB(king)
-    const enemyColor = color === Color.WHITE ? Color.BLACK : Color.WHITE
+    if (king === EMPTY_MASK) return false
+    const kingSquare = popLSB(king).square
+    const enemyColor = swapColor(color)
     return isSquareAttacked(state, kingSquare, enemyColor)
 }
 
-function isCheckmate(state: BoardState, color: Color): boolean {
-    if (!isInCheck(state, color)) return false
+// Legal moves filter: apply each pseudo-legal move, keep it only if our king
+// is not in check afterwards
+function generateLegalMoves(state: Board, color: Color): Move[] {
+    const pseudoLegal = generatePseudoLegalMoves(state, color)
+    const isWhite = color === Color.WHITE
+    const enemyColor = swapColor(color)
 
-    const legalMoves = generateLegalMoves(state, color)
-    return legalMoves.length === 0
-}
-
-function generateLegalMoves(state: BoardState, color: Color): Move[] {
-    const pseudoLegalMoves = generateAllMoves(state, color)
-
-    return pseudoLegalMoves.filter(move => {
+    return pseudoLegal.filter(move => {
         const newState = applyMove(state, move)
-        return !isInCheck(newState, color)  // King not in check after move
+        const kingMask = isWhite ? newState.whiteKhun : newState.blackKhun
+        if (kingMask === EMPTY_MASK) return false
+        return !isSquareAttacked(newState, popLSB(kingMask).square, enemyColor)
     })
 }
 ```
+
+Checkmate and stalemate are detected inside the search by combining `generateLegalMoves` (returns empty) with `isKhunAttacked` (distinguishes the two cases).
 
 ---
 
@@ -745,138 +718,79 @@ function exportFen(state: BoardState, turn: Color, moveNumber: number): string {
 
 ## State Management
 
-We use immutable updates for move execution:
+We use immutable updates for move execution. The new board is created by manually copying every field (not spread `{ ...state }`, to keep it explicit and avoid accidental extra fields), then directly mutating the relevant bitboard fields:
 
 ```ts
-function applyMove(state: BoardState, move: Move): BoardState {
-    // Clone all bitboards
-    const newState: BoardState = { ...state }
-
+function applyMove(state: Board, move: Move): Board {
     const fromBit = 1n << BigInt(move.from)
     const toBit = 1n << BigInt(move.to)
-    const ALL_BITS = 0xFFFF_FFFF_FFFF_FFFFn
-
-    // Remove piece from source square
-    const clearFromMask = ALL_BITS ^ fromBit
-    if (move.color === Color.WHITE) {
-        switch (move.piece) {
-            case Piece.BIA:
-                newState.whiteBia &= clearFromMask
-                break
-            case Piece.RUA:
-                newState.whiteRua &= clearFromMask
-                break
-            // ... other pieces
-        }
-    }
-    // Similar for black...
-
-    // Handle capture (remove enemy piece from destination)
-    if (move.captured) {
-        const clearToMask = ALL_BITS ^ toBit
-        const enemyColor = move.color === Color.WHITE ? Color.BLACK : Color.WHITE
-        // Clear captured piece from enemy bitboard...
-    }
-
-    // Place piece on destination (possibly promoted)
+    const clearFromBit = FULL_MASK ^ fromBit
     const finalPiece = move.promotion || move.piece
-    if (move.color === Color.WHITE) {
-        switch (finalPiece) {
-            case Piece.BIA:
-                newState.whiteBia |= toBit
-                break
-            // ... other pieces
+
+    // Shallow copy of all 14 piece bitboards + 3 occupancy fields
+    let newState: Board = { ...state, whiteOccupancy: EMPTY_MASK, blackOccupancy: EMPTY_MASK, allOccupancy: EMPTY_MASK }
+
+    // 1. Remove captured piece (if any) — direct field mutation, no helper call needed
+    if (move.captured !== undefined) {
+        const clearToBit = FULL_MASK ^ toBit
+        if (enemyIsWhite) {
+            switch (move.captured) {
+                case Piece.BIA: newState.whiteBia &= clearToBit; break
+                // ... other pieces
+            }
         }
     }
 
-    // Update occupancy bitboards
-    updateOccupancy(newState)
+    // 2. Remove moving piece from source
+    switch (move.piece) {
+        case Piece.RUA: newState.whiteRua &= clearFromBit; break
+        // ...
+    }
 
+    // 3. Place piece (or promoted piece) on destination
+    switch (finalPiece) {
+        case Piece.FLIPPED_BIA: newState.whiteFlippedBia |= toBit; break
+        // ...
+    }
+
+    // 4. Recompute occupancy from scratch
+    updateOccupancy(newState)
     return newState
 }
 ```
+
+The three-step pattern (remove capture → remove from source → place on destination) handles all cases including promotion correctly. `FULL_MASK ^ bit` is the BigInt-safe way to clear a bit (JavaScript's `~` does not work on `bigint`).
 
 ---
 
 ## AI Search
 
-Minimax with alpha-beta pruning and transposition table:
+Minimax with alpha-beta pruning, transposition table, quiescence search, and iterative deepening. See [ai/README.md](ai/README.md) for full documentation.
+
+The search operates on a `Game` object (board + turn + hash + countdown + positionOccurrence) rather than the board alone. A `SearchContext` threads shared mutable state through the recursion:
 
 ```ts
-interface TranspositionEntry {
-    depth: number
-    score: number
-    flag: 'exact' | 'lowerbound' | 'upperbound'
-    bestMove: Move | null
+interface SearchContext {
+    tt: TranspositionTable | null
+    // Frequency map of position hashes on the current path — O(1) repetition check
+    pathFreq: Map<bigint, number>
+    nodes: number       // shared node counter
+    stopTime?: number   // wall-clock deadline for time-limited search
+    aborted: boolean    // set when stopTime is exceeded
 }
+```
 
-const transpositionTable = new Map<string, TranspositionEntry>()
+The public entry points are:
 
-function minimax(
-    state: BoardState,
-    turn: Color,
-    depth: number,
-    alpha: number,
-    beta: number
-): { bestScore: number; bestMove: Move | null } {
-    // Check transposition table
-    const hash = hashState(state, turn)
-    const cached = transpositionTable.get(hash)
-    if (cached && cached.depth >= depth) {
-        if (cached.flag === 'exact') {
-            return { bestScore: cached.score, bestMove: cached.bestMove }
-        }
-        // Handle lowerbound/upperbound...
-    }
+```ts
+// Fixed-depth search
+findBestMove(game, depth, tt?)
 
-    // Base case
-    if (depth === 0) {
-        return { bestScore: evaluate(state), bestMove: null }
-    }
+// Iterative deepening with optional time limit
+iterativeDeepening(game, maxDepth, timeLimitMs?, tt?)
 
-    const moves = generateLegalMoves(state, turn)
-    if (moves.length === 0) {
-        // Checkmate or stalemate
-        return {
-            bestScore: isInCheck(state, turn) ? -Infinity : 0,
-            bestMove: null
-        }
-    }
-
-    let bestMove: Move | null = null
-    const isMaximizing = turn === Color.WHITE
-
-    if (isMaximizing) {
-        let bestScore = -Infinity
-        for (const move of moves) {
-            const newState = applyMove(state, move)
-            const result = minimax(newState, Color.BLACK, depth - 1, alpha, beta)
-
-            if (result.bestScore > bestScore) {
-                bestScore = result.bestScore
-                bestMove = move
-            }
-            alpha = Math.max(alpha, bestScore)
-            if (beta <= alpha) break  // Prune
-        }
-        return { bestScore, bestMove }
-    } else {
-        // Minimizing...
-    }
-}
-
-function evaluate(state: BoardState): number {
-    let score = 0
-
-    // Material using popCount
-    score += popCount(state.whiteRua) * 500
-    score -= popCount(state.blackRua) * 500
-    score += popCount(state.whiteMa) * 300
-    score -= popCount(state.blackMa) * 300
-    // ... other pieces
-
-    return score
-}
+// Low-level (pass explicit alpha/beta)
+minimax(game, depth, alpha, beta, tt?)
 ```
 
 ---
@@ -910,25 +824,31 @@ See [benchmark/README.md](../../benchmark/README.md) for performance comparisons
 ## File Structure
 
 ```
-src/bitboard/
-├── board/
-│   └── board.ts           # Mask64 type, BoardState, bit operations, masks
-├── moves/
-│   ├── generation.ts      # Move generation for all piece types
-│   ├── execution.ts       # Apply moves, create new state
-│   └── notation.ts        # SAN parsing (e.g., "Rxd4") and formatting
-├── rules/
-│   ├── attacks.ts         # Attack tables, isSquareAttacked
-│   ├── status.ts          # isCheck, isCheckmate, isStalemate, isDraw
-│   └── countdown.ts       # Makruk-specific counting rules
-├── fen/
-│   ├── importer.ts        # FEN string → BoardState
-│   └── exporter.ts        # BoardState → FEN string
-├── ai/
-│   ├── search.ts          # Minimax, alpha-beta, transposition table
-│   └── evaluation.ts      # Position evaluation function
-├── utils/
-│   └── board-utils.ts     # printBoard, debugging helpers
-├── types.ts               # TypeScript interfaces and types
-└── index.ts               # Public API exports
+src/
+├── common/
+│   ├── const.ts           # Piece, Color enums, piece values, FEN constants
+│   ├── fen.ts             # FEN string parsing (shared between 0x88 and bitboard)
+│   └── utils.ts           # swapColor and other shared utilities
+└── bitboard/
+    ├── board/
+    │   └── board.ts       # Mask64 type, Board interface, bit ops, file/rank masks
+    ├── moves/
+    │   ├── generation.ts  # Pseudo-legal + legal move generation for all piece types
+    │   ├── execution.ts   # applyMove — immutable board update
+    │   ├── notation.ts    # SAN parsing (e.g., "Rxd4") and formatting
+    │   └── index.ts       # Public move API: move(), generateLegalMoves()
+    ├── rules/
+    │   ├── attacks.ts     # Pre-computed attack tables, getRookAttacks (hyperbola)
+    │   ├── status.ts      # isKhunAttacked, isCheckmate, isInsufficientMaterial
+    │   └── countdown.ts   # Makruk countdown rules (piece-power, board-power)
+    ├── fen/
+    │   ├── importer.ts    # FEN string → Game
+    │   └── exporter.ts    # Game → FEN string
+    ├── hash/
+    │   └── zobrist.ts     # Zobrist hashing: computeHash, updateHashForMove
+    ├── ai/
+    │   ├── search.ts      # Minimax, alpha-beta, TT, quiescence, iterative deepening
+    │   └── evaluation.ts  # evaluateFast: material + PST
+    ├── types.ts           # Move, Game TypeScript interfaces
+    └── index.ts           # Public API exports
 ```

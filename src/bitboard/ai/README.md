@@ -32,10 +32,9 @@ minimax(state, depth, alpha, beta):
 
 Caches evaluated positions to avoid redundant computation.
 
-**Hash Function**: Uses all 14 bitboards concatenated with turn:
-```
-whiteBia_whiteFlippedBia_..._blackKhun_turn
-```
+**Hash Function**: Uses Zobrist hashing — a 64-bit incremental hash covering all piece positions, side to move, and countdown state. See [hash/README.md](../hash/README.md) for details.
+
+**Replacement Strategy**: Always-replace with LRU eviction (evicts the oldest single entry when the table is full, preserving all other cached results).
 
 **Entry Types**:
 - `exact`: Score is exact (within alpha-beta window)
@@ -60,18 +59,28 @@ Prevents horizon effect by searching captures until position is "quiet".
 
 ```
 quiescence(state, alpha, beta):
+    if in check:
+        // Must search all legal moves to escape check
+        for each legal move:
+            score = quiescence(child, alpha, beta)
+            update alpha/beta
+            if beta <= alpha: break
+        if no moves: return checkmate score  // Mated
+        return best
+
     stand_pat = evaluate(state)
     if stand_pat >= beta: return beta  // Standing pat is good enough
+    if stand_pat > alpha: alpha = stand_pat
 
-    for each capture:
+    for each legal capture:
         score = quiescence(child, alpha, beta)
         update alpha/beta
         if beta <= alpha: break
 
-    return alpha
+    return alpha (or beta for black)
 ```
 
-Without quiescence, depth-limited search might stop right before an obvious recapture, giving wrong evaluation.
+Without quiescence, depth-limited search might stop right before an obvious recapture, giving wrong evaluation. The check-handling path ensures checkmates are not missed at the quiescence horizon.
 
 ### Iterative Deepening
 
@@ -135,13 +144,28 @@ score = Σ(white_material) - Σ(black_material)
 
 Positive = white advantage. Negative = black advantage.
 
+Note: Mobility evaluation (counting legal moves) was intentionally removed. It required calling `generateLegalMoves` twice at every leaf node, which was the single largest performance bottleneck in search.
+
+## Repetition Detection
+
+The engine detects threefold repetition without cloning any Maps during search:
+
+- **Game history**: `positionOccurrence: Map<bigint, number>` tracks how many times each hash has been seen in the actual game (before the search starts). This Map is shared by reference across all search nodes — it is never cloned.
+- **Search path**: `SearchContext.pathFreq: Map<bigint, number>` is an incremental frequency counter maintained as the recursive search descends (increment on the way in, decrement on the way out). This gives O(1) per-node repetition checking at any depth.
+- **Combined check**: `historyCount + pathCount >= 3` → draw.
+
+### Countdown Integration
+
+When no Bia remain, Makruk activates a forced countdown (piece-power or board-power). The search-path move application (`applyMoveForSearch`) calls `stepCountdown` after each move and XORs the old/new countdown state into the Zobrist hash. This ensures positions that are piece-identical but differ in countdown progress get distinct hashes, preventing false draw claims.
+
 ## Performance
 
 Key optimizations over 0x88:
 - Bitboard operations (popCount, getLSB)
 - Transposition table hit rate
 - Move ordering reduces nodes by 90%+
-- Quiescence only searches captures
+- Quiescence only searches captures (or all moves when in check)
+- O(1) repetition detection via pathFreq Map (vs old O(depth) linear scan)
 
 See [benchmark/README.md](../../../benchmark/README.md) for performance comparisons.
 
@@ -513,7 +537,7 @@ function orderMoves(moves: Move[], ttBestMove?: Move | null): void
 
 #### `evaluateFast(board)`
 
-Fast position evaluation using material, piece-square tables, and mobility.
+Fast position evaluation using material and piece-square tables.
 
 ```typescript
 function evaluateFast(board: Board): number
@@ -540,7 +564,7 @@ function createTranspositionTable(maxSize?: number): TranspositionTable
 ```
 
 **Parameters:**
-- `maxSize` - Maximum entries before clearing (default: 1,000,000)
+- `maxSize` - Maximum number of entries. When full, the oldest entry is evicted (always-replace strategy). Default: 1,000,000.
 
 **Returns:** A new `TranspositionTable` instance
 

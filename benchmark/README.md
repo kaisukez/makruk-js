@@ -1,55 +1,54 @@
 # Benchmarks
 
-Compares 0x88 vs Bitboard implementations.
+Bitboard implementation performance.
 
 ## Usage
 
 ```bash
-pnpm benchmark        # Run all
-pnpm benchmark:fen    # FEN only
-pnpm benchmark:moves  # Move generation only
-pnpm benchmark:ai     # AI search only
+pnpm benchmark          # Run all (fen + moves + ai)
+pnpm benchmark:fen      # FEN only
+pnpm benchmark:moves    # Move generation only
+pnpm benchmark:ai       # AI search only
+pnpm benchmark:parallel # Parallel search (separate, async)
 ```
 
 ## Results
 
-Tested on Apple M1, Node v24.
+Tested on Apple M4 Pro, Node v24.11.1.
 
 ### FEN Operations
 
-| Operation | 0x88 | Bitboard | Winner |
-|-----------|------|----------|--------|
-| Import initial | 0.012 ms | 0.024 ms | 0x88 2x faster |
-| Import middlegame | 0.006 ms | 0.007 ms | ~Equal |
-| Import endgame | 0.005 ms | 0.002 ms | Bitboard 2x faster |
-| Export initial | 0.004 ms | 0.00005 ms | Bitboard 80x faster |
-| Export middlegame | 0.003 ms | 0.00004 ms | Bitboard 64x faster |
-| Export endgame | 0.001 ms | 0.00004 ms | Bitboard 33x faster |
+| Operation | Time | Throughput |
+|-----------|------|------------|
+| Import initial | 0.016 ms | 64,000 ops/s |
+| Import middlegame | 0.007 ms | 147,000 ops/s |
+| Import endgame | 0.004 ms | 275,000 ops/s |
+| Export initial | 0.016 ms | 63,000 ops/s |
+| Export middlegame | 0.005 ms | 221,000 ops/s |
+| Export endgame | 0.002 ms | 460,000 ops/s |
 
 ### Move Generation
 
-| Position | 0x88 | Bitboard | Winner |
-|----------|------|----------|--------|
-| Initial | 0.73 ms | 0.34 ms | Bitboard 2x faster |
-| Middlegame | 0.40 ms | 0.18 ms | Bitboard 2x faster |
-| Endgame | 0.10 ms | 0.02 ms | Bitboard 6x faster |
+| Position | Moves | Time | Throughput |
+|----------|-------|------|------------|
+| Initial | 23 | 0.020 ms | 50,000 ops/s |
+| Middlegame | 11 | 0.016 ms | 62,000 ops/s |
+| Endgame | 3 | 0.005 ms | 210,000 ops/s |
 
 ### AI Search
 
-| Position | Depth | 0x88 | Bitboard | Winner |
-|----------|-------|------|----------|--------|
-| Endgame | 1 | 5 ms | 0.012 ms | Bitboard 400x faster |
-| Middlegame | 1 | 19 ms | 0.026 ms | Bitboard 750x faster |
-| Endgame | 3 | 151 ms | 0.007 ms | Bitboard 22000x faster |
-| Middlegame | 3 | 503 ms | 0.038 ms | Bitboard 13000x faster |
-| Endgame | 5 | 1.8 s | 0.006 ms | Bitboard 300000x faster |
-| Middlegame | 5 | 9.4 s | 0.029 ms | Bitboard 320000x faster |
+| Position | Depth 1 | Depth 3 | Depth 5 |
+|----------|---------|---------|---------|
+| Endgame | 0.073 ms | 1.9 ms | 27 ms |
+| Middlegame | 0.216 ms | 0.9 ms | 5.2 ms |
+| Opening | 0.414 ms | 17 ms | 683 ms |
 
-The deeper the search, the more the transposition table and move ordering optimizations pay off - up to 320,000x speedup at depth 5.
+Throughput: ~138,000–205,000 nodes/sec.
 
 ## Files
 
-- `utils.js` - Benchmark helper functions
+- `utils.js` - Benchmark helper (`measure`, `bench`)
 - `fen-operations.js` - FEN import/export
 - `move-generation.js` - Legal move generation
 - `ai-search.js` - Minimax search at depths 1, 3, 5
+- `parallel-search.js` - Single-thread vs parallel (Worker Threads)

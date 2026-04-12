@@ -250,9 +250,9 @@ describe("getLSB", () => {
         expect(getLSB(0xFF00n)).toBe(8) // first set bit in rank 2
     })
 
-    test("should handle edge case of square > 63", () => {
-        // This shouldn't happen in practice, but test error handling
-        expect(() => getLSB(1n << 100n)).toThrow()
+    test("should return correct index for high bit positions", () => {
+        // getLSB works for any BigInt bit position
+        expect(getLSB(1n << 100n)).toBe(100)
     })
 })
 

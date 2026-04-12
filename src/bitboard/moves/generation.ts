@@ -1,14 +1,11 @@
 import type { Mask64, Board } from "bitboard/board/board"
 import { Color, Piece } from "common/const"
+import type { Move } from "bitboard/types"
 import {
     EMPTY_MASK,
     FULL_MASK,
     popLSB,
-    setPiece,
-    removePiece,
     getPieceAt,
-    updateOccupancy,
-    createEmptyBoard,
     RANK_6,
     RANK_3,
 } from "bitboard/board/board"
@@ -22,78 +19,79 @@ import {
 } from "bitboard/rules/attacks"
 import { applyMove } from "bitboard/moves/execution"
 
-export interface Move {
-    from: number
-    to: number
-    piece: Piece
-    color: Color
-    captured?: Piece
-    promotion?: Piece
-}
-
 export function generatePseudoLegalMoves(
     state: Board,
     color: Color
 ): Move[] {
     const moves: Move[] = []
     const isWhite = color === Color.WHITE
+    const friendly = isWhite ? state.whiteOccupancy : state.blackOccupancy
+    const enemy = isWhite ? state.blackOccupancy : state.whiteOccupancy
+    const targetMask = FULL_MASK ^ friendly
 
-    const friendlyOccupancy = isWhite ? state.whiteOccupancy : state.blackOccupancy
-    const enemyOccupancy = isWhite ? state.blackOccupancy : state.whiteOccupancy
-
-    generateBiaMoves(state, color, friendlyOccupancy, enemyOccupancy, moves)
-    generateFlippedBiaMoves(state, color, friendlyOccupancy, enemyOccupancy, moves)
-    generateMaMoves(state, color, friendlyOccupancy, enemyOccupancy, moves)
-    generateThonMoves(state, color, friendlyOccupancy, enemyOccupancy, moves)
-    generateMetMoves(state, color, friendlyOccupancy, enemyOccupancy, moves)
-    generateRuaMoves(state, color, friendlyOccupancy, enemyOccupancy, moves)
-    generateKhunMoves(state, color, friendlyOccupancy, enemyOccupancy, moves)
+    generateBiaMoves(state, color, enemy, moves, false)
+    generateFlippedBiaMoves(state, color, targetMask, moves)
+    generateMaMoves(state, color, targetMask, moves)
+    generateThonMoves(state, color, targetMask, moves)
+    generateMetMoves(state, color, targetMask, moves)
+    generateRuaMoves(state, color, targetMask, moves)
+    generateKhunMoves(state, color, targetMask, moves)
 
     return moves
+}
+
+/**
+ * Generate only captures (moves to enemy-occupied squares) without legality check.
+ * Reuses the same per-piece helpers as generatePseudoLegalMoves.
+ */
+export function generatePseudoLegalCaptures(state: Board, color: Color): Move[] {
+    const captures: Move[] = []
+    const isWhite = color === Color.WHITE
+    const enemy = isWhite ? state.blackOccupancy : state.whiteOccupancy
+
+    generateBiaMoves(state, color, enemy, captures, true)
+    generateFlippedBiaMoves(state, color, enemy, captures)
+    generateMaMoves(state, color, enemy, captures)
+    generateThonMoves(state, color, enemy, captures)
+    generateMetMoves(state, color, enemy, captures)
+    generateRuaMoves(state, color, enemy, captures)
+    generateKhunMoves(state, color, enemy, captures)
+
+    return captures
 }
 
 function generateBiaMoves(
     state: Board,
     color: Color,
-    friendly: Mask64,
     enemy: Mask64,
-    moves: Move[]
+    moves: Move[],
+    capturesOnly: boolean
 ): void {
     const isWhite = color === Color.WHITE
     let pawns = isWhite ? state.whiteBia : state.blackBia
     const allOccupancy = state.allOccupancy
-    const promotionRank = isWhite ? RANK_6 : RANK_3 // Rank 6 for white, rank 3 for black
+    const promotionRank = isWhite ? RANK_6 : RANK_3
 
     while (pawns !== EMPTY_MASK) {
         const { bb, square } = popLSB(pawns)
         pawns = bb
 
-        // Pawn moves (non-captures)
-        let pawnMoves = getPawnMoves(square, isWhite) & (FULL_MASK ^ allOccupancy)
+        if (!capturesOnly) {
+            // Pawn moves (non-captures)
+            let pawnMoves = getPawnMoves(square, isWhite) & (FULL_MASK ^ allOccupancy)
 
-        while (pawnMoves !== EMPTY_MASK) {
-            const { bb: remaining, square: toSquare } = popLSB(pawnMoves)
-            pawnMoves = remaining
+            while (pawnMoves !== EMPTY_MASK) {
+                const { bb: remaining, square: toSquare } = popLSB(pawnMoves)
+                pawnMoves = remaining
 
-            const toBit = 1n << BigInt(toSquare)
-            const shouldPromote = (toBit & promotionRank) !== EMPTY_MASK
+                const toBit = 1n << BigInt(toSquare)
+                const shouldPromote = (toBit & promotionRank) !== EMPTY_MASK
 
-            if (shouldPromote) {
-                // In Makruk, pawns promote to FlippedBia
-                moves.push({
-                    from: square,
-                    to: toSquare,
-                    piece: Piece.BIA,
-                    color,
-                    promotion: Piece.FLIPPED_BIA,
-                })
-            } else {
-                moves.push({
-                    from: square,
-                    to: toSquare,
-                    piece: Piece.BIA,
-                    color,
-                })
+                if (shouldPromote) {
+                    moves.push({ from: square, to: toSquare, piece: Piece.BIA, color, promotion: Piece.FLIPPED_BIA })
+                } else {
+                    moves.push({ from: square, to: toSquare, piece: Piece.BIA, color })
+                }
             }
         }
 
@@ -109,22 +107,9 @@ function generateBiaMoves(
             const shouldPromote = (toBit & promotionRank) !== EMPTY_MASK
 
             if (shouldPromote) {
-                moves.push({
-                    from: square,
-                    to: toSquare,
-                    piece: Piece.BIA,
-                    color,
-                    captured: capturedPiece?.[1],
-                    promotion: Piece.FLIPPED_BIA,
-                })
+                moves.push({ from: square, to: toSquare, piece: Piece.BIA, color, captured: capturedPiece?.[1], promotion: Piece.FLIPPED_BIA })
             } else {
-                moves.push({
-                    from: square,
-                    to: toSquare,
-                    piece: Piece.BIA,
-                    color,
-                    captured: capturedPiece?.[1],
-                })
+                moves.push({ from: square, to: toSquare, piece: Piece.BIA, color, captured: capturedPiece?.[1] })
             }
         }
     }
@@ -137,8 +122,7 @@ function generateBiaMoves(
 function generateFlippedBiaMoves(
     state: Board,
     color: Color,
-    friendly: Mask64,
-    enemy: Mask64,
+    targetMask: Mask64,
     moves: Move[]
 ): void {
     const isWhite = color === Color.WHITE
@@ -148,22 +132,13 @@ function generateFlippedBiaMoves(
         const { bb, square } = popLSB(pieces)
         pieces = bb
 
-        // FlippedBia moves one square diagonally
-        let attacks = getDiagonalAttacks(square) & (FULL_MASK ^ friendly)
+        let attacks = getDiagonalAttacks(square) & targetMask
 
         while (attacks !== EMPTY_MASK) {
             const { bb: remaining, square: toSquare } = popLSB(attacks)
             attacks = remaining
 
-            const capturedPiece = getPieceAt(state, toSquare)
-
-            moves.push({
-                from: square,
-                to: toSquare,
-                piece: Piece.FLIPPED_BIA,
-                color,
-                captured: capturedPiece?.[1],
-            })
+            moves.push({ from: square, to: toSquare, piece: Piece.FLIPPED_BIA, color, captured: getPieceAt(state, toSquare)?.[1] })
         }
     }
 }
@@ -174,8 +149,7 @@ function generateFlippedBiaMoves(
 function generateMaMoves(
     state: Board,
     color: Color,
-    friendly: Mask64,
-    enemy: Mask64,
+    targetMask: Mask64,
     moves: Move[]
 ): void {
     const isWhite = color === Color.WHITE
@@ -185,34 +159,25 @@ function generateMaMoves(
         const { bb, square } = popLSB(knights)
         knights = bb
 
-        let attacks = getKnightAttacks(square) & (FULL_MASK ^ friendly)
+        let attacks = getKnightAttacks(square) & targetMask
 
         while (attacks !== EMPTY_MASK) {
             const { bb: remaining, square: toSquare } = popLSB(attacks)
             attacks = remaining
 
-            const capturedPiece = getPieceAt(state, toSquare)
-
-            moves.push({
-                from: square,
-                to: toSquare,
-                piece: Piece.MA,
-                color,
-                captured: capturedPiece?.[1],
-            })
+            moves.push({ from: square, to: toSquare, piece: Piece.MA, color, captured: getPieceAt(state, toSquare)?.[1] })
         }
     }
 }
 
 /**
  * Generate Thon (Makruk Bishop) moves
- * Moves one square diagonally (like Ferz)
+ * Moves one square diagonally AND one square forward
  */
 function generateThonMoves(
     state: Board,
     color: Color,
-    friendly: Mask64,
-    enemy: Mask64,
+    targetMask: Mask64,
     moves: Move[]
 ): void {
     const isWhite = color === Color.WHITE
@@ -222,16 +187,13 @@ function generateThonMoves(
         const { bb, square } = popLSB(bishops)
         bishops = bb
 
-        // Thon moves one square diagonally AND one square forward
-        let attacks = getDiagonalAttacks(square) & (FULL_MASK ^ friendly)
+        let attacks = getDiagonalAttacks(square) & targetMask
 
-        // Add forward move (one square forward for white, one square backward for black)
-        const forwardOffset = isWhite ? 8 : -8
-        const forwardSquare = square + forwardOffset
+        // Add forward square if it's within the target mask
+        const forwardSquare = square + (isWhite ? 8 : -8)
         if (forwardSquare >= 0 && forwardSquare < 64) {
             const forwardBit = 1n << BigInt(forwardSquare)
-            // Only add if the square is not occupied by a friendly piece
-            if ((forwardBit & friendly) === EMPTY_MASK) {
+            if ((forwardBit & targetMask) !== EMPTY_MASK) {
                 attacks |= forwardBit
             }
         }
@@ -240,15 +202,7 @@ function generateThonMoves(
             const { bb: remaining, square: toSquare } = popLSB(attacks)
             attacks = remaining
 
-            const capturedPiece = getPieceAt(state, toSquare)
-
-            moves.push({
-                from: square,
-                to: toSquare,
-                piece: Piece.THON,
-                color,
-                captured: capturedPiece?.[1],
-            })
+            moves.push({ from: square, to: toSquare, piece: Piece.THON, color, captured: getPieceAt(state, toSquare)?.[1] })
         }
     }
 }
@@ -260,8 +214,7 @@ function generateThonMoves(
 function generateMetMoves(
     state: Board,
     color: Color,
-    friendly: Mask64,
-    enemy: Mask64,
+    targetMask: Mask64,
     moves: Move[]
 ): void {
     const isWhite = color === Color.WHITE
@@ -271,22 +224,13 @@ function generateMetMoves(
         const { bb, square } = popLSB(queens)
         queens = bb
 
-        // Met moves one square diagonally
-        let attacks = getDiagonalAttacks(square) & (FULL_MASK ^ friendly)
+        let attacks = getDiagonalAttacks(square) & targetMask
 
         while (attacks !== EMPTY_MASK) {
             const { bb: remaining, square: toSquare } = popLSB(attacks)
             attacks = remaining
 
-            const capturedPiece = getPieceAt(state, toSquare)
-
-            moves.push({
-                from: square,
-                to: toSquare,
-                piece: Piece.MET,
-                color,
-                captured: capturedPiece?.[1],
-            })
+            moves.push({ from: square, to: toSquare, piece: Piece.MET, color, captured: getPieceAt(state, toSquare)?.[1] })
         }
     }
 }
@@ -297,8 +241,7 @@ function generateMetMoves(
 function generateRuaMoves(
     state: Board,
     color: Color,
-    friendly: Mask64,
-    enemy: Mask64,
+    targetMask: Mask64,
     moves: Move[]
 ): void {
     const isWhite = color === Color.WHITE
@@ -308,21 +251,13 @@ function generateRuaMoves(
         const { bb, square } = popLSB(rooks)
         rooks = bb
 
-        let attacks = getRookAttacks(square, state.allOccupancy) & (FULL_MASK ^ friendly)
+        let attacks = getRookAttacks(square, state.allOccupancy) & targetMask
 
         while (attacks !== EMPTY_MASK) {
             const { bb: remaining, square: toSquare } = popLSB(attacks)
             attacks = remaining
 
-            const capturedPiece = getPieceAt(state, toSquare)
-
-            moves.push({
-                from: square,
-                to: toSquare,
-                piece: Piece.RUA,
-                color,
-                captured: capturedPiece?.[1],
-            })
+            moves.push({ from: square, to: toSquare, piece: Piece.RUA, color, captured: getPieceAt(state, toSquare)?.[1] })
         }
     }
 }
@@ -333,8 +268,7 @@ function generateRuaMoves(
 function generateKhunMoves(
     state: Board,
     color: Color,
-    friendly: Mask64,
-    enemy: Mask64,
+    targetMask: Mask64,
     moves: Move[]
 ): void {
     const isWhite = color === Color.WHITE
@@ -344,29 +278,17 @@ function generateKhunMoves(
         const { bb, square } = popLSB(kings)
         kings = bb
 
-        let attacks = getKingAttacks(square) & (FULL_MASK ^ friendly)
+        let attacks = getKingAttacks(square) & targetMask
 
         while (attacks !== EMPTY_MASK) {
             const { bb: remaining, square: toSquare } = popLSB(attacks)
             attacks = remaining
 
-            const capturedPiece = getPieceAt(state, toSquare)
-
-            moves.push({
-                from: square,
-                to: toSquare,
-                piece: Piece.KHUN,
-                color,
-                captured: capturedPiece?.[1],
-            })
+            moves.push({ from: square, to: toSquare, piece: Piece.KHUN, color, captured: getPieceAt(state, toSquare)?.[1] })
         }
     }
 }
 
-/**
- * Apply a move to the bitboard state
- * Returns a new state (immutable)
- */
 export function isSquareAttacked(
     state: Board,
     square: number,
@@ -376,13 +298,7 @@ export function isSquareAttacked(
 
     // Check pawn attacks
     const pawnAttackers = getPawnAttacks(square, !isWhite)
-    if (pawnAttackers === undefined) {
-        throw new Error(`getPawnAttacks returned undefined for square ${square}`)
-    }
     const pawns = isWhite ? state.whiteBia : state.blackBia
-    if (typeof pawns !== 'bigint') {
-        throw new Error(`Pawns is not a bigint: ${typeof pawns}, state.whiteBia=${typeof state.whiteBia}, state.blackBia=${typeof state.blackBia}`)
-    }
     if ((pawns & pawnAttackers) !== EMPTY_MASK) return true
 
     // Check flipped bia attacks (diagonal)
@@ -400,7 +316,7 @@ export function isSquareAttacked(
     if ((thons & diagAttacks) !== EMPTY_MASK) return true
 
     // Thon can also attack one square forward
-    // White Thon at square-8 can attack square, Black Thon at square+8 can attack square
+    // White Thon at square-8 attacks square by moving north; Black Thon at square+8 attacks by moving south
     const thonForwardOffset = isWhite ? -8 : 8
     const thonAttackerSquare = square + thonForwardOffset
     if (thonAttackerSquare >= 0 && thonAttackerSquare < 64) {
@@ -434,29 +350,35 @@ export function generateLegalMoves(
 ): Move[] {
     const pseudoLegalMoves = generatePseudoLegalMoves(state, color)
     const legalMoves: Move[] = []
+    const isWhite = color === Color.WHITE
+    const enemyColor = isWhite ? Color.BLACK : Color.WHITE
 
     for (const move of pseudoLegalMoves) {
-        // Apply the move
         const newState = applyMove(state, move)
-
-        // Find our king
-        const isWhite = color === Color.WHITE
         const kingMask = isWhite ? newState.whiteKhun : newState.blackKhun
-        const kingSquare = kingMask !== EMPTY_MASK ? popLSB(kingMask).square : -1
-
-        if (kingSquare === -1) {
-            // King was captured (shouldn't happen in legal moves)
-            continue
-        }
-
-        // Check if king is in check after the move
-        const enemyColor = isWhite ? Color.BLACK : Color.WHITE
-        const inCheck = isSquareAttacked(newState, kingSquare, enemyColor)
-
-        if (!inCheck) {
+        if (kingMask === EMPTY_MASK) continue
+        if (!isSquareAttacked(newState, popLSB(kingMask).square, enemyColor)) {
             legalMoves.push(move)
         }
     }
 
     return legalMoves
+}
+
+/**
+ * Generate legal captures only (pseudo-legal captures filtered for legality).
+ * Used by quiescence search to avoid generating all moves.
+ */
+export function generateLegalCaptures(state: Board, color: Color): Move[] {
+    const pseudoCaptures = generatePseudoLegalCaptures(state, color)
+    const isWhite = color === Color.WHITE
+    const enemyColor = isWhite ? Color.BLACK : Color.WHITE
+
+    return pseudoCaptures.filter(move => {
+        const newState = applyMove(state, move)
+        const kingMask = isWhite ? newState.whiteKhun : newState.blackKhun
+        if (kingMask === EMPTY_MASK) return false
+        const { square: kingSquare } = popLSB(kingMask)
+        return !isSquareAttacked(newState, kingSquare, enemyColor)
+    })
 }
