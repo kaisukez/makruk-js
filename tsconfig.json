@@ -5,7 +5,12 @@
         "declaration": true,
         "outDir": "./dist",
         "strict": true,
-        "baseUrl": "./src",
+        "paths": {
+            "bitboard/*": ["./src/bitboard/*"],
+            "common/*": ["./src/common/*"],
+            "0x88/*": ["./src/0x88/*"]
+        },
+        "ignoreDeprecations": "6.0",
         "lib": [
             "ES2020",
             "DOM"

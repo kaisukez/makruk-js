@@ -7,7 +7,7 @@
 
 import type { Move, Game } from "bitboard/types"
 import { Color } from "common/const"
-import { minimax, MinimaxOutput, TranspositionTable, createTranspositionTable, applyMoveForSearch } from "./search"
+import { minimax, MinimaxOutput, TranspositionTable, createTranspositionTable, applyMoveForSearch } from "bitboard/ai/search"
 
 /**
  * Shared bounds structure for parallel alpha-beta
